@@ -12,6 +12,15 @@ export default {
 
     theme: {
         extend: {
+            colors: {
+                'dark-navy': '#0A192F',
+                'soft-white': '#F8F9FA',
+                'cool-gray': '#D1D5DB',
+                'bright-blue': '#007BFF',
+                'neon-cyan': '#00F0FF',
+                'bright-orange': '#FF6B00',
+                'cyber-purple': '#8A2BE2',
+            },
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
