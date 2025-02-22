@@ -31,8 +31,10 @@
         "clsx": "^2.1.1",
         "lucide-react": "^0.475.0",
         "motion": "^12.4.7",
+        "react-tsparticles": "^2.12.2",
         "tailwind-merge": "^3.0.1",
         "three": "^0.173.0",
-        "three-globe": "^2.41.12"
+        "three-globe": "^2.41.12",
+        "tsparticles": "^3.8.1"
     }
 }
