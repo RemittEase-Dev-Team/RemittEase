@@ -34,9 +34,9 @@ jobs:
     - name: Install Node.js dependencies
       run: |
         if [ -f package-lock.json ]; then
-          npm ci
+          npm install --legacy-peer-deps
         else
-          npm install
+          npm install --legacy-peer-deps
         fi
 
     - name: Install Composer dependencies
@@ -83,3 +83,4 @@ jobs:
 
         EOF
 
+        
