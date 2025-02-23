@@ -1,0 +1,86 @@
+name: Deploy to RemittEase Server
+
+on:
+  push:
+    branches:
+      - main  # Change to remittease default live branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'  # Ensure this matches current in server PHP version
+        extensions: mbstring, bcmath, intl, pdo, mysql, zip
+        ini-values: post_max_size=256M, upload_max_filesize=256M, memory_limit=512M
+        coverage: none
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'  # Ensure this matches your project's requirements
+
+    - name: Clean Node Modules
+      run: |
+        rm -rf node_modules
+        rm -f package-lock.json
+
+    - name: Install Node.js dependencies
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci
+        else
+          npm install
+        fi
+
+    - name: Install Composer dependencies
+      run: composer install --no-dev --prefer-dist --optimize-autoloader
+
+    - name: Create .env file
+      run: |
+        cp .env.example .env
+        echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
+        echo "DB_CONNECTION=pgsql" >> .env
+        echo "DB_HOST=127.0.0.1" >> .env
+        echo "DB_PORT=5432" >> .env
+        echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env
+        echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+
+    - name: Generate application key
+      run: php artisan key:generate
+
+    - name: Install sshpass
+      run: sudo apt-get install -y sshpass
+
+    - name: Pull latest changes from GitHub
+      run: |
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" \
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@162.254.35.72 << 'EOF'
+          cd /home/remittease/web/remittease.com/public_html
+          git pull https://${{ secrets.GH_ACCESS_TOKEN }}@github.com/RemittEase-Dev-Team/RemittEase.git main
+        EOF
+
+    - name: Build assets
+      run: |
+        npm install
+        npm run build
+
+    - name: Run post-deployment scripts
+      run: |
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" \
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@162.254.35.72 << 'EOF'
+          cd /home/remittease/web/remittease.com/public_html
+          php artisan migrate --force
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+        EOF
+
