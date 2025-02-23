@@ -29,15 +29,11 @@ jobs:
     - name: Clean Node Modules
       run: |
         rm -rf node_modules
-        rm -f package-lock.json
+        rm -f yarn.lock
 
     - name: Install Node.js dependencies
       run: |
-        if [ -f package-lock.json ]; then
-          npm install --legacy-peer-deps
-        else
-          npm install --legacy-peer-deps
-        fi
+        yarn install --legacy-peer-deps
 
     - name: Install Composer dependencies
       run: composer install --no-dev --prefer-dist --optimize-autoloader
@@ -68,8 +64,8 @@ jobs:
 
     - name: Build assets
       run: |
-        npm install
-        npm run build
+        yarn
+        yarn build
 
     - name: Run post-deployment scripts
       run: |
@@ -82,5 +78,3 @@ jobs:
           php artisan view:cache
 
         EOF
-
-        
