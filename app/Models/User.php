@@ -21,6 +21,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'kyc_status',
+        'stellar_public_key',
+        'stellar_secret_seed',
     ];
 
     /**

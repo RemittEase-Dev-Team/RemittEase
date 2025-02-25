@@ -34,5 +34,9 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'stellar' => [
+        'network' => env('STELLAR_NETWORK', 'testnet'),
+        'horizon_url' => env('HORIZON_URL', 'https://horizon-testnet.stellar.org'),
+    ],
 
 ];
