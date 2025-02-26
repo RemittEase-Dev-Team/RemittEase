@@ -100,8 +100,8 @@ export default function Dashboard() {
             header={
                 <div className="flex justify-between items-center">
                     <h2 className="text-2xl font-bold leading-tight text-blue-800 dark:text-blue-200">Dashboard</h2>
-                    <div className="flex items-center bg-gray-800 dark:bg-gray-200 rounded-lg p-2">
-                        <span className="text-sm text-gray-100 mr-2">Wallet: GABC1234...XYZ</span>
+                    <div className="flex items-center bg-gray-800 dark:bg-blue-200 rounded-lg p-2">
+                        <span className="text-sm text-gray-100 dark:text-gray-900 mr-2">Wallet: GABC1234...XYZ</span>
                         <button onClick={() => copyToClipboard('GABC1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef')} className="text-gray-500 hover:text-gray-700">
                             <Copy size={16} />
                         </button>
@@ -180,7 +180,7 @@ export default function Dashboard() {
                 <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl p-5 shadow-sm md:col-span-2 lg:col-span-2 ">
                     <div className="flex justify-between items-center mb-2">
                         <div className="text-lg font-semibold">Total Balance</div>
-                        <select className="px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700 text-sm">
+                        <select className="px-5 py-1 rounded-full border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-blue-400 text-sm">
                             <option>USD</option>
                             <option>NGN</option>
                         </select>
@@ -193,31 +193,31 @@ export default function Dashboard() {
 
                     <div className="flex justify-end gap-2 mb-3">
                         <button
-                            className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === 'Today' ? 'bg-gray-800 dark:bg-gray-200 text-white' : 'bg-gray-100 dark:bg-gray-200'}`}
+                            className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === 'Today' ? 'bg-gray-800 dark:bg-blue-600 text-gray-800 dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
                             onClick={() => setActiveTimeFilter('Today')}
                         >
                             Today
                         </button>
                         <button
-                            className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === '24H' ? 'bg-gray-800 dark:bg-gray-200 text-white' : 'bg-gray-100 dark:bg-gray-200'}`}
+                            className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === '24H' ? 'bg-gray-800 dark:bg-blue-600 text-gray-800 dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
                             onClick={() => setActiveTimeFilter('24H')}
                         >
                             24H
                         </button>
                         <button
-                            className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === '1W' ? 'bg-gray-800 dark:bg-gray-200 text-white' : 'bg-gray-100 dark:bg-gray-200'}`}
+                            className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === '1W' ? 'bg-gray-800 dark:bg-blue-600 text-gray-800 dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
                             onClick={() => setActiveTimeFilter('1W')}
                         >
                             1W
                         </button>
                         <button
-                            className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === '1M' ? 'bg-gray-800 dark:bg-gray-200 text-white' : 'bg-gray-100 dark:bg-gray-200'}`}
+                            className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === '1M' ? 'bg-gray-800 dark:bg-blue-600 text-gray-800 dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
                             onClick={() => setActiveTimeFilter('1M')}
                         >
                             1M
                         </button>
                         <button
-                            className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === 'All' ? 'bg-gray-800 dark:bg-gray-200 text-white' : 'bg-gray-100 dark:bg-gray-200'}`}
+                            className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === 'All' ? 'bg-gray-800 dark:bg-blue-600 text-gray-800 dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
                             onClick={() => setActiveTimeFilter('All')}
                         >
                             All
@@ -262,11 +262,11 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-5">
 
         {/* New Price Alert */}
-        <div className="bg-white rounded-xl p-5 shadow-sm">
-          <div className="text-lg font-semibold mb-4">New price alert</div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
+          <div className="text-lg font-semibold mb-4 dark:text-gray-100">New price alert</div>
 
           {currencies.slice(0, 5).map((currency) => (
-            <div key={currency.code} className="flex items-center justify-between mb-3 py-2">
+            <div key={currency.code} className="flex items-center justify-between mb-3 py-2 dark:text-gray-100 dark:bg-gray-800">
               <div className="flex items-center gap-2">
                 <span className="text-lg">{currency.flag}</span>
                 <span>{currency.name} ({currency.code})</span>
@@ -281,19 +281,19 @@ export default function Dashboard() {
           ))}
 
           {currencies.length > 5 && (
-            <button className="bg-blue-50 text-blue-600 w-full py-3 rounded-lg mt-4 font-medium">
+            <button className="bg-blue-50 dark:bg-blue-600 text-blue-600 dark:text-gray-100 w-full py-3 rounded-lg mt-4 font-medium">
               Show more
             </button>
           )}
 
-          <button className="bg-blue-50 text-blue-600 w-full py-3 rounded-lg mt-4 font-medium">
+          <button className="bg-blue-50 dark:bg-blue-600 text-blue-600 dark:text-gray-100 w-full py-3 rounded-lg mt-4 font-medium">
             Set notification
           </button>
         </div>
 
         {/* Transaction History */}
-        <div className="bg-white rounded-xl p-5 shadow-sm">
-          <div className="text-lg font-semibold mb-4">Transaction History</div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm">
+          <div className="text-lg font-semibold mb-4 dark:text-gray-100">Transaction History</div>
 
           <div className="flex items-center border border-gray-200 rounded-lg px-3 py-2 mb-4">
             <Search size={18} className="text-gray-400 mr-2" />
@@ -307,7 +307,7 @@ export default function Dashboard() {
           <div className="text-sm text-gray-500 mb-2">1 Oct, 2023</div>
 
           {transactions.map((transaction) => (
-            <div key={transaction.id} className="flex items-center justify-between py-3 border-b border-gray-100">
+            <div key={transaction.id} className="flex items-center justify-between py-3 border-b border-gray-100 dark:text-gray-100 dark:bg-gray-800">
               <div className="flex items-start">
                 {transaction.isOutgoing ? (
                   <div className="bg-red-50 text-red-500 w-8 h-8 rounded-lg flex items-center justify-center mr-3">
@@ -337,57 +337,57 @@ export default function Dashboard() {
             </div>
           ))}
 
-          <button className="bg-blue-50 text-blue-600 w-full py-3 rounded-lg mt-4 font-medium">
+          <button className="bg-blue-50 dark:bg-blue-600 text-blue-600 dark:text-gray-100 w-full py-3 rounded-lg mt-4 font-medium ">
             See all
           </button>
         </div>
 
         {/* Swap Currencies */}
-        <div className="bg-white rounded-xl p-5 shadow-sm">
-          <div className="text-lg font-semibold mb-4">Swap currencies</div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm ">
+          <div className="text-lg font-semibold mb-4 dark:text-gray-100">Swap currencies</div>
 
-          <div className="mb-4">
-            <div className="text-sm mb-2">You pay</div>
-            <div className="flex items-center justify-between">
+          <div className="mb-4 ">
+            <div className="text-sm mb-2 dark:text-gray-100">You pay</div>
+            <div className="flex items-center justify-between dark:bg-gray-800">
               <input
                 type="number"
-                className="text-2xl font-semibold outline-none w-1/2"
+                className="text-2xl font-semibold outline-none w-1/2 dark:text-gray-100 dark:bg-gray-800"
                 value={fromAmount}
                 onChange={(e) => setFromAmount(Number(e.target.value))}
               />
-              <button className="flex items-center border border-gray-200 rounded-lg px-3 py-2 gap-2">
-                <span className="text-lg">{currencies.find(c => c.code === fromCurrency)?.flag}</span>
-                <span className="font-medium">{fromCurrency}</span>
-                <ChevronDown size={18} />
+              <button className="flex items-center border border-gray-200 rounded-lg px-3 py-2 gap-2 dark:bg-gray-800">
+                <span className="text-lg dark:text-gray-100">{currencies.find(c => c.code === fromCurrency)?.flag}</span>
+                <span className="font-medium dark:text-gray-100">{fromCurrency}</span>
+                <ChevronDown size={18} className="dark:text-white"/>
               </button>
             </div>
           </div>
 
-          <div className="flex justify-center my-4">
-            <div className="bg-gray-100 p-2 rounded-full">
+          <div className="flex justify-center my-4 dark:bg-gray-800">
+            <div className="bg-gray-100 dark:bg-blue-400 p-2 rounded-full">
               <ArrowDown size={20} className="text-gray-500" />
             </div>
           </div>
 
           <div className="mb-4">
-            <div className="text-sm mb-2">You get</div>
-            <div className="flex items-center justify-between">
+            <div className="text-sm mb-2 dark:text-gray-100">You get</div>
+            <div className="flex items-center justify-between dark:bg-gray-800">
               <input
                 type="number"
-                className="text-2xl font-semibold outline-none w-1/2"
+                className="text-2xl font-semibold outline-none w-1/2 dark:text-gray-100 dark:bg-gray-800"
                 value={toAmount}
                 readOnly
               />
-              <button className="flex items-center border border-gray-200 rounded-lg px-3 py-2 gap-2">
-                <span className="text-lg">{currencies.find(c => c.code === toCurrency)?.flag}</span>
-                <span className="font-medium">{toCurrency}</span>
-                <ChevronDown size={18} />
+              <button className="flex items-center border border-gray-200 rounded-lg px-3 py-2 gap-2 dark:bg-gray-800">
+                <span className="text-lg dark:text-gray-100">{currencies.find(c => c.code === toCurrency)?.flag}</span>
+                <span className="font-medium dark:text-gray-100">{toCurrency}</span>
+                <ChevronDown size={18} className="dark:text-white"/>
               </button>
             </div>
           </div>
 
           <button
-            className="bg-blue-600 text-white w-full py-3 rounded-lg mt-4 font-medium"
+            className="bg-green-600 dark:bg-green-600 text-white w-full py-3 rounded-lg mt-4 font-medium"
             onClick={handleConvert}
           >
             Convert
