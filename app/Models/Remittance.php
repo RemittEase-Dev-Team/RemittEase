@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Wallet extends Model
+class Remittance extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'balance', 'currency', 'stellar_address'];
+    protected $fillable = ['user_id', 'recipient', 'amount', 'currency', 'status'];
 
     public function user()
     {

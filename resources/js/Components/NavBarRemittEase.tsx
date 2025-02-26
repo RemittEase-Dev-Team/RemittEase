@@ -141,15 +141,27 @@ const NavBarRemittEase: React.FC = () => {
                 Contact
               </a>
             </li>
+            @auth
+            <li>
+                <a
+                href="/dashboard"
+                className="block bg-yellow-400 hover:bg-orange-400 px-4 py-2 rounded-full text-dark-navy text-center font-semibold transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                 Dashboard
+              </a>
+            </li>
+            @else
             <li>
               <a
                 href="/login"
                 className="block bg-yellow-400 hover:bg-orange-400 px-4 py-2 rounded-full text-dark-navy text-center font-semibold transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Login or Register
+                Login / Register
               </a>
             </li>
+            @endauth
           </ul>
         </div>
       )}

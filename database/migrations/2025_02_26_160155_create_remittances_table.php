@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('wallets', function (Blueprint $table) {
+        Schema::create('remittances', function (Blueprint $table) {
             $table->id();
-        $table->foreignId('user_id')->constrained()->onDelete('cascade');
-        $table->decimal('balance', 20, 8)->default(0);
-        $table->string('currency')->default('XLM');
-        $table->string('stellar_address')->unique();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('recipient');
+            $table->decimal('amount', 20, 8);
+            $table->string('currency');
+            $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('wallets');
+        Schema::dropIfExists('remittances');
     }
 };

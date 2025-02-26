@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('wallets', function (Blueprint $table) {
+        Schema::create('sections', function (Blueprint $table) {
             $table->id();
-        $table->foreignId('user_id')->constrained()->onDelete('cascade');
-        $table->decimal('balance', 20, 8)->default(0);
-        $table->string('currency')->default('XLM');
-        $table->string('stellar_address')->unique();
+            $table->string('name')->unique(); // Section name: Hero, Features, Roadmap, etc.
+            $table->json('content'); // JSON format for structured data
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });
     }
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('wallets');
+        Schema::dropIfExists('sections');
     }
 };
