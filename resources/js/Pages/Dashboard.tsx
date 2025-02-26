@@ -123,7 +123,7 @@ export default function Dashboard() {
                     <div className="flex justify-between items-center mb-3">
                         <div className="text-lg font-semibold">Balance</div>
                         <select
-                            className="px-5 py-1 rounded-full border border-gray-200 dark:border-gray-700 text-sm"
+                            className="px-5 py-1 rounded-full border dark:text-bright-blue border-gray-200 dark:border-gray-700 text-sm"
                             value={currencyMain}
                             onChange={(e) => setCurrencyMain(e.target.value as CurrencyCode)}
                         >
