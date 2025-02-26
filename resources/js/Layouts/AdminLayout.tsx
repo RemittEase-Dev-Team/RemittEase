@@ -15,15 +15,45 @@ export default function AdminLayout({ header, children }: PropsWithChildren<{ he
             <div className={`bg-white dark:bg-gray-800 w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} transition duration-200 ease-in-out md:relative md:translate-x-0`}>
                 <div className="flex items-center space-x-3 px-4">
                     <ApplicationLogo className="h-9 w-auto text-gray-800 dark:text-gray-200" />
-                    <span className="text-xl font-semibold text-gray-800 dark:text-gray-200">Admin Panel</span>
                 </div>
                 <nav>
-                    <NavLink href={route('admin.dashboard')} active={route().current('admin.dashboard')}><DollarSign className="inline-block w-5 h-5 mr-2"/> Dashboard</NavLink>
-                    <NavLink href={route('admin.users')} active={route().current('admin.users')}><Users className="inline-block w-5 h-5 mr-2"/> Users</NavLink>
-                    <NavLink href={route('admin.transactions')} active={route().current('admin.transactions')}><FileText className="inline-block w-5 h-5 mr-2"/> Transactions</NavLink>
-                    <NavLink href={route('admin.kyc')} active={route().current('admin.kyc')}><CheckCircle className="inline-block w-5 h-5 mr-2"/> KYC Approvals</NavLink>
-                    <NavLink href={route('admin.blogs')} active={route().current('admin.blogs')}><FileText className="inline-block w-5 h-5 mr-2"/> Blogs</NavLink>
-                    <NavLink href={route('admin.settings')} active={route().current('admin.settings')}><Settings className="inline-block w-5 h-5 mr-2"/> Settings</NavLink>
+                    <div className="px-4 py-4">
+                            <span className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Admin Panel</span>
+
+                    </div>
+
+                    <ul className="space-y-2">
+                        <li>
+                            <NavLink href={route('admin.dashboard')} active={route().current('admin.dashboard')} className="hover:bg-blue-500 hover:text-white transition-colors">
+                                <DollarSign className="inline-block w-5 h-5 mr-2 text-gray-800 dark:text-gray-200"/> Dashboard
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink href={route('admin.users')} active={route().current('admin.users')} className="hover:bg-blue-500 hover:text-white transition-colors">
+                                <Users className="inline-block w-5 h-5 mr-2"/> Users
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink href={route('admin.transactions')} active={route().current('admin.transactions')} className="hover:bg-blue-500 hover:text-white transition-colors">
+                                <FileText className="inline-block w-5 h-5 mr-2"/> Transactions
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink href={route('admin.kyc')} active={route().current('admin.kyc')} className="hover:bg-blue-500 hover:text-white transition-colors">
+                                <CheckCircle className="inline-block w-5 h-5 mr-2"/> KYC Approvals
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink href={route('admin.blogs')} active={route().current('admin.blogs')} className="hover:bg-blue-500 hover:text-white transition-colors">
+                                <FileText className="inline-block w-5 h-5 mr-2"/> Blogs
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink href={route('admin.settings')} active={route().current('admin.settings')} className="hover:bg-blue-500 hover:text-white transition-colors">
+                                <Settings className="inline-block w-5 h-5 mr-2"/> Settings
+                            </NavLink>
+                        </li>
+                    </ul>
                 </nav>
             </div>
 

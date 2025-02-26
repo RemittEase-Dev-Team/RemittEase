@@ -29,6 +29,10 @@ return new class extends Migration
             $table->string('support_phone')->nullable();
             $table->string('terms_of_service_url')->nullable();
             $table->string('privacy_policy_url')->nullable();
+            $table->string('site_url')->nullable(); // Added key item
+            $table->string('exchange_rate_api')->nullable(); // Added key item
+            $table->string('support_email')->nullable(); // Added key item
+            $table->string('kyc_verification_provider')->nullable(); // Added key item
             $table->timestamps();
         });
     }

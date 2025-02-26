@@ -23,6 +23,10 @@ class Settings extends Model
         'support_phone',
         'terms_of_service_url',
         'privacy_policy_url',
+        'site_url', // Added key item
+        'exchange_rate_api', // Added key item
+        'support_email', // Added key item
+        'kyc_verification_provider', // Added key item
     ];
 
     protected $casts = [

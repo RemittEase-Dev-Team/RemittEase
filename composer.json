@@ -16,6 +16,7 @@
         "laravel/tinker": "^2.9",
         "onfido/onfido-php": "^9.0",
         "soneso/stellar-php-sdk": "^1.6",
+        "spatie/laravel-permission": "^6.15",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
