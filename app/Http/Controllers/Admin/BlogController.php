@@ -12,14 +12,14 @@ class BlogController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Admin/Blogs', [
+        return Inertia::render('Admin/Blog/Index', [
             'blogs' => Blog::latest()->get(),
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('Admin/CreateBlog');
+        return Inertia::render('Admin/Blog/Create');
     }
 
     public function store(Request $request)
@@ -45,7 +45,7 @@ class BlogController extends Controller
 
     public function edit($id)
     {
-        return Inertia::render('Admin/EditBlog', [
+        return Inertia::render('Admin/Blog/Edit', [
             'blog' => Blog::findOrFail($id),
         ]);
     }

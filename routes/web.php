@@ -11,7 +11,6 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\KYCController;
 use App\Http\Controllers\Admin\TransactionController;
 use Illuminate\Support\Facades\Route;
-use Spatie\Permission\Middleware\RoleMiddleware;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -33,7 +32,7 @@ Route::middleware('auth')->group(function () {
 });
 
 
-Route::middleware('auth')->prefix('admin')->group(function () {
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/sections', [SectionController::class, 'index'])->name('admin.sections');
     Route::post('/sections/{id}/update', [SectionController::class, 'update']);
