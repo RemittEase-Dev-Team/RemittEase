@@ -19,7 +19,7 @@ const LandingPage: React.FC = () => {
   return (
     <div className="bg-dark-navy text-soft-white font-poppins">
       <Head title="RemittEase - Fast, Low-Cost, Secure Remittances" />
-      <NavBarRemittEase auth={auth} /> {/* Passing auth to NavBarRemittEase */}
+      <NavBarRemittEase/>
       <HeroSectionRemittEase />
       <AboutSection />
       <FeaturesSection />

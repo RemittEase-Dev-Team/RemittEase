@@ -1,15 +1,17 @@
 <?php
 
+
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
-use App\Http\Controllers\SectionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\KYCController;
-use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\ManageTransactionController;
+use App\Http\Controllers\Admin\CurrencyController;
+use App\Http\Controllers\Admin\SectionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -23,11 +25,18 @@ Route::get('/', function () {
 });
 
 
-Route::middleware('auth')->group(function () {
+Route::middleware([
+    'auth',
+    'verified',
+    // 'kyc.verified'
+    ])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+    Route::get('/kyc', [App\Http\Controllers\KYCController::class, 'show'])->name('kyc.view');
+    Route::post('/kyc/start', [App\Http\Controllers\KYCController::class, 'initiateKYC'])->name('kyc.start');
+    Route::post('/kyc/skip', [App\Http\Controllers\KYCController::class, 'skipKYC'])->name('kyc.skip');
 
 });
 
@@ -39,9 +48,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/kyc', [KYCController::class, 'index'])->name('admin.kyc');
     Route::get('/kyc/{id}/approve', [KYCController::class, 'approve'])->name('admin.kyc.approve');
     Route::get('/kyc/{id}/reject', [KYCController::class, 'reject'])->name('admin.kyc.reject');
-    Route::get('/transactions', [TransactionController::class, 'index'])->name('admin.transactions');
-    Route::get('/transactions/{id}/approve', [TransactionController::class, 'approve'])->name('admin.transactions.approve');
-    Route::get('/transactions/{id}/reject', [TransactionController::class, 'reject'])->name('admin.transactions.reject');
+    Route::get('/transactions', [ManageTransactionController::class, 'index'])->name('admin.transactions');
+    Route::get('/transactions/{id}/approve', [ManageTransactionController::class, 'approve'])->name('admin.transactions.approve');
+    Route::get('/transactions/{id}/reject', [ManageTransactionController::class, 'reject'])->name('admin.transactions.reject');
     Route::get('/blogs', [BlogController::class, 'index'])->name('admin.blogs');
     Route::get('/blogs/create', [BlogController::class, 'create'])->name('admin.blogs.create');
     Route::post('/blogs', [BlogController::class, 'store'])->name('admin.blogs.store');
@@ -55,6 +64,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('admin.users');
     Route::get('/users/{id}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
     Route::get('/users/{id}/reject', [UserController::class, 'reject'])->name('admin.users.reject');
+    Route::get('/currencies', [CurrencyController::class, 'index'])->name('admin.currencies');
 
 });
 

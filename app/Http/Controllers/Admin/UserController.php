@@ -18,7 +18,7 @@ class UserController extends Controller
     {
         $users = User::with(['wallet', 'kyc'])->select('id', 'name', 'email', 'role', 'created_at')->get();
 
-        return Inertia::render('Admin/Users', [
+        return Inertia::render('Admin/User/Index', [
             'users' => $users,
         ]);
     }
@@ -28,9 +28,9 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::with(['wallet', 'kyc'])->findOrFail($id);
+        $user = User::with(['wallet', 'kyc', 'transactions'])->findOrFail($id);
 
-        return Inertia::render('Admin/UserDetails', [
+        return Inertia::render('Admin/User/Show', [
             'user' => $user,
         ]);
     }
@@ -42,7 +42,7 @@ class UserController extends Controller
     {
         $user = User::with(['wallet', 'kyc'])->findOrFail($id);
 
-        return Inertia::render('Admin/EditUser', [
+        return Inertia::render('Admin/User/Edit', [
             'user' => $user,
         ]);
     }

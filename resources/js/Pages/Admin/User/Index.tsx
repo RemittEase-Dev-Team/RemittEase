@@ -6,7 +6,7 @@ interface User {
     id: number;
     name: string;
     email: string;
-    role: string;
+    role: "admin" | "staff" | "user";
     kyc_status: string;
     wallet_balance: number;
 }
@@ -18,8 +18,8 @@ interface UsersProps {
 const Users = ({ users }: UsersProps) => {
     const { patch } = useForm();
 
-    const handleRoleChange = (id: number, role: string) => {
-        patch(`/admin/users/${id}/update-role`, { role });
+    const handleRoleChange = (id: number, role: User['role']) => {
+        patch(`/admin/users/${id}/update-role`, { data: { role } } as any);
     };
 
     return (
@@ -47,7 +47,7 @@ const Users = ({ users }: UsersProps) => {
                                     <td className="p-2">
                                         <select
                                             value={user.role}
-                                            onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                                            onChange={(e) => handleRoleChange(user.id, e.target.value as User['role'])}
                                             className="p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
                                         >
                                             <option value="admin">Admin</option>
