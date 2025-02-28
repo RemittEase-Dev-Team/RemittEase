@@ -40,7 +40,7 @@ const Blogs = ({ blogs }: BlogProps) => {
                                     <td className="p-2">{blog.title}</td>
                                     <td className="p-2">{blog.author}</td>
                                     <td className="p-2">
-                                        <Link href={`/admin/blogs/edit/${blog.id}`} className="text-blue-500 hover:underline mr-4">
+                                        <Link href={`/admin/blogs/${blog.id}/edit`} className="text-blue-500 hover:underline mr-4">
                                             Edit
                                         </Link>
                                         <button
