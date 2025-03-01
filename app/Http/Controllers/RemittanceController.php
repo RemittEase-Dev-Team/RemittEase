@@ -19,7 +19,7 @@ class RemittanceController extends Controller
             'business_id' => env('LINKIO_BUSINESS_ID'),
             'link_tag' => Auth::user()->id,
             'type' => 'deposit',
-            'currency' => 'USD',
+            'currency' => 'USD', 
             'amount' => $request->amount,
         ]);
 

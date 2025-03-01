@@ -2,6 +2,7 @@
 
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RemittanceController;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -37,7 +38,7 @@ Route::middleware([
     Route::get('/kyc', [App\Http\Controllers\KYCController::class, 'show'])->name('kyc.view');
     Route::post('/kyc/start', [App\Http\Controllers\KYCController::class, 'initiateKYC'])->name('kyc.start');
     Route::post('/kyc/skip', [App\Http\Controllers\KYCController::class, 'skipKYC'])->name('kyc.skip');
-
+    Route::post('/deposit', [RemittanceController::class, 'loadCash'])->name('deposit');
 });
 
 
