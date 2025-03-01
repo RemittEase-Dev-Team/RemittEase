@@ -2,7 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Head, useForm } from "@inertiajs/react";
 import AdminLayout from "@/Layouts/AdminLayout";
 
-const EditBlog = ({ blog }) => {
+interface Blog {
+    title: string;
+    content: string;
+    author_id: string;
+    image: string;
+    tags: string;
+    id: number;
+}
+
+const EditBlog = ({ blog }: { blog: Blog }) => {
     const { data, setData, post, processing } = useForm({
         title: blog.title || "",
         content: blog.content || "",
