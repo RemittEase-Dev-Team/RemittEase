@@ -103,7 +103,7 @@ export default function Dashboard() {
 
   const handleDeposit = () => {
     if (selectedCurrency && amount) {
-      console.log(`Depositing ${amount} ${selectedCurrency?.code}`);
+      console.log(`Depositing ooo`);
       setDepositModal(false);
     } else {
       alert('Please select a currency and enter an amount.');
