@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Wallet;
+use Inertia\Inertia;
 
 class RemittanceController extends Controller
 {
@@ -29,9 +30,18 @@ class RemittanceController extends Controller
             $wallet->balance += $request->amount;
             $wallet->save();
 
-            return response()->json(['success' => true, 'message' => 'Cash loaded successfully.']);
+                return Inertia::render('Wallet/Show', [
+                    'success' => true,
+                    'message' => 'Amount deposited successfully',
+                ]);
+
+            // return response()->json(['success' => true, 'message' => 'Cash loaded successfully.']);
         } else {
-            return response()->json(['success' => false, 'error' => 'Transaction failed.'], 500);
+            // return response()->json(['success' => false, 'error' => 'Transaction failed.'], 500);
+            return Inertia::render('Wallet/Show', [
+                'success' => false,
+                'message' => 'Deposit failed',
+            ]);
         }
     }
 

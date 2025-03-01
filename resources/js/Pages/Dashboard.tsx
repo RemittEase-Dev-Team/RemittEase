@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, useForm } from '@inertiajs/react';
+import { FormEventHandler, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChevronDown, ArrowUp, ArrowDown, Plus, Search, User, Copy } from 'lucide-react';
 import { SiStellar } from 'react-icons/si';
@@ -12,6 +12,11 @@ import { FaPoundSign } from "react-icons/fa";
 type CurrencyCode = 'XLM' | 'USD' | 'NGN' | 'EUR' | 'GBP';
 
 export default function Dashboard() {
+  const {data, setData, post} = useForm({
+    type: '',
+    currency: '',
+    amount: ''
+  })
   const [currencyMain, setCurrencyMain] = useState<CurrencyCode>('XLM');
   const [activeTimeFilter, setActiveTimeFilter] = useState('Today');
   const [depositModal, setDepositModal] = useState(false)
@@ -101,15 +106,27 @@ export default function Dashboard() {
     alert('Address copied to clipboard!');
   };
 
-  const handleDeposit = () => {
+  const handleDeposit: FormEventHandler = async (e) => {
+    e.preventDefault()
+
     if (selectedCurrency && amount) {
-      console.log(`Depositing ooo`);
+      try{
+        const response = post(route('deposit', {
+          currency: selectedCurrency.code,
+          amount,
+        }
+      ))
+      console.log("response: ", response)
+      }catch(err){
+        console.log(err)
+      }
       setDepositModal(false);
     } else {
       alert('Please select a currency and enter an amount.');
     }
   };
 
+  // console.log("selected Currency: ", selectedCurrency)
 
   return (
     <AuthenticatedLayout
@@ -226,10 +243,13 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="flex gap-3 mt-4">
-                <button onClick={() => setDepositModal(true)} className="bg-blue-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
+                <button onClick={() => setDepositModal(true)} className="bg-yellow-700 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
                   Deposit
                 </button>
-                <button className="bg-green-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
+                <button onClick={() => setDepositModal(false)} className="bg-blue-700 hover:bg-blue-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
+                  Withdraw
+                </button>
+                <button className="bg-green-700 hover:bg-green-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
                   Send
                 </button>
               </div>
