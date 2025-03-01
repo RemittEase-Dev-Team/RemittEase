@@ -8,6 +8,11 @@ use Soneso\StellarSDK\StellarSDK;
 use Soneso\StellarSDK\TransactionBuilder;
 use Soneso\StellarSDK\Xdr\XdrMemo;
 use Soneso\StellarSDK\Xdr\XdrMemoType;
+use Soneso\StellarSDK\Asset;
+use Soneso\StellarSDK\AssetTypeCreditAlphaNum4;
+use Soneso\StellarSDK\PaymentOperationBuilder;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class StellarService
 {
@@ -26,20 +31,27 @@ class StellarService
      */
     public function createAccount()
     {
-        $keypair = KeyPair::random();
-        $publicKey = $keypair->getAccountId();
-        $secretSeed = $keypair->getSecretSeed();
+        try {
+            $keypair = KeyPair::random();
+            $publicKey = $keypair->getAccountId();
+            $secretSeed = $keypair->getSecretSeed();
 
-        // Fund the account using Friendbot for testnet
-        if (config('services.stellar.network') === 'testnet') {
-            $friendbotUrl = "https://friendbot.stellar.org/?addr={$publicKey}";
-            file_get_contents($friendbotUrl);
+            // Fund the account using Friendbot for testnet
+            if (config('services.stellar.network') === 'testnet') {
+                $friendbotUrl = "https://friendbot.stellar.org/?addr={$publicKey}";
+                file_get_contents($friendbotUrl);
+            }
+
+            Log::info("Account created: {$publicKey}");
+
+            return [
+                'public_key' => $publicKey,
+                'secret_seed' => $secretSeed,
+            ];
+        } catch (Exception $e) {
+            Log::error("Account creation failed: " . $e->getMessage());
+            throw new Exception("Failed to create account");
         }
-
-        return [
-            'public_key' => $publicKey,
-            'secret_seed' => $secretSeed,
-        ];
     }
 
     /**
@@ -50,7 +62,12 @@ class StellarService
      */
     public function getAccount(string $publicKey)
     {
-        return $this->sdk->requestAccount($publicKey);
+        try {
+            return $this->sdk->requestAccount($publicKey);
+        } catch (Exception $e) {
+            Log::error("Failed to retrieve account: " . $e->getMessage());
+            throw new Exception("Failed to retrieve account details");
+        }
     }
 
     /**
@@ -65,20 +82,29 @@ class StellarService
      */
     public function sendPayment(string $sourceSecret, string $destinationPublicKey, string $amount, string $assetCode = 'XLM', string $assetIssuer = null)
     {
-        $sourceKeypair = KeyPair::fromSecretSeed($sourceSecret);
-        $sourceAccount = $this->sdk->requestAccount($sourceKeypair->getAccountId());
+        try {
+            $sourceKeypair = KeyPair::fromSecretSeed($sourceSecret);
+            $sourceAccount = $this->sdk->requestAccount($sourceKeypair->getAccountId());
 
-        $asset = $assetCode === 'XLM' ? Asset::native() : new AssetTypeCreditAlphaNum4($assetCode, $assetIssuer);
+            $asset = $assetCode === 'XLM' ? Asset::native() : new AssetTypeCreditAlphaNum4($assetCode, $assetIssuer);
 
-        $paymentOperation = (new PaymentOperationBuilder($destinationPublicKey, $asset, $amount))->build();
+            $paymentOperation = (new PaymentOperationBuilder($destinationPublicKey, $asset, $amount))->build();
 
-        $transaction = (new TransactionBuilder($sourceAccount))
-            ->addOperation($paymentOperation)
-            ->addMemo(new XdrMemo(XdrMemoType::MEMO_TEXT, 'Payment'))
-            ->build();
+            $transaction = (new TransactionBuilder($sourceAccount))
+                ->addOperation($paymentOperation)
+                ->addMemo(new XdrMemo(XdrMemoType::MEMO_TEXT, 'Payment'))
+                ->build();
 
-        $transaction->sign($sourceKeypair, Network::testnet());
+            $transaction->sign($sourceKeypair, Network::testnet());
 
-        return $this->sdk->submitTransaction($transaction);
+            $response = $this->sdk->submitTransaction($transaction);
+
+            Log::info("Payment sent: {$amount} {$assetCode} to {$destinationPublicKey}");
+
+            return $response;
+        } catch (Exception $e) {
+            Log::error("Payment failed: " . $e->getMessage());
+            throw new Exception("Failed to send payment");
+        }
     }
 }
