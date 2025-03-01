@@ -11,7 +11,7 @@ class SectionController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Admin/Sections', [
+        return Inertia::render('Admin/Sections/Index', [
             'sections' => Section::all()
         ]);
     }

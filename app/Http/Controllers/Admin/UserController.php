@@ -16,7 +16,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with(['wallet', 'kyc'])->select('id', 'name', 'email', 'role', 'created_at')->get();
+        $users = User::with(['wallet', 'kyc'])->select('id', 'name', 'email', 'created_at')->get();
 
         return Inertia::render('Admin/User/Index', [
             'users' => $users,

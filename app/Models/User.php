@@ -48,4 +48,51 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function wallet()
+    {
+        return $this->hasMany(Wallet::class);
+    }
+
+    public function kyc()
+    {
+        return $this->hasOne(KYC::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function isAdmin()
+    {
+        return $this->hasRole('admin');
+    }
+
+    public function isUser()
+    {
+        return $this->hasRole('user');
+    }
+
+    public function isKYCVerified()
+    {
+        return $this->kyc_status === 'verified';
+    }
+
+    public function isKYCPending()
+    {
+        return $this->kyc_status === 'pending';
+    }
+
+    public function isKYCRejected()
+    {
+        return $this->kyc_status === 'rejected';
+    }
+
+    public function isUnverified()
+    {
+        return $this->kyc_status === 'unverified';
+    }
+
+
 }
