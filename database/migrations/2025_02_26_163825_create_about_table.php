@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sections', function (Blueprint $table) {
+        Schema::create('abouts', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique(); // Section name: Hero, Features, Roadmap, etc.
-            $table->json('content'); // JSON format for structured data
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->text('mission');
+            $table->text('vision');
+            $table->json('core_values');
+            $table->json('sub_1_fees');
             $table->timestamps();
         });
     }
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sections');
+        Schema::dropIfExists('abouts');
     }
 };

@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-
+import { usePage, useForm } from '@inertiajs/react';
+import { PageProps } from '@/types';
+import { LogOut } from 'lucide-react';
 const NavBarRemittEase: React.FC = () => {
   const [isSticky, setIsSticky] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { auth } = usePage<PageProps>().props;
+  const { post } = useForm();
 
   // Keep the navbar sticky when scrolled
   useEffect(() => {
@@ -14,9 +18,13 @@ const NavBarRemittEase: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleLogout = () => {
+    post('/logout');
+  };
+
   return (
     <nav
-      className={`w-full flex justify-between items-center py-4 px-8 z-30 bg-dark-navy text-white transition-colors ${
+      className={`w-full max-w-7xl mx-auto flex justify-between items-center py-4  z-30 bg-dark-navy text-white transition-colors ${
         isSticky ? 'sticky top-0' : ''
       }`}
     >
@@ -46,14 +54,35 @@ const NavBarRemittEase: React.FC = () => {
             Contact
           </a>
         </li>
-        <li>
-          <a
-            href="/login"
-            className="bg-yellow-400 hover:bg-orange-400 px-4 py-2 rounded-full text-dark-navy font-semibold transition-colors"
-          >
-            Login or Register
-          </a>
-        </li>
+        {auth?.user ? (
+            <>
+          <li>
+            <a
+              href="/dashboard"
+              className="bg-yellow-400 hover:bg-orange-400 px-4 py-2 rounded-full text-dark-navy font-semibold transition-colors"
+            >
+              Dashboard
+            </a>
+          </li>
+          <li>
+            <a
+              onClick={handleLogout}
+              className="bg-red-400 hover:bg-red-500 px-2 py-1 rounded-full text-white font-semibold transition-colors flex items-center"
+            >
+              <LogOut className="mr-2" />
+            </a>
+          </li>
+          </>
+        ) : (
+          <li>
+            <a
+              href="/login"
+              className="bg-yellow-400 hover:bg-orange-400 px-4 py-2 rounded-full text-dark-navy font-semibold transition-colors"
+            >
+              Login or Register
+            </a>
+          </li>
+        )}
       </ul>
 
       {/* Hamburger Button (mobile only) */}
@@ -141,17 +170,28 @@ const NavBarRemittEase: React.FC = () => {
                 Contact
               </a>
             </li>
-            @auth
-            <li>
+            {auth?.user ? (
+            <>
+              <li>
                 <a
-                href="/dashboard"
-                className="block bg-yellow-400 hover:bg-orange-400 px-4 py-2 rounded-full text-dark-navy text-center font-semibold transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                 Dashboard
-              </a>
-            </li>
-            @else
+                  href="/dashboard"
+                  className="block bg-yellow-400 hover:bg-orange-400 px-4 py-2 rounded-full text-dark-navy text-center font-semibold transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </a>
+              </li>
+              <li>
+                <button
+                  onClick={handleLogout}
+                  className="block bg-red-400 hover:bg-red-500 px-4 py-2 rounded-full text-white text-center font-semibold transition-colors flex items-center justify-center"
+                >
+                  <LogOut className="mr-2" />
+                  Logout
+                </button>
+              </li>
+            </>
+            ) : (
             <li>
               <a
                 href="/login"
@@ -161,7 +201,7 @@ const NavBarRemittEase: React.FC = () => {
                 Login / Register
               </a>
             </li>
-            @endauth
+            )}
           </ul>
         </div>
       )}

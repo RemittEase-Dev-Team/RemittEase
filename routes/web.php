@@ -13,18 +13,17 @@ use App\Http\Controllers\Admin\KYCController;
 use App\Http\Controllers\Admin\ManageTransactionController;
 use App\Http\Controllers\Admin\CurrencyController;
 use App\Http\Controllers\Admin\SectionController;
+use App\Http\Controllers\Admin\HeroController;
+use App\Http\Controllers\Admin\FeaturesController;
+use App\Http\Controllers\Admin\RoadmapController;
+use App\Http\Controllers\Admin\AboutController;
+use App\Http\Controllers\Admin\QuestRewardController;
+use App\Http\Controllers\Admin\TeamController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\HomeController;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
-
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::middleware([
     'auth',
@@ -67,7 +66,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/users/{id}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
     Route::get('/users/{id}/reject', [UserController::class, 'reject'])->name('admin.users.reject');
     Route::get('/currencies', [CurrencyController::class, 'index'])->name('admin.currencies');
-
+    Route::resource('heroes', HeroController::class);
+    Route::resource('features', FeaturesController::class);
+    Route::resource('roadmaps', RoadmapController::class);
+    Route::resource('abouts', AboutController::class);
+    Route::resource('blogs', BlogController::class);
+    Route::resource('quest-rewards', QuestRewardController::class);
+    Route::resource('teams', TeamController::class);
 });
 
 

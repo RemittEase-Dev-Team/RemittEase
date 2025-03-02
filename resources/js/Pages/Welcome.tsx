@@ -1,7 +1,6 @@
 import React from 'react';
 import { Head } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react'; // Importing usePage
-import Button from '@/Components/ui/Button';
 import NavBarRemittEase from '@/Components/NavBarRemittEase';
 import HeroSectionRemittEase from '@/Components/Sections/HeroSectionRemittEase';
 import AboutSection from '@/Components/Sections/AboutSection';
@@ -14,19 +13,25 @@ import Footer from '@/Components/Footer';
 import { PageProps } from '@/types'; // Importing PageProps instead of Auth
 
 const LandingPage: React.FC = () => {
-  const { auth } = usePage<PageProps>().props; // Using usePage to get auth with correct type
+  const { auth, questRewards, heroes, features, roadmaps, abouts, blogs, teams } = usePage<PageProps>().props; // Using usePage to get auth with correct type
 
+  console.log('features', features);
+  console.log('heroes', heroes);
+  console.log('roadmaps', roadmaps);
+  console.log('abouts', abouts);
+  console.log('blogs', blogs);
+  console.log('teams', teams);
   return (
     <div className="bg-dark-navy text-soft-white font-poppins">
       <Head title="RemittEase - Fast, Low-Cost, Secure Remittances" />
-      <NavBarRemittEase/>
+      <NavBarRemittEase />
       <HeroSectionRemittEase />
       <AboutSection />
       <FeaturesSection />
       <RoadMapSection />
       <TeamSection />
       <BlogSection />
-      <QuestRewardsSection />
+      <QuestRewardsSection questRewards={questRewards} />
       <Footer />
     </div>
   );
