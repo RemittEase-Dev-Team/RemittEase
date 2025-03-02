@@ -20,19 +20,11 @@ class SectionController extends Controller
         return Inertia::render('Admin/Sections/Index', [
             'heroes' => Hero::all(),
             'features' => Features::all(),
-            'roadmaps' => Roadmap::all(),
             'abouts' => About::all(),
-            'blogs' => Blog::all(),
+            'questRewards' => QuestReward::all(),
             'teams' => Team::all(),
         ]);
     }
 
-    public function update(Request $request, $id)
-    {
-        $section = Section::findOrFail($id);
-        if (!empty($request->content)) {
-            $section->update(['content' => json_encode($request->content)]);
-        }
-        return redirect()->back()->with('success', 'Section updated successfully.');
-    }
+   
 }

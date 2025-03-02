@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Award, CheckCircle2, Star } from 'lucide-react';
+import * as lucideIcons from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Quest {
@@ -7,7 +7,7 @@ interface Quest {
   title: string;
   description: string;
   rewardPoints: number;
-  icon?: React.ReactNode;
+  icon?: string; // Changed to string to represent icon name
   progress: number; // 0 to 100
 }
 
@@ -44,6 +44,7 @@ const QuestRewardsSection: React.FC<QuestRewardsSectionProps> = ({ questRewards 
           {questRewards.map((quest) => {
             const isClaimed = claimedQuests.includes(quest.id);
             const isComplete = quest.progress >= 100;
+            const IconComponent = quest.icon ? lucideIcons[quest.icon as keyof typeof lucideIcons] : null;
 
             return (
               <motion.div
@@ -51,7 +52,7 @@ const QuestRewardsSection: React.FC<QuestRewardsSectionProps> = ({ questRewards 
                 whileHover={{ scale: 1.03 }}
                 className="bg-black bg-opacity-30 rounded-lg shadow-lg p-6 flex flex-col items-center transition-transform"
               >
-                {quest.icon && <div className="mb-4">{quest.icon}</div>}
+                {IconComponent && React.createElement(IconComponent as React.ElementType, { className: "mb-4" })}
 
                 <h3 className="text-xl font-bold text-neon-cyan mb-1">{quest.title}</h3>
                 <p className="text-cool-gray text-sm mb-4">{quest.description}</p>
