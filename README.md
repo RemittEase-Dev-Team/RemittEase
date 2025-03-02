@@ -1,4 +1,4 @@
-<p align="center"><a href="https://remitease.com" target="_blank"><img src="https://raw.githubusercontent.com/remitease/remitease/master/assets/logo.png" width="400" alt="RemittEase Logo"></a></p>
+<p align="center"><a href="https://remitease.com" target="_blank"><img src="https://remittease.com/svg/logo-blue.svg" width="400" alt="RemittEase Logo"></a></p>
 
 <p align="center">
 <a href="https://github.com/remitease/remitease/actions"><img src="https://github.com/remitease/remitease/workflows/tests/badge.svg" alt="Build Status"></a>
