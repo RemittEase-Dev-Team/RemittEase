@@ -442,7 +442,7 @@ export default function Dashboard() {
                 <div className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-blue-600 dark:bg-blue-400 text-white px-3 py-1 rounded text-sm z-10">
                   $3,000
                 </div>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="150%">
                   <LineChart data={chartData}>
                     <XAxis
                       dataKey="time"
