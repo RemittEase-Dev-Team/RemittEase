@@ -12,7 +12,7 @@ import { FaPoundSign } from "react-icons/fa";
 type CurrencyCode = 'XLM' | 'USD' | 'NGN' | 'EUR' | 'GBP';
 
 export default function Dashboard() {
-  const {data, setData, post} = useForm({
+  const { data, setData, post } = useForm({
     type: '',
     currency: '',
     amount: ''
@@ -20,9 +20,11 @@ export default function Dashboard() {
   const [currencyMain, setCurrencyMain] = useState<CurrencyCode>('XLM');
   const [activeTimeFilter, setActiveTimeFilter] = useState('Today');
   const [depositModal, setDepositModal] = useState(false)
+  const [withdrawalModal, setWithdrawalModal] = useState(false)
   const [search, setSearch] = useState('')
   const [selectedCurrency, setSelectedCurrency] = useState<any | object | null>(null)
   const [amount, setAmount] = useState('');
+  const [walletAddress, setWalletAddress] = useState('')
 
 
   const [balance, setBalance] = useState({
@@ -110,21 +112,60 @@ export default function Dashboard() {
     e.preventDefault()
 
     if (selectedCurrency && amount) {
-      try{
+      try {
         const response = post(route('deposit', {
           currency: selectedCurrency.code,
           amount,
         }
-      ))
-      console.log("response: ", response)
-      }catch(err){
+        ))
+        console.log("response: ", response)
+      } catch (err) {
         console.log(err)
       }
-      setDepositModal(false);
+      setDepositModal(false)
+      setWithdrawalModal(false)
+      setSearch('')
+      setSelectedCurrency(null)
+      setAmount('')
+      setWalletAddress('')
     } else {
       alert('Please select a currency and enter an amount.');
     }
   };
+
+  const handleWithdrawal: FormEventHandler = async (e) => {
+    e.preventDefault()
+
+    if (selectedCurrency && amount) {
+      try {
+        const response = post(route('withdraw', {
+          currency: selectedCurrency.code,
+          amount,
+        }
+        ))
+        console.log("response: ", response)
+      } catch (err) {
+        console.log(err)
+      }
+      setDepositModal(false)
+      setWithdrawalModal(false)
+      setSearch('')
+      setSelectedCurrency(null)
+      setAmount('')
+      setWalletAddress('')
+    } else {
+      alert('Please select a currency and enter an amount.');
+    }
+  };
+
+  const CloseModal = () => {
+    setDepositModal(false)
+    setWithdrawalModal(false)
+    setSearch('')
+    setSelectedCurrency(null)
+    setAmount('')
+    setWalletAddress('')
+  }
 
   // console.log("selected Currency: ", selectedCurrency)
 
@@ -144,26 +185,29 @@ export default function Dashboard() {
     >
       {depositModal && (
         <section className='absolute w-full h-screen inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center'>
-          <div className='bg-white rounded-md p-10 w-[25%]'>
-            <h2 className='uppercase font-bold mb-4 text-center text-2xl'>Deposit Crypto</h2>
+          <div className='bg-white dark:bg-gray-800 rounded-md p-6 w-[25%]'>
+            <h2 className='uppercase font-bold mb-4 text-center text-2xl dark:text-gray-100'>Deposit Crypto</h2>
 
             <div className='mb-4'>
-              <h3 className='font-semibold mb-2'>Select Currency</h3>
-              <input
-                type='text'
-                placeholder='Search...'
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className='w-full p-2 border rounded-md mb-2'
-              />
-              <div className='max-h-40 overflow-y-auto'>
+              <h3 className='font-semibold mb-2 dark:text-gray-100'>Select Currency</h3>
+              <div className='flex items-center border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 mb-2'>
+                <Search size={18} className='text-gray-400 mr-2' />
+                <input
+                  type='text'
+                  placeholder='Search...'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className='border-none outline-none w-full bg-transparent dark:text-gray-100 dark:bg-gray-800'
+                />
+              </div>
+              <div className='max-h-40 overflow-y-auto custom-scrollbar' >
                 {Currency.filter((currency) =>
                   currency.name.toLowerCase().includes(search.toLowerCase())
                 ).map((currency: any, index: number) => (
                   <div
                     key={index}
-                    onClick={() =>{ setSearch(currency.name); setSelectedCurrency(currency) }}
-                    className={`p-2 hover:bg-gray-100 cursor-pointer ${selectedCurrency?.code === currency.code ? 'bg-gray-200' : ''
+                    onClick={() => { setSearch(currency.name); setSelectedCurrency(currency) }}
+                    className={`p-2 hover:bg-gray-100 cursor-pointer text-white hover:text-black ${selectedCurrency?.code === currency.code ? 'bg-gray-500 text-black' : ''
                       }`}
                   >
                     {currency.flag} {currency.name} ({currency.code})
@@ -174,19 +218,19 @@ export default function Dashboard() {
 
             {selectedCurrency && (
               <div className='mb-4'>
-                <h3 className='font-semibold mb-2'>Enter Amount</h3>
+                <h3 className='font-semibold mb-2 text-white'>Enter Amount</h3>
                 <input
                   type='number'
                   placeholder='Amount'
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className='w-full p-2 border rounded-md'
+                  className='w-full p-2 border rounded-md bg-transparent text-white'
                 />
               </div>
             )}
             <div className='w-full flex items-center justify-between'>
               <button
-                onClick={() => setDepositModal(false)}
+                onClick={CloseModal}
                 className='bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600'
               >
                 Close
@@ -202,15 +246,89 @@ export default function Dashboard() {
           </div>
         </section>
       )}
+
+      {withdrawalModal && (
+        <section className='absolute w-full h-screen inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center'>
+          <div className='bg-white dark:bg-gray-800 rounded-md p-6 w-[25%]'>
+            <h2 className='uppercase font-bold mb-4 text-center text-2xl dark:text-gray-100'>Withdraw Crypto</h2>
+            <div className='mb-4'>
+              <h3 className='font-semibold mb-2 dark:text-gray-100'>Select Currency</h3>
+              <div className='flex items-center border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 mb-2'>
+                <Search size={18} className='text-gray-400 mr-2' />
+                <input
+                  type='text'
+                  placeholder='Search...'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className='border-none outline-none w-full bg-transparent dark:text-gray-100 dark:bg-gray-800'
+                />
+              </div>
+              <div className='max-h-40 overflow-y-auto custom-scrollbar' >
+                {Currency.filter((currency) =>
+                  currency.name.toLowerCase().includes(search.toLowerCase())
+                ).map((currency: any, index: number) => (
+                  <div
+                    key={index}
+                    onClick={() => { setSearch(currency.name); setSelectedCurrency(currency) }}
+                    className={`p-2 hover:bg-gray-100 cursor-pointer text-white hover:text-black ${selectedCurrency?.code === currency.code ? 'bg-gray-500 text-black' : ''
+                      }`}
+                  >
+                    {currency.flag} {currency.name} ({currency.code})
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {selectedCurrency && (
+              <div className='mb-4'>
+                <h3 className='font-semibold mb-2 text-white'>Enter Amount</h3>
+                <input
+                  type='number'
+                  placeholder='Amount'
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className='w-full p-2 border rounded-md bg-transparent text-white'
+                />
+              </div>
+            )}
+
+            {selectedCurrency && (
+              <div className='mb-4'>
+                <h3 className='font-semibold mb-2 dark:text-gray-100'>Wallet Address</h3>
+                <input
+                  type='text'
+                  placeholder='Paste wallet address'
+                  value={walletAddress}
+                  onChange={(e) => setWalletAddress(e.target.value)}
+                  className='w-full p-2 text-white border border-gray-200 dark:border-gray-700 rounded-md dark:text-gray-100 dark:bg-gray-800'
+                />
+              </div>
+            )}
+
+            <div className='w-full flex items-center justify-between'>
+              <button
+                onClick={CloseModal}
+                className='bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md'
+              >
+                Close
+              </button>
+              <button
+                onClick={handleWithdrawal}
+                className='bg-blue-950 hover:bg-blue-900 text-white px-4 py-2 rounded-md'
+              >
+                Withdraw
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
       <Head title="RemittEase Dashboard" />
 
       <div className="py-12 dark:bg-gray-900 bg-gray-100">
         <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
 
 
-          {/* Main Content */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Balance Card */}
             <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl p-5 shadow-sm md:col-span-1 lg:col-span-1">
               <div className="bg-gradient-to-r from-blue-100 to-orange-300 dark:bg-gradient-to-r dark:from-blue-900 dark:to-orange-700 rounded-lg p-3">
                 <div className="flex justify-between items-center mb-3">
@@ -246,7 +364,7 @@ export default function Dashboard() {
                 <button onClick={() => setDepositModal(true)} className="bg-yellow-700 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
                   Deposit
                 </button>
-                <button onClick={() => setDepositModal(false)} className="bg-blue-700 hover:bg-blue-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
+                <button onClick={() => setWithdrawalModal(true)} className="bg-blue-700 hover:bg-blue-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
                   Withdraw
                 </button>
                 <button className="bg-green-700 hover:bg-green-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">

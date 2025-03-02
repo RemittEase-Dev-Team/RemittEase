@@ -39,6 +39,7 @@ Route::middleware([
     Route::post('/kyc/start', [App\Http\Controllers\KYCController::class, 'initiateKYC'])->name('kyc.start');
     Route::post('/kyc/skip', [App\Http\Controllers\KYCController::class, 'skipKYC'])->name('kyc.skip');
     Route::post('/deposit', [RemittanceController::class, 'loadCash'])->name('deposit');
+    Route::post('/withdraw', [RemittanceController::class, 'withdrawFunds'])->name('withdraw');
 });
 
 
