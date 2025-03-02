@@ -4,7 +4,7 @@ import {
   Menu, X, ChevronDown, ChevronRight,
   Users, FileText, DollarSign, CheckCircle,
   Settings, Home, Globe, CreditCard,
-  RefreshCw, BarChart2, Bell
+  RefreshCw, BarChart2, Bell, ScrollText, Dock, AppWindow
 } from 'lucide-react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
@@ -58,9 +58,19 @@ export default function AdminLayout({ header, children }: PropsWithChildren<{ he
         { name: 'Revenue Reports', route: 'admin.reports.revenue', icon: <DollarSign className="w-4 h-4" /> }
       ]
     },
+    {
+        name: 'Content M.S.',
+        icon: <AppWindow className="w-5 h-5" />,
+        submenu: [
+        { name: 'Blogs', route: 'admin.blogs', icon: <FileText className="w-5 h-5" /> },
+        { name: 'Roadmap', route: 'admin.roadmaps', icon: <ScrollText className="w-5 h-5" /> },
+        { name: 'Landing Page', route: 'admin.sections', icon: <Dock className="w-5 h-5" /> },
+        { name: 'Teams', route: 'admin.teams', icon: <Users className="w-5 h-5" /> },
+
+        ]
+    },
+
     { name: 'Stellar Network', route: 'admin.stellar', icon: <CreditCard className="w-5 h-5" /> },
-    { name: 'Blogs', route: 'admin.blogs', icon: <FileText className="w-5 h-5" /> },
-    { name: 'Content Sections', route: 'admin.sections', icon: <FileText className="w-5 h-5" /> },
     { name: 'Settings', route: 'admin.settings', icon: <Settings className="w-5 h-5" /> },
   ];
 
@@ -199,7 +209,7 @@ export default function AdminLayout({ header, children }: PropsWithChildren<{ he
                   </button>
                 </Dropdown.Trigger>
                 <Dropdown.Content>
-                  <Dropdown.Link href="/profile/edit">Profile</Dropdown.Link>
+                  <Dropdown.Link href={route('profile.edit')}>Profile</Dropdown.Link>
                   <Dropdown.Link href="/logout" method="post" as="button">Log Out</Dropdown.Link>
                 </Dropdown.Content>
               </Dropdown>

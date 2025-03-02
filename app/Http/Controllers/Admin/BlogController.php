@@ -26,11 +26,14 @@ class BlogController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
             'content' => 'required|string',
         ]);
 
-        Blog::create($request->all());
+        $request->merge(['slug' => Str::slug($request->title)]);
+        $request->merge(['author' => auth()->user()->name]);
+        $request->merge(['image' => $request->file('image')->store('blogs', 'public')]);
+
+        Blog::create($request->only(['title', 'slug', 'author', 'content', 'image']));
 
         return redirect()->back()->with('success', 'Blog post created successfully.');
     }
@@ -50,7 +53,11 @@ class BlogController extends Controller
             'content' => 'required|string',
         ]);
 
-        $blog->update($request->all());
+        $request->merge(['slug' => Str::slug($request->title)]);
+        $request->merge(['author' => auth()->user()->name]);
+        $request->merge(['image' => $request->file('image')->store('blogs', 'public')]);
+        
+        $blog->update($request->only(['title', 'slug', 'author', 'content', 'image']));
 
         return redirect()->back()->with('success', 'Blog post updated successfully.');
     }

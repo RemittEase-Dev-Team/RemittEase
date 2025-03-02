@@ -11,9 +11,14 @@ class RoadmapController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Admin/Roadmap/Index', [
+        return Inertia::render('Admin/Roadmaps/Index', [
             'roadmaps' => Roadmap::all()
         ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('Admin/Roadmaps/Create');
     }
 
     public function store(Request $request)
@@ -23,7 +28,7 @@ class RoadmapController extends Controller
             'details' => 'required|string',
         ]);
 
-        Roadmap::create($request->all());
+        Roadmap::create($request->only(['quarter', 'details']));
 
         return redirect()->back()->with('success', 'Roadmap entry created successfully.');
     }
@@ -35,7 +40,7 @@ class RoadmapController extends Controller
             'details' => 'required|string',
         ]);
 
-        $roadmap->update($request->all());
+        $roadmap->update($request->only(['quarter', 'details']));
 
         return redirect()->back()->with('success', 'Roadmap entry updated successfully.');
     }

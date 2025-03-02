@@ -6,12 +6,11 @@ import EditSectionModal from '@/Components/EditSectionModal';
 interface SectionsProps {
     heroes: any[];
     features: any[];
-    roadmaps: any[];
     abouts: any[];
     questRewards: any[];
 }
 
-const Sections: React.FC<SectionsProps> = ({ heroes, features, roadmaps, abouts, questRewards }) => {
+const Sections: React.FC<SectionsProps> = ({ heroes, features, abouts, questRewards }) => {
     const [editingSection, setEditingSection] = useState<{ name: string; content: any } | null>(null);
 
     const handleEdit = (name: string, content: any) => {
@@ -32,12 +31,6 @@ const Sections: React.FC<SectionsProps> = ({ heroes, features, roadmaps, abouts,
                 <div className="bg-white p-4 rounded shadow">
                     <h3 className="text-lg font-semibold">Features</h3>
                     <button onClick={() => handleEdit('Features', features)} className="mt-2 px-4 py-2 bg-green-500 text-white rounded">
-                        Edit
-                    </button>
-                </div>
-                <div className="bg-white p-4 rounded shadow">
-                    <h3 className="text-lg font-semibold">Roadmaps</h3>
-                    <button onClick={() => handleEdit('Roadmaps', roadmaps)} className="mt-2 px-4 py-2 bg-green-500 text-white rounded">
                         Edit
                     </button>
                 </div>

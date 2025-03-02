@@ -30,6 +30,9 @@ class UserController extends Controller
     {
         $user = User::with(['wallet', 'kyc', 'transactions'])->findOrFail($id);
 
+        // Since wallet is a hasMany relationship, we need to handle it as a collection
+        $user->wallet_balance = $user->wallet->sum('balance') ?? 0;
+
         return Inertia::render('Admin/User/Show', [
             'user' => $user,
         ]);

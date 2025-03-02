@@ -63,6 +63,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings');
     Route::post('/settings/{id}/update', [SettingsController::class, 'update']);
     Route::get('/users', [UserController::class, 'index'])->name('admin.users');
+    Route::get('/users/{id}', [UserController::class, 'show'])->name('admin.users.show');
     Route::get('/users/{id}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
     Route::get('/users/{id}/reject', [UserController::class, 'reject'])->name('admin.users.reject');
     Route::get('/currencies', [CurrencyController::class, 'index'])->name('admin.currencies');
