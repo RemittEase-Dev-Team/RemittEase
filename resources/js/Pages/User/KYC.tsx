@@ -93,7 +93,7 @@ const KYC = ({ kyc_status, can_skip_kyc }: KYCProps) => {
                                 <FileUpload
                                     label="Upload Profile Photo"
                                     accept="image/*"
-                                    onChange={(file) => handleFileChange(file, "profilePhoto")}
+                                    onChange={(file: any) => handleFileChange(file, "profilePhoto")}
                                     error={errors.profilePhoto}
                                 />
                             </div>
@@ -109,7 +109,7 @@ const KYC = ({ kyc_status, can_skip_kyc }: KYCProps) => {
                                     <select
                                         value={data.idType}
                                         onChange={(e) => setData("idType", e.target.value)}
-                                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
+                                        className="w-full p-3 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700"
                                     >
                                         <option value="">Select ID Type</option>
                                         <option value="passport">Passport</option>
@@ -125,7 +125,7 @@ const KYC = ({ kyc_status, can_skip_kyc }: KYCProps) => {
                                     <FileUpload
                                         label="Upload ID Document"
                                         accept="image/*,application/pdf"
-                                        onChange={(file) => handleFileChange(file, "idDocument")}
+                                        onChange={(file: any) => handleFileChange(file, "idDocument")}
                                         error={errors.idDocument}
                                         preview={idPreview}
                                     />
@@ -137,7 +137,7 @@ const KYC = ({ kyc_status, can_skip_kyc }: KYCProps) => {
                             <FileUpload
                                 label="Proof of Address (Utility Bill, Bank Statement)"
                                 accept="image/*,application/pdf"
-                                onChange={(file) => handleFileChange(file, "proofOfAddress")}
+                                onChange={(file: any) => handleFileChange(file, "proofOfAddress")}
                                 error={errors.proofOfAddress}
                                 preview={addressPreview}
                             />
