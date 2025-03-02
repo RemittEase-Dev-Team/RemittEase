@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { ChevronDown, ArrowUp, ArrowDown, Plus, Search, User, Copy } from 'lucide-react';
 import { SiStellar } from 'react-icons/si';
 import { BiDollar } from "react-icons/bi";
@@ -443,30 +443,26 @@ export default function Dashboard() {
                   $3,000
                 </div>
                 <ResponsiveContainer width="100%" height="150%">
-                  <LineChart data={chartData}>
-                    <XAxis
-                      dataKey="time"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <YAxis
-                      domain={[0, 5000]}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 12 }}
-                      width={30}
-                    />
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0066ff" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#0066ff" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="time" />
+                    <YAxis />
                     <Tooltip />
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="value"
                       stroke="#0066ff"
                       strokeWidth={2}
-                      dot={false}
+                      fill="url(#colorValue)" 
+                      fillOpacity={1}
                       activeDot={{ r: 8, fill: "#fff", stroke: "#0066ff", strokeWidth: 2 }}
                     />
-                  </LineChart>
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
