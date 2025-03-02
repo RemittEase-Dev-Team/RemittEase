@@ -20,6 +20,10 @@ const UserDetails = ({ user }: UserDetailsProps) => {
     return (
         <AdminLayout>
             <Head title="User Details" />
+            <Link href="/admin/users" className="flex items-center text-blue-500 hover:underline mt-4 ml-4">
+                    <ChevronLeft className="w-5 h-5 mr-2" />
+                    Back to Users
+                </Link>
             <div className="p-6 bg-gray-100 dark:bg-gray-900 min-h-screen">
                 <h2 className="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-100">User Details</h2>
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-6">
@@ -60,10 +64,7 @@ const UserDetails = ({ user }: UserDetailsProps) => {
                         <div className="text-gray-500 dark:text-gray-400 text-center bg-gray-200 dark:bg-gray-700 p-4 rounded-lg">No Recent Transactions</div>
                     )}
                 </div>
-                <Link href="/admin/users" className="flex items-center text-blue-500 hover:underline mt-4 inline-block">
-                    <ChevronLeft className="w-5 h-5 mr-2" />
-                    Back to Users
-                </Link>
+
             </div>
         </AdminLayout>
     );

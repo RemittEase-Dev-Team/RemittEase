@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Head, useForm } from "@inertiajs/react";
+import { Head, useForm, Link } from "@inertiajs/react";
 import AdminLayout from "@/Layouts/AdminLayout";
+import { FaChevronLeft } from 'react-icons/fa';
 
 interface Blog {
     title: string;
@@ -47,6 +48,10 @@ const EditBlog = ({ blog }: { blog: Blog }) => {
             <div className="p-6 bg-gray-100 dark:bg-gray-900 min-h-screen flex">
                 <div className="flex-1">
                     <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">Edit Blog</h2>
+                    <Link href="/admin/blogs" className="text-blue-500 hover:underline mb-4 inline-block flex items-center">
+                        <FaChevronLeft className="mr-1" />
+                        Back to Blogs
+                    </Link>
                     <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
                         <label className="block text-gray-700 dark:text-gray-300">Title</label>
                         <input

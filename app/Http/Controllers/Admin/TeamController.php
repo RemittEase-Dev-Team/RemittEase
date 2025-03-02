@@ -6,14 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Models\Team;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 
 class TeamController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Admin/Team/Index', [
-            'teams' => Team::all()
-        ]);
+        try {
+            $teams = Team::all();
+            return Inertia::render('Admin/Teams/Index', [
+                'teams' => $teams
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching teams: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to load team members.');
+        }
+    }
+
+    public function create()
+    {
+        return Inertia::render('Admin/Teams/Create');
     }
 
     public function store(Request $request)
@@ -27,9 +39,37 @@ class TeamController extends Controller
             'socials' => 'required|json',
         ]);
 
-        Team::create($request->all());
+        try {
+            Team::create($request->all());
+            return redirect()->route('admin.teams.index')->with('success', 'Team member created successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error creating team member: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to create team member.');
+        }
+    }
 
-        return redirect()->back()->with('success', 'Team member created successfully.');
+    public function show(Team $team)
+    {
+        try {
+            return Inertia::render('Admin/Teams/Show', [
+                'team' => $team
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error showing team member: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to load team member details.');
+        }
+    }
+
+    public function edit(Team $team)
+    {
+        try {
+            return Inertia::render('Admin/Teams/Edit', [
+                'team' => $team
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error editing team member: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to load team member for editing.');
+        }
     }
 
     public function update(Request $request, Team $team)
@@ -43,15 +83,23 @@ class TeamController extends Controller
             'socials' => 'required|json',
         ]);
 
-        $team->update($request->all());
-
-        return redirect()->back()->with('success', 'Team member updated successfully.');
+        try {
+            $team->update($request->all());
+            return redirect()->route('admin.teams.index')->with('success', 'Team member updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error updating team member: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update team member.');
+        }
     }
 
     public function destroy(Team $team)
     {
-        $team->delete();
-
-        return redirect()->back()->with('success', 'Team member deleted successfully.');
+        try {
+            $team->delete();
+            return redirect()->route('admin.teams.index')->with('success', 'Team member deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error deleting team member: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to delete team member.');
+        }
     }
 }
