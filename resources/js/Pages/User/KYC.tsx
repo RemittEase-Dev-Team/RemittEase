@@ -75,7 +75,6 @@ const KYC = ({ kyc_status, can_skip_kyc }: KYCProps) => {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Profile Photo Upload */}
                         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
                                 Profile Photo
@@ -100,7 +99,6 @@ const KYC = ({ kyc_status, can_skip_kyc }: KYCProps) => {
                             </div>
                         </div>
 
-                        {/* ID Document Upload */}
                         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
@@ -135,7 +133,6 @@ const KYC = ({ kyc_status, can_skip_kyc }: KYCProps) => {
                             </div>
                         </div>
 
-                        {/* Proof of Address */}
                         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
                             <FileUpload
                                 label="Proof of Address (Utility Bill, Bank Statement)"
@@ -146,7 +143,6 @@ const KYC = ({ kyc_status, can_skip_kyc }: KYCProps) => {
                             />
                         </div>
 
-                        {/* Additional Notes */}
                         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Additional Notes
@@ -160,7 +156,6 @@ const KYC = ({ kyc_status, can_skip_kyc }: KYCProps) => {
                             />
                         </div>
 
-                        {/* Form Actions */}
                         <div className="flex flex-col sm:flex-row justify-end gap-4 mt-8">
                             {can_skip_kyc && (
                                 <button
