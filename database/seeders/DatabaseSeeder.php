@@ -17,8 +17,13 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             UserSeeder::class,
             SettingsTableSeeder::class,
-            SectionsTableSeeder::class,
             BlogsTableSeeder::class,
+            HeroSeeder::class,
+            FeaturesSeeder::class,
+            RoadmapSeeder::class,
+            AboutSeeder::class,
+            QuestRewardSeeder::class,
+            TeamSeeder::class,
         ]);
     }
 }

@@ -4,27 +4,27 @@ import { motion } from 'framer-motion';
 
 const features = [
   {
-    icon: <Globe size={40} />,
+    icon: 'Globe',
     title: 'Borderless Transfers',
     description: 'Powered by Stellar Blockchain for seamless global transactions.',
   },
   {
-    icon: <DollarSign size={40} />,
+    icon: 'DollarSign',
     title: 'Ultra-low Fees',
     description: 'Enjoy fees under 1% guaranteed for all transactions.',
   },
   {
-    icon: <CreditCard size={40} />,
+    icon: 'CreditCard',
     title: 'Multi-currency Support',
     description: 'Supports USD, EUR, NGN, and USDC for versatile transactions.',
   },
   {
-    icon: <Shield size={40} />,
+    icon: 'Shield',
     title: 'Secure Wallets',
     description: 'Easy recovery options with top-notch security.',
   },
   {
-    icon: <Zap size={40} />,
+    icon: 'Zap',
     title: 'Instant Liquidity',
     description: 'Convert funds between fiat and crypto instantly.',
   },

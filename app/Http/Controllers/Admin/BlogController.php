@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Blog;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Str;
 
@@ -13,7 +13,7 @@ class BlogController extends Controller
     public function index()
     {
         return Inertia::render('Admin/Blog/Index', [
-            'blogs' => Blog::latest()->get(),
+            'blogs' => Blog::all()
         ]);
     }
 
@@ -26,21 +26,13 @@ class BlogController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
+            'author' => 'required|string|max:255',
             'content' => 'required|string',
-            'author_id' => 'required|exists:users,id', // Updated to use author_id
         ]);
 
-        // Create the blog post with a slug
-        Blog::create([
-            'title' => $request->title,
-            'content' => $request->content,
-            'author_id' => $request->author_id,
-            'slug' => Str::slug($request->title), // Automatically generate slug
-            'excerpt' => $request->excerpt ?? '', // Optional excerpt
-            'tags' => $request->tags ?? '', // Optional tags
-        ]);
+        Blog::create($request->all());
 
-        return redirect()->route('admin.blogs')->with('success', 'Blog post created successfully.');
+        return redirect()->back()->with('success', 'Blog post created successfully.');
     }
 
     public function edit($id)
@@ -50,30 +42,23 @@ class BlogController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Blog $blog)
     {
         $request->validate([
             'title' => 'required|string|max:255',
+            'author' => 'required|string|max:255',
             'content' => 'required|string',
-            'author_id' => 'required|exists:users,id', // Updated to use author_id
         ]);
 
-        $blog = Blog::findOrFail($id);
-        $blog->update([
-            'title' => $request->title,
-            'content' => $request->content,
-            'author_id' => $request->author_id,
-            'slug' => Str::slug($request->title), // Automatically update slug
-            'excerpt' => $request->excerpt ?? $blog->excerpt, // Optional excerpt
-            'tags' => $request->tags ?? $blog->tags, // Optional tags
-        ]);
+        $blog->update($request->all());
 
-        return redirect()->route('admin.blogs')->with('success', 'Blog post updated successfully.');
+        return redirect()->back()->with('success', 'Blog post updated successfully.');
     }
 
-    public function destroy($id)
+    public function destroy(Blog $blog)
     {
-        Blog::findOrFail($id)->delete();
-        return redirect()->route('admin.blogs')->with('success', 'Blog post deleted successfully.');
+        $blog->delete();
+
+        return redirect()->back()->with('success', 'Blog post deleted successfully.');
     }
 }
