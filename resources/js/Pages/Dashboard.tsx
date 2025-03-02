@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [activeTimeFilter, setActiveTimeFilter] = useState('Today');
   const [depositModal, setDepositModal] = useState(false)
   const [withdrawalModal, setWithdrawalModal] = useState(false)
+  const [sendModal, setSendModal] = useState(false)
   const [search, setSearch] = useState('')
   const [selectedCurrency, setSelectedCurrency] = useState<any | object | null>(null)
   const [amount, setAmount] = useState('');
@@ -124,6 +125,7 @@ export default function Dashboard() {
       }
       setDepositModal(false)
       setWithdrawalModal(false)
+      setSendModal(false)
       setSearch('')
       setSelectedCurrency(null)
       setAmount('')
@@ -149,6 +151,7 @@ export default function Dashboard() {
       }
       setDepositModal(false)
       setWithdrawalModal(false)
+      setSendModal(false)
       setSearch('')
       setSelectedCurrency(null)
       setAmount('')
@@ -161,6 +164,7 @@ export default function Dashboard() {
   const CloseModal = () => {
     setDepositModal(false)
     setWithdrawalModal(false)
+    setSendModal(false)
     setSearch('')
     setSelectedCurrency(null)
     setAmount('')
@@ -322,6 +326,82 @@ export default function Dashboard() {
           </div>
         </section>
       )}
+
+      {sendModal && (
+        <section className='absolute w-full h-screen inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center'>
+          <div className='bg-white dark:bg-gray-800 rounded-md p-6 w-[25%]'>
+            <h2 className='uppercase font-bold mb-4 text-center text-2xl dark:text-gray-100'>Send Crypto</h2>
+
+            <div className='mb-4'>
+              <h3 className='font-semibold mb-2 dark:text-gray-100'>Select Currency</h3>
+              <div className='flex items-center border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 mb-2'>
+                <Search size={18} className='text-gray-400 mr-2' />
+                <input
+                  type='text'
+                  placeholder='Search...'
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className='border-none outline-none w-full bg-transparent dark:text-gray-100 dark:bg-gray-800'
+                />
+              </div>
+              <div className='max-h-40 overflow-y-auto custom-scrollbar' >
+                {Currency.filter((currency) =>
+                  currency.name.toLowerCase().includes(search.toLowerCase())
+                ).map((currency: any, index: number) => (
+                  <div
+                    key={index}
+                    onClick={() => { setSearch(currency.name); setSelectedCurrency(currency) }}
+                    className={`p-2 hover:bg-gray-100 cursor-pointer text-white hover:text-black ${selectedCurrency?.code === currency.code ? 'bg-gray-500 text-black' : ''
+                      }`}
+                  >
+                    {currency.flag} {currency.name} ({currency.code})
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {selectedCurrency && (
+              <>
+              <div className='mb-4'>
+                <h3 className='font-semibold mb-2 text-white'>Wallet Address</h3>
+                <input
+                  type='text'
+                  placeholder='0x000x...BhC'
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className='w-full p-2 border rounded-md bg-transparent text-white'
+                />
+              </div>
+              <div className='mb-4'>
+                <h3 className='font-semibold mb-2 text-white'>Enter Amount</h3>
+                <input
+                  type='number'
+                  placeholder='Amount'
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className='w-full p-2 border rounded-md bg-transparent text-white'
+                />
+              </div>
+                </>
+            )}
+            <div className='w-full flex items-center justify-between'>
+              <button
+                onClick={CloseModal}
+                className='bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600'
+              >
+                Close
+              </button>
+
+              <button
+                onClick={handleDeposit}
+                className='bg-blue-950 text-white px-4 py-2 rounded-md hover:bg-blue-900'
+              >
+                Deposit
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
       <Head title="RemittEase Dashboard" />
 
       <div className="py-12 dark:bg-gray-900 bg-gray-100">
@@ -367,7 +447,7 @@ export default function Dashboard() {
                 <button onClick={() => setWithdrawalModal(true)} className="bg-blue-700 hover:bg-blue-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
                   Withdraw
                 </button>
-                <button className="bg-green-700 hover:bg-green-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
+                <button onClick={() => setSendModal(true)} className="bg-green-700 hover:bg-green-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
                   Send
                 </button>
               </div>
@@ -458,7 +538,7 @@ export default function Dashboard() {
                       dataKey="value"
                       stroke="#0066ff"
                       strokeWidth={2}
-                      fill="url(#colorValue)" 
+                      fill="url(#colorValue)"
                       fillOpacity={1}
                       activeDot={{ r: 8, fill: "#fff", stroke: "#0066ff", strokeWidth: 2 }}
                     />
