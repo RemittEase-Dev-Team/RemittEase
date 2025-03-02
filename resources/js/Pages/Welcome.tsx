@@ -25,11 +25,11 @@ const LandingPage: React.FC = () => {
     <div className="bg-dark-navy text-soft-white font-poppins">
       <Head title="RemittEase - Fast, Low-Cost, Secure Remittances" />
       <NavBarRemittEase />
-      <HeroSectionRemittEase />
-      <AboutSection />
-      <FeaturesSection />
-      <RoadMapSection />
-      <TeamSection />
+      <HeroSectionRemittEase heroes={heroes} />
+      <AboutSection abouts={abouts} />
+      <FeaturesSection features={features} />
+      <RoadMapSection roadmaps={roadmaps} />
+      <TeamSection teams={teams} />
       <BlogSection />
       <QuestRewardsSection questRewards={questRewards} />
       <Footer />

@@ -3,7 +3,11 @@ import { motion } from 'framer-motion';
 // Import Lucide icons to represent each core value
 import { ShieldCheck, RadioTower, DollarSign } from 'lucide-react';
 
-const AboutSection: React.FC = () => (
+interface AboutSectionProps {
+  abouts: any[];
+}
+
+const AboutSection: React.FC<AboutSectionProps> = ({ abouts }) => (
   <section
     className="py-32 text-center text-soft-white relative overflow-hidden"
     style={{
@@ -19,10 +23,14 @@ const AboutSection: React.FC = () => (
 
       {/* Main Title */}
       <h2 className="text-4xl font-bold text-neon-cyan">About RemittEase</h2>
-      <p className="mt-4 text-lg text-cool-gray max-w-2xl mx-auto">
-        RemittEase makes cross-border money transfers simple, fast, and secure.
-        Built on blockchain, we cut out the middlemen to offer you the lowest fees.
-      </p>
+      {abouts.map((about, index) => (
+        <div key={index} className="mt-4 text-lg text-cool-gray max-w-2xl mx-auto">
+          <h3 className="text-2xl md:text-3xl font-bold text-neon-cyan">
+            {about.title}
+          </h3>
+          <p>{about.description}</p>
+        </div>
+      ))}
 
       {/* Cards Container */}
       <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8 text-left">

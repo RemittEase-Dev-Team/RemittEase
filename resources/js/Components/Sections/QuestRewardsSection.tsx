@@ -11,58 +11,11 @@ interface Quest {
   progress: number; // 0 to 100
 }
 
-const dummyQuests: Quest[] = [
-  {
-    id: 1,
-    title: 'Join Our Discord',
-    description: 'Introduce yourself in the #introductions channel.',
-    rewardPoints: 50,
-    icon: <Star className="w-10 h-10 text-neon-cyan" />,
-    progress: 100,
-  },
-  {
-    id: 2,
-    title: 'Twitter Engagement',
-    description: 'Like and Retweet our pinned post.',
-    rewardPoints: 40,
-    icon: <Award className="w-10 h-10 text-neon-cyan" />,
-    progress: 80,
-  },
-  {
-    id: 3,
-    title: 'Invite a Friend',
-    description: 'Invite a friend to RemittEase and have them join Discord or Twitter.',
-    rewardPoints: 70,
-    icon: <Star className="w-10 h-10 text-neon-cyan" />,
-    progress: 60,
-  },
-  {
-    id: 4,
-    title: 'Complete KYC',
-    description: 'Verify your identity to start sending higher transaction amounts.',
-    rewardPoints: 100,
-    icon: <CheckCircle2 className="w-10 h-10 text-neon-cyan" />,
-    progress: 20,
-  },
-  {
-    id: 5,
-    title: 'Participate in AMA',
-    description: 'Attend our next AMA and ask a question.',
-    rewardPoints: 40,
-    icon: <Award className="w-10 h-10 text-neon-cyan" />,
-    progress: 0,
-  },
-  {
-    id: 6,
-    title: 'Bug Bounty',
-    description: 'Find and report a valid bug or vulnerability.',
-    rewardPoints: 150,
-    icon: <Star className="w-10 h-10 text-neon-cyan" />,
-    progress: 100,
-  },
-];
+interface QuestRewardsSectionProps {
+  questRewards: any[];
+}
 
-const QuestRewardsSection: React.FC = () => {
+const QuestRewardsSection: React.FC<QuestRewardsSectionProps> = ({ questRewards }) => {
   // Track which quests are claimed
   const [claimedQuests, setClaimedQuests] = useState<number[]>([]);
 
@@ -88,7 +41,7 @@ const QuestRewardsSection: React.FC = () => {
 
         {/* Quest Grid */}
         <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {dummyQuests.map((quest) => {
+          {questRewards.map((quest) => {
             const isClaimed = claimedQuests.includes(quest.id);
             const isComplete = quest.progress >= 100;
 

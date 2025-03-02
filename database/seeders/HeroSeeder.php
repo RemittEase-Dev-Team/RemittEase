@@ -11,8 +11,9 @@ class HeroSeeder extends Seeder
     {
         Hero::create([
             'title' => 'Fast, Low-Cost, Secure Remittances',
-            'subtitle' => 'Send and receive money across borders instantly with low fees and top security.',
+            'subtitle' => 'Send and receive money across borders instantly with low fees and top security. Built on blockchain for transparency and affordability.',
             'cta' => 'Try Now',
         ]);
     }
 }
+

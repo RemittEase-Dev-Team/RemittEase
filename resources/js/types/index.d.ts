@@ -11,4 +11,10 @@ export type PageProps<
     auth: {
         user: User;
     };
+    heroes: any[];
+    abouts: any[];
+    features: any[];
+    roadmaps: any[];
+    teams: any[];
+    questRewards: any[];
 };

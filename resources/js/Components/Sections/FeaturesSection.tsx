@@ -2,35 +2,11 @@ import React from 'react';
 import { Globe, DollarSign, CreditCard, Shield, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const features = [
-  {
-    icon: 'Globe',
-    title: 'Borderless Transfers',
-    description: 'Powered by Stellar Blockchain for seamless global transactions.',
-  },
-  {
-    icon: 'DollarSign',
-    title: 'Ultra-low Fees',
-    description: 'Enjoy fees under 1% guaranteed for all transactions.',
-  },
-  {
-    icon: 'CreditCard',
-    title: 'Multi-currency Support',
-    description: 'Supports USD, EUR, NGN, and USDC for versatile transactions.',
-  },
-  {
-    icon: 'Shield',
-    title: 'Secure Wallets',
-    description: 'Easy recovery options with top-notch security.',
-  },
-  {
-    icon: 'Zap',
-    title: 'Instant Liquidity',
-    description: 'Convert funds between fiat and crypto instantly.',
-  },
-];
+interface FeaturesSectionProps {
+  features: any[];
+}
 
-const FeaturesSection: React.FC = () => (
+const FeaturesSection: React.FC<FeaturesSectionProps> = ({ features }) => (
   <section className="py-24 text-soft-white" style={{
     background: 'radial-gradient(circle, rgba(0, 115, 255, 0.2), rgba(0, 0, 22, 1))',
   }}>
