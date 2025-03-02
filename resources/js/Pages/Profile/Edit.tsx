@@ -12,9 +12,14 @@ export default function Edit({
     return (
         <AuthenticatedLayout
             header={
+                <div className='flex items-center justify-between text-white'>
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     Profile
                 </h2>
+                <a href='/kyc' className='bg-yellow-600 hover:bg-yellow-700 p-2 px-4 rounded-lg cursor-pointer'>
+                    Complete KYC
+                </a>
+                </div>
             }
         >
             <Head title="Profile" />

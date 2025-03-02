@@ -178,6 +178,7 @@ export default function Dashboard() {
       header={
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold leading-tight text-blue-800 dark:text-blue-200">Dashboard</h2>
+          <p className="bg-yellow-200 p-4 rounded-lg text-yellow-800" > ⚠️ You have not completed KYC verification. To access full remittance features, please <a href='/kyc' className='text-blue-600 underline italic'>click here</a> verify your identity.</p>
           <div className="flex items-center bg-gray-800 dark:bg-blue-200 rounded-lg p-2">
             <span className="text-sm text-gray-100 dark:text-gray-900 mr-2">Wallet: GABC1234...XYZ</span>
             <button onClick={() => copyToClipboard('GABC1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef')} className="text-gray-500 hover:text-gray-700">
