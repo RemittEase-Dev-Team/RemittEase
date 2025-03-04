@@ -30,22 +30,29 @@ class TeamController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'role' => 'required|string|max:255',
-            'image' => 'required|string',
-            'short_desc' => 'required|string',
-            'full_desc' => 'required|string',
-            'socials' => 'required|json',
+        $validated = $request->validate([
+            'name'               => 'nullable|string|max:255',
+            'role'               => 'nullable|string|max:255',
+            'short_desc'         => 'nullable|string',
+            'full_desc'          => 'nullable|string',
+            'socials'            => 'array',  // or 'socials' => 'nullable|array'
+            'socials.twitter'    => 'nullable|string',
+            'socials.github'     => 'nullable|string',
+            'socials.linkedin'   => 'nullable|string',
+            'image'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        try {
-            Team::create($request->all());
-            return redirect()->route('admin.teams.index')->with('success', 'Team member created successfully.');
-        } catch (\Exception $e) {
-            Log::error('Error creating team member: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to create team member.');
+        // If file was uploaded, store it
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('public/team-images');
+            // Convert "public/team-images/xxxx" -> "storage/team-images/xxxx"
+            $validated['image'] = str_replace('public/', 'storage/', $path);
         }
+
+        // Now create the model
+        Team::create($validated);
+
+        return redirect()->route('teams.index')->with('success', 'Team member created successfully!');
     }
 
     public function show(Team $team)
@@ -74,22 +81,41 @@ class TeamController extends Controller
 
     public function update(Request $request, Team $team)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'role' => 'required|string|max:255',
-            'image' => 'required|string',
-            'short_desc' => 'required|string',
-            'full_desc' => 'required|string',
-            'socials' => 'required|json',
+        $validated = $request->validate([
+            'name'               => 'nullable|string|max:255',
+            'role'               => 'nullable|string|max:255',
+            'short_desc'         => 'nullable|string',
+            'full_desc'          => 'nullable|string',
+            'socials'            => 'nullable|array',  // or 'socials' => 'nullable|array'
+            'socials.twitter'    => 'nullable|string',
+            'socials.github'     => 'nullable|string',
+            'socials.linkedin'   => 'nullable|string',
+            'image'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        try {
-            $team->update($request->all());
-            return redirect()->route('admin.teams.index')->with('success', 'Team member updated successfully.');
-        } catch (\Exception $e) {
-            Log::error('Error updating team member: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to update team member.');
+        // If a new file is uploaded, store it
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('public/team-images');
+            $validated['image'] = str_replace('public/', 'storage/', $path);
+        } else {
+            // If user didn't select a new file, remove 'image' to avoid overwriting
+            unset($validated['image']);
         }
+
+        // Check if the possible data is set for every value to add it to the updated and update the db with the model of the arrays of data to ensure they always set and post
+        if($team && $team != null) {
+            if(isset($validated['name'])) $team->name = $validated['name'];
+            if(isset($validated['role'])) $team->role = $validated['role'];
+            if(isset($validated['short_desc'])) $team->short_desc = $validated['short_desc'];
+            if(isset($validated['full_desc'])) $team->full_desc = $validated['full_desc'];
+            if(isset($validated['socials'])) $team->socials = $validated['socials'];
+            if(isset($validated['image'])) $team->image = $validated['image'];
+            $team->update();
+        }else{
+            $team = Team::create($validated);
+        }
+
+        return redirect()->route('admin.teams.index')->with('success', 'Team member updated successfully!');
     }
 
     public function destroy(Team $team)
