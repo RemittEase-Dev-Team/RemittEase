@@ -38,7 +38,7 @@ const TeamsIndex: React.FC = () => {
                   cancel
                 </a>
                 <a
-                  onClick={() => destroy(route('admin.teams.destroy', selectedItem.id))}
+                  onClick={() =>{destroy(route('admin.teams.destroy', selectedItem.id)), setConf(false)}}
                   className="px-4 py-2 bg-red-500 text-white rounded cursor-pointer"
                 >
                   Delete
