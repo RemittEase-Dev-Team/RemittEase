@@ -21,7 +21,7 @@ const EditTeam: React.FC = () => {
   const { team } = usePage<PageProps>().props as unknown as { team: Team };
 
   // Important: store 'null' for image, but keep existing image path for preview
-  const { data, setData, patch, processing, errors } = useForm({
+  const { data, setData, patch: update, processing, errors } = useForm({
     id: team.id,
     name: team.name,
     role: team.role,
@@ -49,8 +49,7 @@ const EditTeam: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // same trick to ensure file is sent properly
-    patch(`/admin/teams/${team.id}`, { forceFormData: true });
+    update(route(`admin.teams.update`, team.id));
   };
 
   return (

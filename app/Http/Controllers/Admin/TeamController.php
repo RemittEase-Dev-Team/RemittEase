@@ -52,7 +52,7 @@ class TeamController extends Controller
         // Now create the model
         Team::create($validated);
 
-        return redirect()->route('teams.index')->with('success', 'Team member created successfully!');
+        return redirect()->route('admin.teams.index')->with('success', 'Team member created successfully!');
     }
 
     public function show(Team $team)
