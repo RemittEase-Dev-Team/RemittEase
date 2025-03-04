@@ -24,6 +24,8 @@ class User extends Authenticatable
         'kyc_status',
         'stellar_public_key',
         'stellar_secret_seed',
+        'onfido_sdk_token',
+        'onfido_check_id',
     ];
 
     /**

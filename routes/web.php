@@ -27,7 +27,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::middleware([
     'auth',
-    'verified',
+    // 'verified',
     // 'kyc.verified'
     ])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

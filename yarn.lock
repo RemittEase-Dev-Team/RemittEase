@@ -2309,6 +2309,11 @@ object-inspect@^1.13.3:
   resolved "https://registry.yarnpkg.com/object-inspect/-/object-inspect-1.13.4.tgz#8375265e21bc20d0fa582c22e1b13485d6e00213"
   integrity sha512-W67iLl4J2EXEGTbfeHCffrjDfitvLANg0UlX3wFUUSTx92KXRFegMHUVgSqE+wvhAbi4WqjGg9czysTV2Epbew==
 
+onfido-sdk-ui@^14.43.0:
+  version "14.43.0"
+  resolved "https://registry.yarnpkg.com/onfido-sdk-ui/-/onfido-sdk-ui-14.43.0.tgz#c5a5741f76b8a1f74e86d0dc9d49a884396730c2"
+  integrity sha512-m8I7vocZsfWFX+XxZSuInLuDMjhyh2EvLoho4l4LOrJ6kS7FP2gKYVDXMY4LCehGGJYt76oMpdZSSWHsWOVgiA==
+
 package-json-from-dist@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/package-json-from-dist/-/package-json-from-dist-1.0.1.tgz#4f1471a010827a86f94cfd9b0727e36d267de505"
