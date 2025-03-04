@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('role');
-            $table->string('image');
+            $table->string('image')->nullable();
             $table->text('short_desc');
             $table->text('full_desc');
-            $table->json('socials');
+            $table->json('socials')->nullable();
             $table->timestamps();
         });
     }

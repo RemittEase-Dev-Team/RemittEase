@@ -10,4 +10,8 @@ class Team extends Model
     use HasFactory;
 
     protected $fillable = ['name', 'role', 'image', 'short_desc', 'full_desc', 'socials'];
+
+    protected $casts = [
+        'socials' => 'array',
+    ];
 }
