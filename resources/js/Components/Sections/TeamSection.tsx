@@ -29,8 +29,8 @@ const TeamSection: React.FC<TeamSectionProps> = ({ teams }) => {
 
         {/* Team Grid */}
         <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {teams.map((member, index) => {
-            const socials = JSON.parse(member.socials);
+          {teams?.map((member, index) => {
+            const socials = member?.socials;
             return (
               <div
                 key={index}
