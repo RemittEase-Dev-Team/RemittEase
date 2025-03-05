@@ -28,6 +28,8 @@
     "dependencies": {
         "@react-three/drei": "^10.0.0",
         "@react-three/fiber": "^9.0.0-alpha.8",
+        "@walletconnect/client": "^1.8.0",
+        "@walletconnect/web3-provider": "^1.8.0",
         "chart.js": "^4.4.8",
         "clsx": "^2.1.1",
         "lucide-react": "^0.475.0",

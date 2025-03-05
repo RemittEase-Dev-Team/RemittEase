@@ -39,10 +39,11 @@ class SettingsController extends Controller
             'exchange_rate_api' => 'required|url',
             'support_email' => 'required|email',
             'kyc_verification_provider' => 'required|string',
+            'moonpay_enabled' => 'required|boolean',
         ]);
 
         $settings = Settings::first();
-        $settings->update($request->all());
+        $settings->update($request->validated());
 
         return redirect()->back()->with('success', 'Settings updated successfully.');
     }

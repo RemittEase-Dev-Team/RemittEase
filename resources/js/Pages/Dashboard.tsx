@@ -11,7 +11,11 @@ import { FaPoundSign } from "react-icons/fa";
 
 type CurrencyCode = 'XLM' | 'USD' | 'NGN' | 'EUR' | 'GBP';
 
-export default function Dashboard() {
+interface Props {
+  moonpayEnabled: boolean;
+}
+
+export default function Dashboard({ moonpayEnabled }: Props) {
   const { data, setData, post } = useForm({
     type: '',
     currency: '',
@@ -442,9 +446,11 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="flex gap-3 mt-4">
-                <button onClick={() => setDepositModal(true)} className="bg-yellow-700 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
-                  Deposit
-                </button>
+                {moonpayEnabled && (
+                  <button onClick={() => setDepositModal(true)} className="bg-yellow-700 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
+                    Deposit
+                  </button>
+                )}
                 <button onClick={() => setWithdrawalModal(true)} className="bg-blue-700 hover:bg-blue-600 text-white py-2 px-4 rounded-lg flex-1 font-medium">
                   Withdraw
                 </button>

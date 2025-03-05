@@ -6,6 +6,7 @@ use App\Http\Controllers\RemittanceController;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\BlogController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
@@ -80,6 +81,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/teams/{team}/edit', [TeamController::class, 'edit'])->name('admin.teams.edit');
     Route::patch('/teams/{team}', [TeamController::class, 'update'])->name('admin.teams.update');
     Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('admin.teams.destroy');
+    Route::resource('transactions', ManageTransactionController::class);
 });
 
 

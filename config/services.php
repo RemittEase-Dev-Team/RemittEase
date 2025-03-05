@@ -39,4 +39,9 @@ return [
         'horizon_url' => env('HORIZON_URL', 'https://horizon-testnet.stellar.org'),
     ],
 
+    'moonpay' => [
+        'public_key' => env('MOONPAY_PUBLIC_KEY'),
+        'secret_key' => env('MOONPAY_SECRET_KEY'),
+    ],
+
 ];
