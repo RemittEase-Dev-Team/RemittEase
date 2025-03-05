@@ -1,14 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
-import { FormEventHandler, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { ChevronDown, ArrowUp, ArrowDown, Plus, Search, User, Copy } from 'lucide-react';
-import { SiStellar } from 'react-icons/si';
-import { BiDollar } from "react-icons/bi";
-import { FaNairaSign } from "react-icons/fa6";
-import { FaEuroSign } from "react-icons/fa";
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler, useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { ChevronDown, ArrowUp, ArrowDown, Plus, Search, User, Copy } from 'lucide-react';
