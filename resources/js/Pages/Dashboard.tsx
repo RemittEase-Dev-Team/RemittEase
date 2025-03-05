@@ -7,7 +7,18 @@ import { SiStellar } from 'react-icons/si';
 import { BiDollar } from "react-icons/bi";
 import { FaNairaSign } from "react-icons/fa6";
 import { FaEuroSign } from "react-icons/fa";
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, useForm } from '@inertiajs/react';
+import { FormEventHandler, useState, useEffect } from 'react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { ChevronDown, ArrowUp, ArrowDown, Plus, Search, User, Copy } from 'lucide-react';
+import { SiStellar } from 'react-icons/si';
+import { BiDollar } from "react-icons/bi";
+import { FaNairaSign } from "react-icons/fa6";
+import { FaEuroSign } from "react-icons/fa";
 import { FaPoundSign } from "react-icons/fa";
+import Web3 from 'web3';
+import WalletConnectProvider from "@walletconnect/web3-provider";
 
 type CurrencyCode = 'XLM' | 'USD' | 'NGN' | 'EUR' | 'GBP';
 
@@ -30,6 +41,10 @@ export default function Dashboard({ moonpayEnabled }: Props) {
   const [selectedCurrency, setSelectedCurrency] = useState<any | object | null>(null)
   const [amount, setAmount] = useState('');
   const [walletAddress, setWalletAddress] = useState('')
+  const [web3, setWeb3] = useState<Web3 | null>(null);
+  const [provider, setProvider] = useState<WalletConnectProvider | null>(null);
+  const [accounts, setAccounts] = useState<string[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
 
 
   const [balance, setBalance] = useState({
