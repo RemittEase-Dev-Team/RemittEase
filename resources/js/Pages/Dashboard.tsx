@@ -199,8 +199,8 @@ export default function Dashboard({ moonpayEnabled }: Props) {
       }
     >
       {depositModal && (
-        <section className='absolute w-full h-screen inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center'>
-          <div className='bg-white dark:bg-gray-800 rounded-md p-6 w-[25%]'>
+        <section className='fixed w-full h-screen inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center'>
+          <div className='bg-white dark:bg-gray-800 rounded-md p-6 w-full m-4 lg:w-[25%]'>
             <h2 className='uppercase font-bold mb-4 text-center text-2xl dark:text-gray-100'>Deposit Crypto</h2>
 
             <div className='mb-4'>
@@ -222,7 +222,7 @@ export default function Dashboard({ moonpayEnabled }: Props) {
                   <div
                     key={index}
                     onClick={() => { setSearch(currency.name); setSelectedCurrency(currency) }}
-                    className={`p-2 hover:bg-gray-100 cursor-pointer text-white hover:text-black ${selectedCurrency?.code === currency.code ? 'bg-gray-500 text-black' : ''
+                    className={`p-2 hover:bg-gray-100 cursor-pointer dark:text-white hover:text-black ${selectedCurrency?.code === currency.code ? 'bg-gray-500 text-black' : ''
                       }`}
                   >
                     {currency.flag} {currency.name} ({currency.code})
@@ -233,13 +233,13 @@ export default function Dashboard({ moonpayEnabled }: Props) {
 
             {selectedCurrency && (
               <div className='mb-4'>
-                <h3 className='font-semibold mb-2 text-white'>Enter Amount</h3>
+                <h3 className='font-semibold mb-2 dark:text-white'>Enter Amount</h3>
                 <input
                   type='number'
                   placeholder='Amount'
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className='w-full p-2 border rounded-md bg-transparent text-white'
+                  className='w-full p-2 border rounded-md bg-transparent dark:text-white'
                 />
               </div>
             )}
@@ -263,8 +263,8 @@ export default function Dashboard({ moonpayEnabled }: Props) {
       )}
 
       {withdrawalModal && (
-        <section className='absolute w-full h-screen inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center'>
-          <div className='bg-white dark:bg-gray-800 rounded-md p-6 w-[25%]'>
+        <section className='fixed w-full h-screen inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center'>
+          <div className='bg-white dark:bg-gray-800 rounded-md p-6 w-full m-4 lg:w-[25%]'>
             <h2 className='uppercase font-bold mb-4 text-center text-2xl dark:text-gray-100'>Withdraw Crypto</h2>
             <div className='mb-4'>
               <h3 className='font-semibold mb-2 dark:text-gray-100'>Select Currency</h3>
@@ -285,7 +285,7 @@ export default function Dashboard({ moonpayEnabled }: Props) {
                   <div
                     key={index}
                     onClick={() => { setSearch(currency.name); setSelectedCurrency(currency) }}
-                    className={`p-2 hover:bg-gray-100 cursor-pointer text-white hover:text-black ${selectedCurrency?.code === currency.code ? 'bg-gray-500 text-black' : ''
+                    className={`p-2 hover:bg-gray-100 cursor-pointer dark:text-white hover:text-black ${selectedCurrency?.code === currency.code ? 'bg-gray-500 text-black' : ''
                       }`}
                   >
                     {currency.flag} {currency.name} ({currency.code})
@@ -296,13 +296,13 @@ export default function Dashboard({ moonpayEnabled }: Props) {
 
             {selectedCurrency && (
               <div className='mb-4'>
-                <h3 className='font-semibold mb-2 text-white'>Enter Amount</h3>
+                <h3 className='font-semibold mb-2 dark:text-white'>Enter Amount</h3>
                 <input
                   type='number'
                   placeholder='Amount'
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className='w-full p-2 border rounded-md bg-transparent text-white'
+                  className='w-full p-2 border rounded-md bg-transparent dark:text-white'
                 />
               </div>
             )}
@@ -315,7 +315,7 @@ export default function Dashboard({ moonpayEnabled }: Props) {
                   placeholder='Paste wallet address'
                   value={walletAddress}
                   onChange={(e) => setWalletAddress(e.target.value)}
-                  className='w-full p-2 text-white border border-gray-200 dark:border-gray-700 rounded-md dark:text-gray-100 dark:bg-gray-800'
+                  className='w-full p-2 dark:text-white border border-gray-200 dark:border-gray-700 rounded-md dark:text-gray-100 dark:bg-gray-800'
                 />
               </div>
             )}
@@ -339,8 +339,8 @@ export default function Dashboard({ moonpayEnabled }: Props) {
       )}
 
       {sendModal && (
-        <section className='absolute w-full h-screen inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center'>
-          <div className='bg-white dark:bg-gray-800 rounded-md p-6 w-[25%]'>
+        <section className='fixed w-full h-screen inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center'>
+          <div className='bg-white dark:bg-gray-800 rounded-md p-6 w-full m-4 lg:w-[25%]'>
             <h2 className='uppercase font-bold mb-4 text-center text-2xl dark:text-gray-100'>Send Crypto</h2>
 
             <div className='mb-4'>
@@ -362,7 +362,7 @@ export default function Dashboard({ moonpayEnabled }: Props) {
                   <div
                     key={index}
                     onClick={() => { setSearch(currency.name); setSelectedCurrency(currency) }}
-                    className={`p-2 hover:bg-gray-100 cursor-pointer text-white hover:text-black ${selectedCurrency?.code === currency.code ? 'bg-gray-500 text-black' : ''
+                    className={`p-2 hover:bg-gray-100 cursor-pointer dark:text-white hover:text-black ${selectedCurrency?.code === currency.code ? 'bg-gray-500 text-black' : ''
                       }`}
                   >
                     {currency.flag} {currency.name} ({currency.code})
@@ -374,23 +374,23 @@ export default function Dashboard({ moonpayEnabled }: Props) {
             {selectedCurrency && (
               <>
               <div className='mb-4'>
-                <h3 className='font-semibold mb-2 text-white'>Wallet Address</h3>
+                <h3 className='font-semibold mb-2 dark:text-white'>Wallet Address</h3>
                 <input
                   type='text'
                   placeholder='0x000x...BhC'
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className='w-full p-2 border rounded-md bg-transparent text-white'
+                  className='w-full p-2 border rounded-md bg-transparent dark:text-white'
                 />
               </div>
               <div className='mb-4'>
-                <h3 className='font-semibold mb-2 text-white'>Enter Amount</h3>
+                <h3 className='font-semibold mb-2 dark:text-white'>Enter Amount</h3>
                 <input
                   type='number'
                   placeholder='Amount'
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className='w-full p-2 border rounded-md bg-transparent text-white'
+                  className='w-full p-2 border rounded-md bg-transparent dark:text-white'
                 />
               </div>
                 </>
