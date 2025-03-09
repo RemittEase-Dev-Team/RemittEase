@@ -9,7 +9,13 @@ class Remittance extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'recipient', 'amount', 'currency', 'status'];
+    protected $fillable = [
+        'user_id',
+        'recipient',
+        'amount',
+        'currency',
+        'status'
+    ];
 
     public function user()
     {
