@@ -9,10 +9,27 @@ class Wallet extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'balance', 'currency', 'stellar_address'];
+    protected $fillable = [
+        'user_id',
+        'public_key',
+        'secret_key', // This will be encrypted
+        'status'
+    ];
 
+    /**
+     * Get the user that owns the wallet.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the transactions for this wallet.
+     */
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'sender_wallet_id')
+            ->orWhere('recipient_wallet_id', $this->id);
     }
 }

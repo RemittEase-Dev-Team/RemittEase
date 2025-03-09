@@ -3931,16 +3931,16 @@
         },
         {
             "name": "soneso/stellar-php-sdk",
-            "version": "1.6.1",
+            "version": "1.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Soneso/stellar-php-sdk.git",
-                "reference": "24016dfec684aa5f428f7502ae7bdc69223e7bcc"
+                "reference": "3a8626a47a23bffd55edc4baf2f965e4048c7786"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Soneso/stellar-php-sdk/zipball/24016dfec684aa5f428f7502ae7bdc69223e7bcc",
-                "reference": "24016dfec684aa5f428f7502ae7bdc69223e7bcc",
+                "url": "https://api.github.com/repos/Soneso/stellar-php-sdk/zipball/3a8626a47a23bffd55edc4baf2f965e4048c7786",
+                "reference": "3a8626a47a23bffd55edc4baf2f965e4048c7786",
                 "shasum": ""
             },
             "require": {
@@ -3975,9 +3975,9 @@
             "description": "Stellar PHP SDK for the Stellar Network",
             "support": {
                 "issues": "https://github.com/Soneso/stellar-php-sdk/issues",
-                "source": "https://github.com/Soneso/stellar-php-sdk/tree/1.6.1"
+                "source": "https://github.com/Soneso/stellar-php-sdk/tree/1.6.2"
             },
-            "time": "2024-12-04T13:26:28+00:00"
+            "time": "2025-03-05T08:49:52+00:00"
         },
         {
             "name": "spatie/laravel-permission",

@@ -3,52 +3,115 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Session;
+use Inertia\Inertia;
+use App\Services\StellarWalletService;
+use App\Models\Wallet;
+use Illuminate\Support\Facades\Auth;
 
 class WalletController extends Controller
 {
-    public function connect(Request $request)
+    protected $walletService;
+
+    public function __construct(StellarWalletService $walletService)
     {
-        // Implement wallet connection logic
-        Log::info('Wallet connect request received: ' . json_encode($request->all()));
+        $this->walletService = $walletService;
+        $this->middleware('auth');
+    }
 
-        $walletAddress = $request->input('walletAddress');
+    /**
+     * Display wallet dashboard
+     */
+    public function index()
+    {
+        $user = Auth::user();
+        $wallet = $user->wallet;
 
-        if ($walletAddress) {
-            Session::put('walletAddress', $walletAddress);
-            return response()->json(['message' => 'Wallet connected successfully', 'walletAddress' => $walletAddress]);
-        } else {
-            return response()->json(['message' => 'Wallet connection failed', 'error' => 'Wallet address not provided'], 400);
+        if (!$wallet) {
+            // Automatically create wallet if user doesn't have one
+            $wallet = $this->walletService->createWalletForUser($user);
+        }
+
+        // Get wallet balance
+        $balances = $this->walletService->getWalletBalance($wallet->public_key);
+
+        // Get recent transactions
+        $transactions = $wallet->transactions()
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        return Inertia::render('Wallet/Dashboard', [
+            'wallet' => [
+                'publicKey' => $wallet->public_key,
+                'balances' => $balances
+            ],
+            'transactions' => $transactions
+        ]);
+    }
+
+    /**
+     * Send payment
+     */
+    public function sendPayment(Request $request)
+    {
+        $validated = $request->validate([
+            'destination' => 'required|string',
+            'amount' => 'required|numeric|min:0.0000001',
+            'asset_code' => 'sometimes|string'
+        ]);
+
+        $user = Auth::user();
+        $wallet = $user->wallet;
+
+        if (!$wallet) {
+            return back()->withErrors([
+                'wallet' => 'Wallet not found'
+            ]);
+        }
+
+        try {
+            $response = $this->walletService->sendPayment(
+                $wallet,
+                $validated['destination'],
+                $validated['amount'],
+                $validated['asset_code'] ?? 'XLM'
+            );
+
+            // Record the transaction in the database
+            $transaction = new \App\Models\Transaction();
+            $transaction->sender_wallet_id = $wallet->id;
+            $transaction->recipient_address = $validated['destination'];
+            $transaction->amount = $validated['amount'];
+            $transaction->asset_code = $validated['asset_code'] ?? 'XLM';
+            $transaction->transaction_hash = $response->getHash();
+            $transaction->status = 'completed';
+            $transaction->save();
+
+            return back()->with('success', 'Payment sent successfully');
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'payment' => 'Failed to send payment: ' . $e->getMessage()
+            ]);
         }
     }
 
-    public function sendTransaction(Request $request)
+    /**
+     * Show wallet details
+     */
+    public function show()
     {
-        // TODO: Implement send transaction logic
-        Log::info('Send transaction request received: ' . json_encode($request->all()));
+        $user = Auth::user();
+        $wallet = $user->wallet;
 
-        // Simulate transaction processing
-        $transactionData = $request->all();
-        $transactionHash = '0x' . md5(json_encode($transactionData)); // Generate a dummy transaction hash
+        if (!$wallet) {
+            return redirect()->route('wallet.index');
+        }
 
-        // Store transaction details in the database
-        $transaction = new \App\Models\Transaction();
-        $transaction->user_id = auth()->id(); // Assuming user is authenticated
-        $transaction->transaction_hash = $transactionHash;
-        $transaction->amount = $transactionData['amount'] ?? 0; // Assuming amount is passed in the request
-        $transaction->currency = $transactionData['currency'] ?? 'USD'; // Assuming currency is passed in the request
-        $transaction->status = 'pending'; // Set initial status to pending
-        $transaction->save();
-
-        return response()->json(['message' => 'Transaction sent successfully', 'transactionHash' => $transactionHash]);
-    }
-
-    public function getBalance(Request $request)
-    {
-        // TODO: Implement get balance logic
-        Log::info('Get balance request received: ' . json_encode($request->all()));
-
-        return response()->json(['balance' => 0]);
+        return Inertia::render('Wallet/Details', [
+            'wallet' => [
+                'publicKey' => $wallet->public_key,
+                'createdAt' => $wallet->created_at
+            ]
+        ]);
     }
 }

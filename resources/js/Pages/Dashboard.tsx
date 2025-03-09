@@ -500,31 +500,31 @@ export default function Dashboard({ moonpayEnabled }: Props) {
 
               <div className="flex justify-end gap-2 mb-3">
                 <button
-                  className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === 'Today' ? 'bg-gray-800 dark:bg-blue-600 text-gray-800 dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
+                  className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === 'Today' ? 'bg-gray-800 dark:bg-blue-600 text-white dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
                   onClick={() => setActiveTimeFilter('Today')}
                 >
                   Today
                 </button>
                 <button
-                  className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === '24H' ? 'bg-gray-800 dark:bg-blue-600 text-gray-800 dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
+                  className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === '24H' ? 'bg-gray-800 dark:bg-blue-600 text-white dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
                   onClick={() => setActiveTimeFilter('24H')}
                 >
                   24H
                 </button>
                 <button
-                  className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === '1W' ? 'bg-gray-800 dark:bg-blue-600 text-gray-800 dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
+                  className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === '1W' ? 'bg-gray-800 dark:bg-blue-600 text-white dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
                   onClick={() => setActiveTimeFilter('1W')}
                 >
                   1W
                 </button>
                 <button
-                  className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === '1M' ? 'bg-gray-800 dark:bg-blue-600 text-gray-800 dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
+                  className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === '1M' ? 'bg-gray-800 dark:bg-blue-600 text-white dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
                   onClick={() => setActiveTimeFilter('1M')}
                 >
                   1M
                 </button>
                 <button
-                  className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === 'All' ? 'bg-gray-800 dark:bg-blue-600 text-gray-800 dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
+                  className={`px-3 py-1 rounded-full text-sm ${activeTimeFilter === 'All' ? 'bg-gray-800 dark:bg-blue-600 text-white dark:text-gray-100' : 'bg-gray-100 dark:bg-gray-400'}`}
                   onClick={() => setActiveTimeFilter('All')}
                 >
                   All
@@ -535,7 +535,7 @@ export default function Dashboard({ moonpayEnabled }: Props) {
                 <div className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-blue-600 dark:bg-blue-400 text-white px-3 py-1 rounded text-sm z-10">
                   $3,000
                 </div>
-                <ResponsiveContainer width="100%" height="150%">
+                <ResponsiveContainer width="100%" height="100%" className="md:mt-20">
                   <AreaChart data={chartData}>
                     <defs>
                       <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">

@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('wallets', function (Blueprint $table) {
             $table->id();
-        $table->foreignId('user_id')->constrained()->onDelete('cascade');
-        $table->decimal('balance', 20, 8)->default(0);
-        $table->string('currency')->default('XLM');
-        $table->string('stellar_address')->unique();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('public_key')->unique();
+            $table->text('secret_key'); // This will be encrypted
+            $table->string('status')->default('active');
             $table->timestamps();
         });
     }

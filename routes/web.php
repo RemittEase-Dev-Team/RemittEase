@@ -1,28 +1,30 @@
 <?php
 
 
+use App\Http\Controllers\Admin\AboutController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\BlogController;
+use App\Http\Controllers\Admin\CurrencyController;
+use App\Http\Controllers\Admin\FeaturesController;
+use App\Http\Controllers\Admin\HeroController;
+use App\Http\Controllers\Admin\KYCController;
+use App\Http\Controllers\Admin\ManageTransactionController;
+use App\Http\Controllers\Admin\QuestRewardController;
+use App\Http\Controllers\Admin\RoadmapController;
+use App\Http\Controllers\Admin\SectionController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\TeamController;
+use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MoonPayController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RemittanceController;
 use Illuminate\Foundation\Application;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Admin\TransactionController;
-use App\Http\Controllers\Admin\BlogController;
-use App\Http\Controllers\Admin\SettingsController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\KYCController;
-use App\Http\Controllers\Admin\ManageTransactionController;
-use App\Http\Controllers\Admin\CurrencyController;
-use App\Http\Controllers\Admin\SectionController;
-use App\Http\Controllers\Admin\HeroController;
-use App\Http\Controllers\Admin\FeaturesController;
-use App\Http\Controllers\Admin\RoadmapController;
-use App\Http\Controllers\Admin\AboutController;
-use App\Http\Controllers\Admin\QuestRewardController;
-use App\Http\Controllers\Admin\TeamController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\HomeController;
+
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -40,6 +42,16 @@ Route::middleware([
     Route::post('/kyc/skip', [App\Http\Controllers\KYCController::class, 'skipKYC'])->name('kyc.skip');
     Route::post('/deposit', [RemittanceController::class, 'loadCash'])->name('deposit');
     Route::post('/withdraw', [RemittanceController::class, 'withdrawFunds'])->name('withdraw');
+
+
+    // MoonPay routes
+Route::post('/moonpay/create', [App\Http\Controllers\MoonPayController::class, 'createTransaction'])->name('moonpay.create');
+Route::post('/moonpay/webhook', [App\Http\Controllers\MoonPayController::class, 'webhook'])->name('moonpay.webhook');
+
+// Stellar wallet routes
+Route::get('/stellar/address', [App\Http\Controllers\StellarController::class, 'generateAddress'])->name('stellar.address');
+Route::post('/stellar/withdraw', [App\Http\Controllers\StellarController::class, 'withdraw'])->name('stellar.withdraw');
+Route::post('/stellar/send', [App\Http\Controllers\StellarController::class, 'send'])->name('stellar.send');
 });
 
 
@@ -82,6 +94,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::patch('/teams/{team}', [TeamController::class, 'update'])->name('admin.teams.update');
     Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('admin.teams.destroy');
     Route::resource('transactions', ManageTransactionController::class);
+
+
+
 });
 
 
