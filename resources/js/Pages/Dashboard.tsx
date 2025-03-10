@@ -640,8 +640,7 @@ export default function Dashboard({ moonpayEnabled, user, wallet, transactions, 
                       </div>
                     )}
                     <div>
-                      <div className="font-medium">{transaction.name}</div>
-                      <div className="text-sm text-gray-500">{transaction.type}</div>
+                      <div className="font-medium">{transaction.type}</div>
                     </div>
                   </div>
                   <div className="text-right">
@@ -649,11 +648,6 @@ export default function Dashboard({ moonpayEnabled, user, wallet, transactions, 
                       {transaction.isOutgoing ? '' : '+ '}
                       {transaction.amount} {transaction.currency}
                     </div>
-                    {transaction.originalAmount !== transaction.amount && (
-                      <div className="text-sm text-gray-500">
-                        {transaction.originalAmount} {transaction.currency}
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
