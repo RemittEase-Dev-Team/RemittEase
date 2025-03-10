@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             AboutSeeder::class,
             QuestRewardSeeder::class,
             TeamSeeder::class,
+            CurrenciesTableSeeder::class,
         ]);
     }
 }

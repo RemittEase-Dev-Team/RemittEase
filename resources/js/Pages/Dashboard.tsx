@@ -13,11 +13,45 @@ import WalletConnectProvider from "@walletconnect/web3-provider";
 
 type CurrencyCode = 'XLM' | 'USD' | 'NGN' | 'EUR' | 'GBP';
 
-interface Props {
-  moonpayEnabled: boolean;
+interface Wallet {
+  publicKey: string;
+  formattedPublicKey: string;
+  balance: number;
+  status: string;
+  isVerified: boolean;
+  created_at: string;
 }
 
-export default function Dashboard({ moonpayEnabled }: Props) {
+interface Props {
+  moonpayEnabled: boolean;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    kyc_status: string;
+    can_skip_kyc: boolean;
+  };
+  wallet: Wallet | null;
+  transactions: Array<{
+    id: number;
+    type: string;
+    amount: number;
+    currency: string;
+    date: string;
+    status: string;
+    isOutgoing: boolean;
+    recipientAddress: string;
+    transactionHash: string;
+  }>;
+  currencies: Array<{
+    code: string;
+    name: string;
+    flag: string;
+    selected: boolean;
+  }>;
+}
+
+export default function Dashboard({ moonpayEnabled, user, wallet, transactions, currencies }: Props) {
   const { data, setData, post } = useForm({
     type: '',
     currency: '',
@@ -70,37 +104,9 @@ export default function Dashboard({ moonpayEnabled }: Props) {
     { time: '18:00', value: 4500 }
   ];
 
-  // Dummy transaction data
-  const transactions = [
-    { id: 1, name: 'Michael Philips', type: 'Sent', amount: 150, originalAmount: 151, currency: 'USD', date: '1 Oct, 2023', isOutgoing: true },
-    { id: 2, name: 'Akin Mary', type: 'Sent', amount: 100, originalAmount: 101, currency: 'USD', date: '1 Oct, 2023', isOutgoing: true },
-    { id: 3, name: 'Credit', type: 'Credit', amount: 200, originalAmount: 200, currency: 'USD', date: '24 Sept, 2023', isOutgoing: false }
-  ];
 
-  // Currency options
-  const currencies = [
-    { code: 'XLM', name: 'Stellar Lumens', flag: '🌌', selected: false },
-    { code: 'USD', name: 'United States Dollar', flag: '🇺🇸', selected: true },
-    { code: 'NGN', name: 'Nigerian Naira', flag: '🇳🇬', selected: true },
-    { code: 'GBP', name: 'British Pound Sterling', flag: '🇬🇧', selected: false },
-    { code: 'AED', name: 'United Arab Emirates Dirham', flag: '🇦🇪', selected: false },
-    { code: 'EUR', name: 'Euro', flag: '🇪🇺', selected: false },
-    { code: 'JPY', name: 'Japanese Yen', flag: '🇯🇵', selected: false },
-    { code: 'CAD', name: 'Canadian Dollar', flag: '🇨🇦', selected: false },
-    { code: 'AUD', name: 'Australian Dollar', flag: '🇦🇺', selected: false },
-    { code: 'CHF', name: 'Swiss Franc', flag: '🇨🇭', selected: false },
-    { code: 'NZD', name: 'New Zealand Dollar', flag: '🇳🇿', selected: false },
-    { code: 'SGD', name: 'Singapore Dollar', flag: '🇸🇬', selected: false },
-    { code: 'HKD', name: 'Hong Kong Dollar', flag: '🇭🇰', selected: false },
-    { code: 'SEK', name: 'Swedish Krona', flag: '🇸🇪', selected: false },
-    { code: 'ZAR', name: 'South African Rand', flag: '🇿🇦', selected: false },
-    { code: 'BRL', name: 'Brazilian Real', flag: '🇧🇷', selected: false },
-    { code: 'RUB', name: 'Russian Ruble', flag: '🇷🇺', selected: false },
-    { code: 'INR', name: 'Indian Rupee', flag: '🇮🇳', selected: false },
-    { code: 'MXN', name: 'Mexican Peso', flag: '🇲🇽', selected: false },
-    { code: 'NGNC', name: 'Nigerian Naira Coin', flag: '🇳🇬', selected: false },
-    { code: 'USDC', name: 'USD Coin', flag: '💵', selected: false }
-  ];
+
+
 
   const Currency = currencies?.filter((currency) => currency?.name?.toLowerCase()?.includes(search?.toLowerCase()) || currency?.code?.toLowerCase()?.includes(search?.toLowerCase()))
 
@@ -188,12 +194,22 @@ export default function Dashboard({ moonpayEnabled }: Props) {
       header={
         <div className="flex flex-col justify-between items-center md:flex-row">
           <h2 className="text-2xl font-bold leading-tight text-blue-800 dark:text-blue-200">Dashboard</h2>
-          <p className="bg-yellow-200 p-4 rounded-lg text-yellow-800 mt-4 md:mt-0" > ⚠️ You have not completed KYC verification. To access full remittance features, please <a href='/kyc' className='text-blue-600 underline italic'>click here</a> verify your identity.</p>
+          <p className="bg-yellow-200 p-4 rounded-lg text-yellow-800 mt-4 md:mt-0">
+            ⚠️ You have not completed KYC verification. To access full remittance features, please{' '}
+            <a href='/kyc' className='text-blue-600 underline italic'>click here</a> verify your identity.
+          </p>
           <div className="flex items-center bg-gray-800 dark:bg-blue-200 rounded-lg p-2 mt-4 md:mt-0">
-            <span className="text-sm text-gray-100 dark:text-gray-900 mr-2">Wallet: GABC1234...XYZ</span>
-            <button onClick={() => copyToClipboard('GABC1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef')} className="text-gray-500 hover:text-gray-700">
-              <Copy size={16} />
-            </button>
+            <span className="text-sm text-gray-100 dark:text-gray-900 mr-2">
+              Wallet: {wallet?.formattedPublicKey || 'No wallet found'}
+            </span>
+            {wallet?.publicKey && (
+              <button
+                onClick={() => copyToClipboard(wallet.publicKey)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <Copy size={16} />
+              </button>
+            )}
           </div>
         </div>
       }
@@ -438,7 +454,9 @@ export default function Dashboard({ moonpayEnabled }: Props) {
                 </div>
                 <div className="text-3xl font-bold mb-1 flex items-center dark:text-gray-100">
                   <span>{balance[currencyMain]?.icon}</span>
-                  <span className="ml-1">{balance[currencyMain]?.amount.toLocaleString()}</span>
+                  <span className="ml-1">
+                    {wallet ? Number(wallet.balance).toLocaleString() : '0'}
+                  </span>
                 </div>
 
 

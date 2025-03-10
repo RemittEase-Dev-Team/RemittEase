@@ -2,15 +2,16 @@
 
 namespace App\Services;
 
-use Soneso\StellarSDK\SorobanServer;
-use Soneso\StellarSDK\Keypair;
 use Soneso\StellarSDK\Soroban\SorobanAuthorizationEntry;
 use Soneso\StellarSDK\Soroban\Arguments\ScAddressObject;
 use Soneso\StellarSDK\Soroban\Arguments\ScUint32Object;
 use Soneso\StellarSDK\Soroban\Arguments\ScInt128Object;
 use Soneso\StellarSDK\Soroban\Arguments\ScSymbolObject;
 use Soneso\StellarSDK\StellarSDK;
+use Soneso\StellarSDK\Soroban\SorobanServer;
+use Soneso\StellarSDK\Crypto\KeyPair;
 use Illuminate\Support\Facades\Log;
+use Soneso\StellarSDK\Network;
 
 class RemitteaseContractInterface
 {
@@ -37,12 +38,34 @@ class RemitteaseContractInterface
         $this->sorobanServer = new SorobanServer($sorobanRpcUrl);
         $this->contractId = $contractId;
 
-        // Load the admin keypair from config (this should be securely stored)
+        // Load or generate admin keypair
+        $this->initializeAdminKeypair();
+    }
+
+    protected function initializeAdminKeypair()
+    {
         $adminSecret = config('stellar.admin_secret');
-        if ($adminSecret) {
-            $this->adminKeypair = Keypair::fromSecretSeed($adminSecret);
-        } else {
+
+        if (empty($adminSecret)) {
+            if (app()->environment('local', 'testing')) {
+                // Generate new keypair for testing
+                $keypair = KeyPair::random();
+                config(['stellar.admin_secret' => $keypair->getSecretSeed()]);
+                $this->adminKeypair = $keypair;
+                Log::info('Generated new testing keypair: ' . $keypair->getAccountId());
+                return;
+            }
             throw new \Exception("Admin secret key not found in configuration");
+        }
+
+        try {
+            $this->adminKeypair = KeyPair::fromSeed($adminSecret);
+            // Verify the keypair is valid by getting the public key
+            $publicKey = $this->adminKeypair->getAccountId();
+            Log::info('Successfully initialized admin keypair for: ' . $publicKey);
+        } catch (\Exception $e) {
+            Log::error('Failed to create KeyPair: ' . $e->getMessage());
+            throw new \Exception("Invalid admin secret key. Please generate a new one using 'php artisan stellar:generate-keypair'");
         }
     }
 
@@ -214,6 +237,7 @@ class RemitteaseContractInterface
 
     /**
      * Record a transaction in the contract
+     * Note: Using shortened symbol 'tx' to match the contract
      */
     public function recordTransaction($fromWallet, $toWallet, $amount, $memo = "payment")
     {

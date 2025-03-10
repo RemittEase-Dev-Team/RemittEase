@@ -51,9 +51,31 @@ class User extends Authenticatable
         ];
     }
 
+   /**
+     * Get the wallet associated with the user.
+     */
     public function wallet()
     {
-        return $this->hasMany(Wallet::class);
+        return $this->hasOne(Wallet::class);
+    }
+
+    /**
+     * Check if user has a wallet
+     */
+    public function hasWallet()
+    {
+        return !is_null($this->wallet);
+    }
+
+    /**
+     * Get wallet balance in specified currency
+     */
+    public function getWalletBalance($currency = 'XLM')
+    {
+        if ($this->hasWallet()) {
+            return $this->wallet->getBalanceInCurrency($currency);
+        }
+        return 0;
     }
 
     public function kyc()

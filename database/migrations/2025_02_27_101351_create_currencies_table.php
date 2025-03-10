@@ -15,10 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('code');
-            $table->string('symbol');
+            $table->string('symbol')->nullable();
             $table->decimal('rate', 10, 2)->nullable();
             $table->string('flag')->nullable();
             $table->string('icon')->nullable();
+            $table->boolean('status')->default(true);
             $table->timestamps();
         });
     }

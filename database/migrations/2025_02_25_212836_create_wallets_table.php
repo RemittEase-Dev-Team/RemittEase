@@ -15,9 +15,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('public_key')->unique();
-            $table->text('secret_key'); // This will be encrypted
-            $table->string('status')->default('active');
+            $table->text('secret_key');
+            $table->string('status')->default('pending');
+            $table->decimal('balance', 20, 7)->default(0);
+            $table->boolean('is_verified')->default(false);
             $table->timestamps();
+
+            $table->index('user_id');
+            $table->index('public_key');
         });
     }
 
