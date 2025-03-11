@@ -30,6 +30,8 @@ class DashboardController extends Controller
             $totalTransactions = Transaction::where('user_id', $user->id)->count();
             $settings = Settings::first();
             $moonpayEnabled = $settings->moonpay_enabled ?? true;
+            $yellowCardEnabled = $settings->yellowcard_enabled ?? true;
+            $linkioEnabled = $settings->linkio_enabled ?? true;
 
             $currencies = Currency::all();
             $wallet = null;
@@ -109,6 +111,8 @@ class DashboardController extends Controller
                     'created_at' => $wallet->created_at->format('Y-m-d H:i:s'),
                 ] : null,
                 'moonpayEnabled' => $moonpayEnabled,
+                'yellowCardEnabled' => $yellowCardEnabled,
+                'linkioEnabled' => $linkioEnabled,
                 'transactions' => $recentTransactions,
                 'currencies' => $currencies,
             ]);

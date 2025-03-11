@@ -41,6 +41,11 @@ interface PaymentProvider {
   };
 }
 
+interface DepositResponse {
+  redirectUrl?: string;
+  sessionId?: string;
+}
+
 interface Props {
   moonpayEnabled: boolean;
   linkioEnabled: boolean;
@@ -142,31 +147,44 @@ export default function Dashboard({
     alert('Address copied to clipboard!');
   };
 
+  const initializeLinkioWidget = (sessionId: string) => {
+    console.log('Initializing Linkio widget with session:', sessionId);
+  };
+
+  const initializeYellowCardWidget = (sessionId: string) => {
+    console.log('Initializing Yellow Card widget with session:', sessionId);
+  };
+
   const handleFiatDeposit: FormEventHandler = async (e) => {
     e.preventDefault();
     setProcessingDeposit(true);
 
     try {
-      const response = await post(route('deposit.fiat'), {
+      const response = await post<DepositResponse>(route('deposit.fiat'), {
         provider: selectedProvider?.id,
         currency: selectedCurrency?.code,
         amount: amount,
         wallet_address: wallet?.publicKey
       });
 
-      // Handle the provider-specific redirect or widget
-      switch(selectedProvider?.id) {
-        case 'moonpay':
-          window.location.href = response.data.redirectUrl;
-          break;
-        case 'linkio':
-          // Initialize Linkio widget
-          initializeLinkioWidget(response.data.sessionId);
-          break;
-        case 'yellowcard':
-          // Initialize Yellow Card widget
-          initializeYellowCardWidget(response.data.sessionId);
-          break;
+      if (response && response.data) {
+        switch(selectedProvider?.id) {
+          case 'moonpay':
+            if (response.data.redirectUrl) {
+              window.location.href = response.data.redirectUrl;
+            }
+            break;
+          case 'linkio':
+            if (response.data.sessionId) {
+              initializeLinkioWidget(response.data.sessionId);
+            }
+            break;
+          case 'yellowcard':
+            if (response.data.sessionId) {
+              initializeYellowCardWidget(response.data.sessionId);
+            }
+            break;
+        }
       }
     } catch (error) {
       console.error('Deposit failed:', error);
@@ -265,12 +283,14 @@ export default function Dashboard({
         </div>
       )}
 
-      {depositStep === 'amount' && (
+      {depositStep === 'amount' && selectedProvider && (
         <DepositAmountForm
           selectedProvider={selectedProvider}
           currencies={currencies}
           exchangeRates={exchangeRates}
-          onSubmit={handleFiatDeposit}
+          onSubmit={(data) => {
+            handleFiatDeposit(new Event('submit') as any);
+          }}
           onBack={() => setDepositStep('provider')}
         />
       )}
@@ -319,7 +339,11 @@ export default function Dashboard({
 
       {/* Updated modals */}
       {depositModal && (
-        <Modal onClose={CloseModal} title="Deposit Funds">
+        <Modal
+          show={depositModal}
+          onClose={CloseModal}
+          maxWidth="2xl"
+        >
           <DepositModalContent />
         </Modal>
       )}

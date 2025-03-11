@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Head, useForm } from "@inertiajs/react";
 import AdminLayout from "@/Layouts/AdminLayout";
+import { Switch } from '@headlessui/react';
 
 interface SettingsProps {
     settings: {
@@ -24,6 +25,9 @@ interface SettingsProps {
         exchange_rate_api: string;
         support_email: string;
         kyc_verification_provider: string;
+        moonpay_enabled: boolean;
+        yellowcard_enabled: boolean;
+        linkio_enabled: boolean;
     };
 }
 
@@ -37,9 +41,12 @@ const Settings = ({ settings }: SettingsProps) => {
         }
     };
 
+    const handleToggleChange = (name: keyof typeof data) => {
+        setData(name, !data[name]);
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post("/admin/settings/update");
         post("/admin/settings/update");
     };
 
@@ -53,13 +60,24 @@ const Settings = ({ settings }: SettingsProps) => {
                         {Object.keys(settings).map((key) => (
                             <div key={key}>
                                 <label className="block text-gray-700 dark:text-gray-300 uppercase">{key.replace(/_/g, " ")}</label>
-                                <input
-                                    type="text"
-                                    name={key}
-                                    value={String(data[key as keyof typeof settings])}
-                                    onChange={handleChange}
-                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
-                                />
+                                {key === 'maintenance_mode' || key === 'moonpay_enabled' || key === 'yellowcard_enabled' || key === 'linkio_enabled' ? (
+                                    <Switch
+                                        checked={data[key]}
+                                        onChange={() => handleToggleChange(key)}
+                                        className="relative inline-flex flex-shrink-0"
+                                    >
+                                        <span className="sr-only">Enable {key.replace(/_/g, " ")}</span>
+                                        <span className="translate-x-0 inline-block bg-gray-600 rounded-full w-14 h-8 transition-transform duration-200 ease-in-out"></span>
+                                    </Switch>
+                                ) : (
+                                    <input
+                                        type="text"
+                                        name={key}
+                                        value={String(data[key as keyof typeof settings])}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
+                                    />
+                                )}
                             </div>
                         ))}
                     </div>

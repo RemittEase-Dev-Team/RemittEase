@@ -29,11 +29,11 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
   const getProviderLogo = () => {
     switch (provider) {
       case 'moonpay':
-        return '/images/providers/moonpay-logo.svg';
+        return '/images/providers/moonpay.svg';
       case 'linkio':
-        return '/images/providers/linkio-logo.svg';
+        return '/images/providers/linkio.svg';
       case 'yellowcard':
-        return '/images/providers/yellowcard-logo.svg';
+        return '/images/providers/yellowcard.svg';
       default:
         return '';
     }

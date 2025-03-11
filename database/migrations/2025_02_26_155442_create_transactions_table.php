@@ -13,17 +13,23 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('sender_wallet_id')->nullable()->constrained('wallets')->nullOnDelete();
             $table->string('recipient_address');
             $table->foreignId('recipient_wallet_id')->nullable()->constrained('wallets')->nullOnDelete();
-            $table->decimal('amount', 20, 7);
+            $table->decimal('amount', 20, 8);
+            $table->string('currency')->default('XLM');
             $table->string('asset_code')->default('XLM');
             $table->string('transaction_hash')->nullable();
             $table->text('memo')->nullable();
-            $table->enum('type', ['deposit', 'withdrawal', 'transfer']);
-            $table->enum('status', ['pending', 'completed', 'failed']);
+            $table->string('type'); // deposit, withdrawal, transfer
+            $table->string('status')->default('pending'); // pending, completed, failed
             $table->string('reference')->unique();
             $table->timestamps();
+
+            $table->index(['user_id', 'type']);
+            $table->index('status');
+            $table->index('created_at');
         });
     }
 

@@ -40,6 +40,8 @@ class SettingsController extends Controller
             'support_email' => 'required|email',
             'kyc_verification_provider' => 'required|string',
             'moonpay_enabled' => 'required|boolean',
+            'linkio_enabled' => 'required|boolean',
+            'yellowcard_enabled' => 'required|boolean',
         ]);
 
         $settings = Settings::first();
