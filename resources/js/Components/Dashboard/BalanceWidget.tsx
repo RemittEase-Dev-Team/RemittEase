@@ -11,34 +11,27 @@ interface Wallet {
   created_at: string;
 }
 
-interface Props {
+interface BalanceWidgetProps {
   wallet: Wallet | null;
-  balance: {
-    [key in CurrencyCode]: {
-      amount: number;
-      change: number;
-      percentage: number;
-    };
-  };
+  balance: any;
   currencyMain: CurrencyCode;
-  setCurrencyMain: Dispatch<SetStateAction<CurrencyCode>>;
+  setCurrencyMain: (currency: CurrencyCode) => void;
+  onDeposit: () => void;
+  onWithdraw: () => void;
+  onSend: () => void;
   moonpayEnabled: boolean;
-  setDepositModal: Dispatch<SetStateAction<boolean>>;
-  setWithdrawalModal: Dispatch<SetStateAction<boolean>>;
-  setSendModal: Dispatch<SetStateAction<boolean>>;
 }
 
-export default function BalanceWidget({
+const BalanceWidget: React.FC<BalanceWidgetProps> = ({
   wallet,
   balance,
   currencyMain,
   setCurrencyMain,
-  moonpayEnabled,
-  setDepositModal,
-  setWithdrawalModal,
-  setSendModal
-}: Props) {
-
+  onDeposit,
+  onWithdraw,
+  onSend,
+  moonpayEnabled
+}) => {
   return (
     <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl p-5 shadow-sm md:col-span-1 lg:col-span-1">
       <div className="bg-gradient-to-r from-blue-100 to-orange-300 dark:bg-gradient-to-r dark:from-blue-900 dark:to-orange-700 rounded-lg p-3">
@@ -74,20 +67,20 @@ export default function BalanceWidget({
       <div className="flex gap-3 mt-4">
         {moonpayEnabled && (
           <button
-            onClick={() => setDepositModal(true)}
+            onClick={onDeposit}
             className="bg-yellow-700 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg flex-1 font-medium"
           >
             Deposit
           </button>
         )}
         <button
-          onClick={() => setWithdrawalModal(true)}
+          onClick={onWithdraw}
           className="bg-blue-700 hover:bg-blue-600 text-white py-2 px-4 rounded-lg flex-1 font-medium"
         >
           Withdraw
         </button>
         <button
-          onClick={() => setSendModal(true)}
+          onClick={onSend}
           className="bg-green-700 hover:bg-green-600 text-white py-2 px-4 rounded-lg flex-1 font-medium"
         >
           Send
@@ -110,4 +103,6 @@ export default function BalanceWidget({
       </div>
     </div>
   );
-}
+};
+
+export default BalanceWidget;
