@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8ffc82ea9d81fd15221b8aa9accd92ab",
+    "content-hash": "cfa4c8b9fdf5c20a8dd73c506fff7de8",
     "packages": [
         {
             "name": "brick/math",
@@ -568,6 +568,56 @@
                 }
             ],
             "time": "2024-12-27T00:36:43+00:00"
+        },
+        {
+            "name": "emekaorjiani/linkio",
+            "version": "v1.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/emekaorjiani/linkio.git",
+                "reference": "e19bcf1335e17ea8aa24bc55aaf5e166608c8aca"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/emekaorjiani/linkio/zipball/e19bcf1335e17ea8aa24bc55aaf5e166608c8aca",
+                "reference": "e19bcf1335e17ea8aa24bc55aaf5e166608c8aca",
+                "shasum": ""
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.1"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "LinkIO": "EmekaOrjiani\\LinkIO\\Facades\\LinkIO"
+                    },
+                    "providers": [
+                        "EmekaOrjiani\\LinkIO\\LinkIOServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "EmekaOrjiani\\LinkIO\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "DoctorVee Orjiani",
+                    "email": "emekaorjiani@gmail.com"
+                }
+            ],
+            "description": "Laravel package for LinkIO integration",
+            "support": {
+                "issues": "https://github.com/emekaorjiani/linkio/issues",
+                "source": "https://github.com/emekaorjiani/linkio/tree/v1.0.3"
+            },
+            "time": "2025-03-11T11:07:14+00:00"
         },
         {
             "name": "fruitcake/php-cors",
