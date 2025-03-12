@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Head, useForm } from "@inertiajs/react";
 import AdminLayout from "@/Layouts/AdminLayout";
-import { Switch } from '@headlessui/react';
+import { Switch, Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
 
 interface SettingsProps {
     settings: {
@@ -33,63 +33,197 @@ interface SettingsProps {
 
 const Settings = ({ settings }: SettingsProps) => {
     const { data, setData, post, processing } = useForm(settings);
+    const [loadingFields, setLoadingFields] = useState<string[]>([]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const updateSetting = (name: keyof typeof data, value: any) => {
+        setData(name, value);
+        setLoadingFields(prev => [...prev, name]);
+
+        post("/admin/settings/update", {
+            preserveScroll: true,
+            onFinish: () => {
+                setLoadingFields(prev => prev.filter(f => f !== name));
+            },
+        });
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        if (name in data) {
-            setData(name as keyof typeof data, value);
-        }
+        updateSetting(name as keyof typeof data, value);
     };
 
-    const handleToggleChange = (name: keyof typeof data) => {
-        setData(name, !data[name]);
+    const handleToggle = (name: keyof typeof data) => {
+        const newValue = !data[name];
+        updateSetting(name, newValue);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        post("/admin/settings/update");
-    };
+    const isLoading = (field: string) => loadingFields.includes(field);
 
     return (
         <AdminLayout>
             <Head title="Settings" />
+
             <div className="p-6 bg-gray-100 dark:bg-gray-900 min-h-screen">
                 <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">Application Settings</h2>
-                <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {Object.keys(settings).map((key) => (
-                            <div key={key}>
-                                <label className="block text-gray-700 dark:text-gray-300 uppercase">{key.replace(/_/g, " ")}</label>
-                                {key === 'maintenance_mode' || key === 'moonpay_enabled' || key === 'yellowcard_enabled' || key === 'linkio_enabled' ? (
-                                    <Switch
-                                        checked={data[key]}
-                                        onChange={() => handleToggleChange(key)}
-                                        className="relative inline-flex flex-shrink-0"
-                                    >
-                                        <span className="sr-only">Enable {key.replace(/_/g, " ")}</span>
-                                        <span className="translate-x-0 inline-block bg-gray-600 rounded-full w-14 h-8 transition-transform duration-200 ease-in-out"></span>
-                                    </Switch>
-                                ) : (
-                                    <input
-                                        type="text"
-                                        name={key}
-                                        value={String(data[key as keyof typeof settings])}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
-                                    />
-                                )}
-                            </div>
-                        ))}
-                    </div>
 
-                    <button
-                        type="submit"
-                        disabled={processing}
-                        className="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                        {processing ? "Saving..." : "Save Settings"}
-                    </button>
-                </form>
+                <TabGroup>
+                    <TabList className="flex space-x-4 mb-6">
+                        {["General", "Payment Gateways", "Security", "Support"].map((tab, idx) => (
+                            <Tab
+                                key={idx}
+                                className={({ selected }) =>
+                                    `px-4 py-2 rounded-lg text-sm font-medium ${
+                                        selected
+                                            ? "bg-blue-600 text-white"
+                                            : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                                    }`
+                                }
+                            >
+                                {tab}
+                            </Tab>
+                        ))}
+                    </TabList>
+
+                    <TabPanels>
+                        {/* GENERAL */}
+                        <TabPanel>
+                            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {[
+                                        'app_name',
+                                        'app_version',
+                                        'currency',
+                                        'default_currency',
+                                        'transaction_fee',
+                                        'max_transaction_limit',
+                                        'min_transaction_limit',
+                                        'stellar_network',
+                                        'maintenance_mode'
+                                    ].map((key) => (
+                                        <div key={key}>
+                                            <label className="block text-gray-700 dark:text-gray-300 uppercase mb-1">
+                                                {key.replace(/_/g, " ")}
+                                            </label>
+
+                                            {key === 'maintenance_mode' ? (
+                                                <Switch
+                                                    checked={data[key]}
+                                                    onChange={() => handleToggle(key)}
+                                                    className={`${
+                                                        data[key] ? 'bg-green-500' : 'bg-gray-400'
+                                                    } relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none`}
+                                                >
+                                                    <span
+                                                        className={`${
+                                                            data[key] ? 'translate-x-6' : 'translate-x-1'
+                                                        } inline-block w-4 h-4 transform bg-white rounded-full transition-transform`}
+                                                    />
+                                                </Switch>
+                                            ) : (
+                                                <input
+                                                    type={typeof data[key] === "number" ? "number" : "text"}
+                                                    name={key}
+                                                    value={data[key] ?? ""}
+                                                    onChange={handleInputChange}
+                                                    className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
+                                                    disabled={isLoading(key)}
+                                                />
+                                            )}
+
+                                            {isLoading(key) && (
+                                                <p className="text-xs text-blue-500 mt-1">Updating...</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </TabPanel>
+
+                        {/* PAYMENT GATEWAYS */}
+                        <TabPanel>
+                            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {['moonpay_enabled', 'yellowcard_enabled', 'linkio_enabled'].map((key) => (
+                                        <div key={key}>
+                                            <label className="block text-gray-700 dark:text-gray-300 uppercase mb-1">
+                                                {key.replace(/_/g, " ")}
+                                            </label>
+                                            <Switch
+                                                checked={data[key]}
+                                                onChange={() => handleToggle(key)}
+                                                className={`${
+                                                    data[key] ? 'bg-green-500' : 'bg-gray-400'
+                                                } relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none`}
+                                            >
+                                                <span
+                                                    className={`${
+                                                        data[key] ? 'translate-x-6' : 'translate-x-1'
+                                                    } inline-block w-4 h-4 transform bg-white rounded-full transition-transform`}
+                                                />
+                                            </Switch>
+
+                                            {isLoading(key) && (
+                                                <p className="text-xs text-blue-500 mt-1">Updating...</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </TabPanel>
+
+                        {/* SECURITY */}
+                        <TabPanel>
+                            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {['api_key', 'api_secret'].map((key) => (
+                                        <div key={key}>
+                                            <label className="block text-gray-700 dark:text-gray-300 uppercase mb-1">
+                                                {key.replace(/_/g, " ")}
+                                            </label>
+                                            <input
+                                                type="password"
+                                                name={key}
+                                                value={data[key] ?? ""}
+                                                onChange={handleInputChange}
+                                                className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
+                                                disabled={isLoading(key)}
+                                            />
+                                            {isLoading(key) && (
+                                                <p className="text-xs text-blue-500 mt-1">Updating...</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </TabPanel>
+
+                        {/* SUPPORT */}
+                        <TabPanel>
+                            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {['contact_email', 'support_phone', 'support_email'].map((key) => (
+                                        <div key={key}>
+                                            <label className="block text-gray-700 dark:text-gray-300 uppercase mb-1">
+                                                {key.replace(/_/g, " ")}
+                                            </label>
+                                            <input
+                                                type="email"
+                                                name={key}
+                                                value={data[key as keyof typeof data] ?? ""}
+                                                onChange={handleInputChange}
+                                                className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
+                                                disabled={isLoading(key)}
+                                            />
+                                            {isLoading(key) && (
+                                                <p className="text-xs text-blue-500 mt-1">Updating...</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </TabPanel>
+                    </TabPanels>
+                </TabGroup>
             </div>
         </AdminLayout>
     );

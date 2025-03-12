@@ -74,7 +74,7 @@ const Users = ({ users }: UsersProps) => {
                                     <td className={`p-3 ${user.kyc_status === "verified" ? "text-green-500" : "text-yellow-500"}`}>
                                         {user.kyc_status}
                                     </td>
-                                    <td className="p-3">${user.wallet_balance?.toFixed(2)}</td>
+                                    <td className="p-3">{user.wallet_balance ? `$${user.wallet_balance.toFixed(2)}` : 'N/A'}</td>
                                     <td className="p-3 flex space-x-3">
                                         <Link href={`/admin/users/${user.id}`} className="text-blue-500 hover:underline">
                                             <Eye className="w-5 h-5" />

@@ -10,7 +10,7 @@ interface UserDetailsProps {
         email: string;
         role: string;
         kyc_status: string;
-        wallet_balance: number;
+        wallet_balance: number | string; // Changed to allow for string or number
         transactions: Array<{ id: number; amount: number; status: string }>;
     };
 }
@@ -37,7 +37,7 @@ const UserDetails = ({ user }: UserDetailsProps) => {
                             <p className="text-lg text-gray-800 dark:text-gray-100"><strong>Email:</strong> {user.email}</p>
                             <p className="text-lg text-gray-800 dark:text-gray-100"><strong>Role:</strong> {user.role}</p>
                             <p className="text-lg text-gray-800 dark:text-gray-100"><strong>KYC Status:</strong> <span className={user.kyc_status === "verified" ? "text-green-500" : "text-yellow-500"}>{user.kyc_status}</span></p>
-                            <p className="text-lg text-gray-800 dark:text-gray-100"><strong>Wallet Balance:</strong> <span className="text-blue-500">${user.wallet_balance.toFixed(2)}</span></p>
+                            <p className="text-lg text-gray-800 dark:text-gray-100"><strong>Wallet Balance:</strong> <span className="text-blue-500">${typeof user.wallet_balance === 'number' ? user.wallet_balance.toFixed(2) : user.wallet_balance}</span></p>
                         </div>
                     </div>
                 </div>
