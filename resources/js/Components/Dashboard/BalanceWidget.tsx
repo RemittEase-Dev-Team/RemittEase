@@ -1,6 +1,5 @@
 import { Dispatch, SetStateAction } from 'react';
-
-type CurrencyCode = 'XLM' | 'USD' | 'NGN' | 'EUR' | 'GBP';
+import { CurrencyCode } from '@/types/currency';
 
 interface Wallet {
   publicKey: string;
@@ -9,6 +8,11 @@ interface Wallet {
   status: string;
   isVerified: boolean;
   created_at: string;
+}
+
+interface BalanceData {
+  amount: number | string;
+  // ... other properties
 }
 
 interface BalanceWidgetProps {
@@ -50,7 +54,9 @@ const BalanceWidget: React.FC<BalanceWidgetProps> = ({
           </select>
         </div>
         <div className="text-3xl font-bold mb-1 flex items-center dark:text-gray-100">
-          {wallet ? Number(wallet.balance).toLocaleString() : '0'}
+          {typeof wallet === 'object' && wallet !== null && 'balance' in wallet
+            ? Number(wallet.balance).toLocaleString()
+            : '0'}
         </div>
         <div
           className={`text-sm flex items-center gap-1 ${
@@ -96,7 +102,9 @@ const BalanceWidget: React.FC<BalanceWidgetProps> = ({
               <span>{cur}</span>
             </div>
             <div className="font-medium">
-              {data.amount.toLocaleString()}
+              {typeof data === 'object' && data !== null && 'amount' in data
+                ? Number(data.amount).toLocaleString()
+                : '0'}
             </div>
           </div>
         ))}

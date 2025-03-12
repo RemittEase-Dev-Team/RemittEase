@@ -16,8 +16,7 @@ import ProviderCard from '@/Components/Dashboard/ProviderCard';
 import DepositAmountForm from '@/Components/Dashboard/DepositAmountForm';
 import QuickActions from '@/Components/Dashboard/QuickActions';
 import AnalyticsWidget from '@/Components/Dashboard/AnalyticsWidget';
-
-type CurrencyCode = 'XLM' | 'RND' | 'USD' | 'NGN' | 'EUR' | 'GBP';
+import { CurrencyCode } from '@/types/currency';
 
 interface Wallet {
   publicKey: string;
@@ -42,8 +41,18 @@ interface PaymentProvider {
 }
 
 interface DepositResponse {
-  redirectUrl?: string;
-  sessionId?: string;
+  data: {
+    redirectUrl?: string;
+    sessionId?: string;
+  }
+}
+
+interface DepositFormData {
+  [key: string]: string | undefined;
+  provider: string;
+  currency: string;
+  amount: string;
+  wallet_address: string;
 }
 
 interface Props {
@@ -93,10 +102,11 @@ export default function Dashboard({
   exchangeRates
 }: Props) {
   // Inertia form (use if you're posting to your backend)
-  const { data, setData, post } = useForm({
-    type: '',
+  const { data, setData, post } = useForm<DepositFormData>({
+    provider: '',
     currency: '',
     amount: '',
+    wallet_address: ''
   });
 
   // Main local state
@@ -160,30 +170,25 @@ export default function Dashboard({
     setProcessingDeposit(true);
 
     try {
-      const response = await post<DepositResponse>(route('deposit.fiat'), {
-        provider: selectedProvider?.id,
-        currency: selectedCurrency?.code,
+      setData({
+        provider: selectedProvider?.id || '',
+        currency: selectedCurrency?.code || '',
         amount: amount,
-        wallet_address: wallet?.publicKey
+        wallet_address: wallet?.publicKey || ''
       });
 
-      if (response && response.data) {
-        switch(selectedProvider?.id) {
-          case 'moonpay':
-            if (response.data.redirectUrl) {
-              window.location.href = response.data.redirectUrl;
-            }
-            break;
-          case 'linkio':
-            if (response.data.sessionId) {
-              initializeLinkioWidget(response.data.sessionId);
-            }
-            break;
-          case 'yellowcard':
-            if (response.data.sessionId) {
-              initializeYellowCardWidget(response.data.sessionId);
-            }
-            break;
+      const response = await post(route('deposit.fiat')) as unknown as DepositResponse;
+
+      if (response?.data) {
+        if (response.data.redirectUrl) {
+          window.location.href = response.data.redirectUrl;
+        } else if (response.data.sessionId) {
+          const provider = selectedProvider?.id;
+          if (provider === 'linkio') {
+            initializeLinkioWidget(response.data.sessionId);
+          } else if (provider === 'yellowcard') {
+            initializeYellowCardWidget(response.data.sessionId);
+          }
         }
       }
     } catch (error) {
@@ -402,7 +407,7 @@ export default function Dashboard({
               wallet={wallet}
               balance={balance}
               currencyMain={currencyMain}
-              setCurrencyMain={setCurrencyMain}
+              setCurrencyMain={(currency: CurrencyCode) => setCurrencyMain(currency)}
               onDeposit={() => setDepositModal(true)}
               onWithdraw={() => setWithdrawalModal(true)}
               onSend={() => setSendModal(true)}

@@ -4122,6 +4122,11 @@ react-chartjs-2@^5.3.0:
   resolved "https://registry.yarnpkg.com/react-chartjs-2/-/react-chartjs-2-5.3.0.tgz#2d3286339a742bc7f77b5829c33ebab215f714cc"
   integrity sha512-UfZZFnDsERI3c3CZGxzvNJd02SHjaSJ8kgW1djn65H1KK8rehwTjyrRKOG3VTMG8wtHZ5rgAO5oTHtHi9GCCmw==
 
+react-country-state-city@^1.1.12:
+  version "1.1.12"
+  resolved "https://registry.yarnpkg.com/react-country-state-city/-/react-country-state-city-1.1.12.tgz#da4486005538a5f5c5e629a77463b379a6986c5e"
+  integrity sha512-9xOfUvm5uw5zZEjjNT3eooWvrJB08Hv1MITPYfgeQUttCHEpxbD/iqMzXNBF2g3Owc9MEnhrKCSpKn5DpTDHqg==
+
 react-crypto-icons@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/react-crypto-icons/-/react-crypto-icons-1.0.5.tgz#015912c20d6c3177861afeaab3f37e4200556ca9"

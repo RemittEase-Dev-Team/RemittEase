@@ -101,7 +101,7 @@ export default function WithdrawalModal({
               placeholder="Paste wallet address"
               value={walletAddress}
               onChange={(e) => setWalletAddress(e.target.value)}
-              className="w-full p-2 dark:text-white border border-gray-200 dark:border-gray-700 rounded-md dark:text-gray-100 dark:bg-gray-800"
+              className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded-md dark:text-gray-100 dark:bg-gray-800"
             />
           </div>
         )}

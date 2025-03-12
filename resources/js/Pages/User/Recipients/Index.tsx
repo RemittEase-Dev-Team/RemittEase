@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
-import { Plus, Search, Edit, Trash } from 'lucide-react';
+import { Plus, Search, Edit, Trash, Eye } from 'lucide-react';
 import { useState } from 'react';
 
 interface Recipient {
@@ -32,6 +32,10 @@ export default function Recipients({ recipients: initialRecipients }: Props) {
         console.error('Failed to delete recipient:', error);
       }
     }
+  };
+
+  const handleShow = (id: number) => {
+    window.location.href = route('recipients.show', { id });
   };
 
   return (
@@ -112,6 +116,12 @@ export default function Recipients({ recipients: initialRecipients }: Props) {
                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                           >
                             <Trash size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleShow(recipient.id)}
+                            className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                          >
+                            <Eye size={18} />
                           </button>
                         </div>
                       </td>

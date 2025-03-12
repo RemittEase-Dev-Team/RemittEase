@@ -20,10 +20,12 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MoonPayController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RecipientController;
 use App\Http\Controllers\RemittanceController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
 
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -42,16 +44,21 @@ Route::middleware([
     Route::post('/kyc/skip', [App\Http\Controllers\KYCController::class, 'skipKYC'])->name('kyc.skip');
     Route::post('/deposit', [RemittanceController::class, 'loadCash'])->name('deposit');
     Route::post('/withdraw', [RemittanceController::class, 'withdrawFunds'])->name('withdraw');
-
-
+    Route::get('/recipients', [RecipientController::class, 'index'])->name('recipients.index');
+    Route::post('/recipients', [RecipientController::class, 'store'])->name('recipients.store');
+    Route::get('/recipients/create', [RecipientController::class, 'create'])->name('recipients.create');
+    Route::get('/recipients/{id}/edit', [RecipientController::class, 'edit'])->name('recipients.edit');
+    Route::post('/recipient/{id}/update', [RecipientController::class, 'update'])->name('recipients.update');
+    Route::get('/recipients/{id}', [RecipientController::class, 'show'])->name('recipients.show');
+    Route::post('/recipients/{id}', [RecipientController::class, 'destroy'])->name('recipients.destroy');
     // MoonPay routes
-Route::post('/moonpay/create', [App\Http\Controllers\MoonPayController::class, 'createTransaction'])->name('moonpay.create');
-Route::post('/moonpay/webhook', [App\Http\Controllers\MoonPayController::class, 'webhook'])->name('moonpay.webhook');
+    Route::post('/moonpay/create', [App\Http\Controllers\MoonPayController::class, 'createTransaction'])->name('moonpay.create');
+    Route::post('/moonpay/webhook', [App\Http\Controllers\MoonPayController::class, 'webhook'])->name('moonpay.webhook');
 
-// Stellar wallet routes
-Route::get('/stellar/address', [App\Http\Controllers\StellarController::class, 'generateAddress'])->name('stellar.address');
-Route::post('/stellar/withdraw', [App\Http\Controllers\StellarController::class, 'withdraw'])->name('stellar.withdraw');
-Route::post('/stellar/send', [App\Http\Controllers\StellarController::class, 'send'])->name('stellar.send');
+    // Stellar wallet routes
+    Route::get('/stellar/address', [App\Http\Controllers\StellarController::class, 'generateAddress'])->name('stellar.address');
+    Route::post('/stellar/withdraw', [App\Http\Controllers\StellarController::class, 'withdraw'])->name('stellar.withdraw');
+    Route::post('/stellar/send', [App\Http\Controllers\StellarController::class, 'send'])->name('stellar.send');
 });
 
 
