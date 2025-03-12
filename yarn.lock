@@ -467,6 +467,16 @@
   dependencies:
     promise-worker-transferable "^1.0.4"
 
+"@moonpay/moonpay-js@^0.6.6":
+  version "0.6.6"
+  resolved "https://registry.yarnpkg.com/@moonpay/moonpay-js/-/moonpay-js-0.6.6.tgz#68a95334517749beb7b2b0c95d4c3ca99f9d0b29"
+  integrity sha512-zQLyRF/qrzcY+9lwTeI2cQtB5/l9/bY4d858q8/2leFnokuJNVOXD1FTZiD0HjSto2aGEEtO/FH8ooSP+Qj6eg==
+
+"@moonpay/moonpay-react@^1.8.10":
+  version "1.8.10"
+  resolved "https://registry.yarnpkg.com/@moonpay/moonpay-react/-/moonpay-react-1.8.10.tgz#2f8eccc07935b0cf2452d6bb4c118b8657b571da"
+  integrity sha512-N6IuLZNVExyjOCikHU/DuyN+9gkUsVc/usTAaTL5mXOwClfWH3UFJGJUt3CY/gloVZSPnhldbVfjisyoRd4J4A==
+
 "@noble/ciphers@1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@noble/ciphers/-/ciphers-1.2.0.tgz#a7858e18eb620f6b2a327a7f0e647b6a78fd0727"
