@@ -119,9 +119,11 @@ export default function Dashboard({
   const [selectedCurrency, setSelectedCurrency] = useState<any | null>(null);
   const [amount, setAmount] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
-  const [selectedProvider, setSelectedProvider] = useState<PaymentProvider | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<PaymentProvider | any | null>(null);
   const [depositStep, setDepositStep] = useState<'provider' | 'amount' | 'payment'>('provider');
   const [processingDeposit, setProcessingDeposit] = useState(false);
+
+  console.log("p: ", paymentProviders)
 
   // Dummy balances, totalBalance, chartData, etc.
   const [balance, setBalance] = useState({
@@ -249,7 +251,8 @@ export default function Dashboard({
               title="MoonPay"
               description="Credit/Debit Card, Bank Transfer"
               onClick={() => {
-                const provider = paymentProviders.find(p => p.id === 'moonpay');
+                // const provider = paymentProviders.find(p => p.id === 'moonpay');
+                const provider = 'moonpay'
                 if (provider) {
                   setSelectedProvider(provider);
                   setDepositStep('amount');
@@ -263,7 +266,8 @@ export default function Dashboard({
               title="Linkio"
               description="Local Bank Transfer"
               onClick={() => {
-                const provider = paymentProviders.find(p => p.id === 'linkio');
+                // const provider = paymentProviders.find(p => p.id === 'linkio');
+                const provider = 'linkio'
                 if (provider) {
                   setSelectedProvider(provider);
                   setDepositStep('amount');
@@ -277,7 +281,8 @@ export default function Dashboard({
               title="Yellow Card"
               description="Crypto & Local Currency"
               onClick={() => {
-                const provider = paymentProviders.find(p => p.id === 'yellowcard');
+                // const provider = paymentProviders.find(p => p.id === 'yellowcard');
+                const provider = 'yellowcard'
                 if (provider) {
                   setSelectedProvider(provider);
                   setDepositStep('amount');

@@ -32,17 +32,17 @@ interface SettingsProps {
 }
 
 const Settings = ({ settings }: SettingsProps) => {
-    const { data, setData, post, processing } = useForm(settings);
-    const [loadingFields, setLoadingFields] = useState<string[]>([]);
+    const { data, setData, post, processing } = useForm<any>(settings);
+    const [loadingFields, setLoadingFields] = useState<string[] | any>([]);
 
     const updateSetting = (name: keyof typeof data, value: any) => {
         setData(name, value);
-        setLoadingFields(prev => [...prev, name]);
+        setLoadingFields((prev: any) => [...prev, name]);
 
         post("/admin/settings/update", {
             preserveScroll: true,
             onFinish: () => {
-                setLoadingFields(prev => prev.filter(f => f !== name));
+                setLoadingFields((prev: any) => prev.filter((f: any) => f !== name));
             },
         });
     };

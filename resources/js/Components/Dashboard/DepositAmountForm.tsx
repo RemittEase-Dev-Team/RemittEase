@@ -33,6 +33,7 @@ const DepositAmountForm: React.FC<DepositAmountFormProps> = ({
   exchangeRates,
   onSubmit,
   onBack,
+
 }) => {
   const [amount, setAmount] = useState<string>('');
   const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
@@ -53,9 +54,11 @@ const DepositAmountForm: React.FC<DepositAmountFormProps> = ({
     }
   }, [amount, selectedCurrency]);
 
+  console.log("selected prov: ", selectedProvider)
+
   const calculateFees = () => {
     const amountNum = parseFloat(amount) || 0;
-    const providerFee = (amountNum * selectedProvider.fees.percentage) + selectedProvider.fees.fixed;
+    const providerFee = (amountNum * selectedProvider?.fees?.percentage) + selectedProvider?.fees?.fixed;
     const networkFee = 0.001; // Example network fee in XLM
 
     setFees({
@@ -65,9 +68,9 @@ const DepositAmountForm: React.FC<DepositAmountFormProps> = ({
     });
 
     // Calculate estimated XLM based on current exchange rate
-    if (selectedCurrency && exchangeRates[selectedCurrency.code]) {
-      const xlmRate = exchangeRates.XLM;
-      const currencyRate = exchangeRates[selectedCurrency.code];
+    if (selectedCurrency && exchangeRates[selectedCurrency?.code]) {
+      const xlmRate = exchangeRates?.XLM;
+      const currencyRate = exchangeRates[selectedCurrency?.code];
       const estimatedAmount = (amountNum - providerFee) * (xlmRate / currencyRate);
       setEstimatedXLM(estimatedAmount);
     }
@@ -79,7 +82,7 @@ const DepositAmountForm: React.FC<DepositAmountFormProps> = ({
 
     onSubmit({
       amount: parseFloat(amount),
-      currency: selectedCurrency.code,
+      currency: selectedCurrency?.code,
       estimatedXLM,
     });
   };
@@ -103,20 +106,20 @@ const DepositAmountForm: React.FC<DepositAmountFormProps> = ({
           Select Currency
         </label>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-          {currencies.map((currency) => (
+          {currencies?.map((currency) => (
             <button
               key={currency.code}
               type="button"
               onClick={() => setSelectedCurrency(currency)}
               className={`p-3 rounded-lg border ${
-                selectedCurrency?.code === currency.code
+                selectedCurrency?.code === currency?.code
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                   : 'border-gray-200 dark:border-gray-700'
               }`}
             >
               <div className="flex items-center space-x-2">
-                <span className="text-xl">{currency.flag}</span>
-                <span className="font-medium dark:text-white">{currency.code}</span>
+                <span className="text-xl">{currency?.flag}</span>
+                <span className="font-medium dark:text-white">{currency?.code}</span>
               </div>
             </button>
           ))}
@@ -152,18 +155,18 @@ const DepositAmountForm: React.FC<DepositAmountFormProps> = ({
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Provider Fee</span>
               <span className="dark:text-white">
-                {fees.provider.toFixed(2)} {selectedCurrency.code}
+                {fees?.provider?.toFixed(2)} {selectedCurrency?.code}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Network Fee</span>
-              <span className="dark:text-white">{fees.network} XLM</span>
+              <span className="dark:text-white">{fees?.network} XLM</span>
             </div>
             <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
               <div className="flex justify-between font-medium">
                 <span className="dark:text-white">You'll Receive (est.)</span>
                 <span className="text-green-600 dark:text-green-400">
-                  {estimatedXLM.toFixed(7)} XLM
+                  {estimatedXLM?.toFixed(7)} XLM
                 </span>
               </div>
             </div>
