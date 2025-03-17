@@ -47,6 +47,32 @@ class MoonPayService
         }
     }
 
+    public function createTransaction($userId, $amount, $currencyCode = 'xlm')
+    {
+        // Generate a signature for the request
+        $signature = $this->generateSignature([
+            'userId' => $userId,
+            'amount' => $amount,
+            'currencyCode' => $currencyCode
+        ]);
+
+        $response = $this->client->post($this->baseUrl . '/transactions', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'X-Signature' => $signature
+            ],
+            'json' => [
+                'userId' => $userId,
+                'amount' => $amount,
+                'currencyCode' => $currencyCode,
+                'walletAddress' => $this->getUserStellarAddress($userId),
+                'returnUrl' => route('moonpay.callback')
+            ]
+        ]);
+
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
     public function getCheckoutURL(array $queryParams)
     {
          if (!$this->moonpayEnabled) {
@@ -59,10 +85,52 @@ class MoonPayService
         return 'https://buy.moonpay.com?' . $queryString;
     }
 
-    public function handleWebhook(array $data)
+    public function createBuyTransaction($userId, $cryptoCurrency, $amount, $walletAddress, $returnUrl)
     {
-        // TODO: Implement webhook handling logic
-        Log::info('MoonPay webhook received: ' . json_encode($data));
+        try {
+            $response = $this->client->post('/v1/transactions', [
+                'json' => [
+                    'customerId' => $userId,
+                    'currencyCode' => $cryptoCurrency,
+                    'baseCurrencyAmount' => $amount,
+                    'walletAddress' => $walletAddress,
+                    'returnUrl' => $returnUrl,
+                    'externalTransactionId' => $this->generateTransactionId()
+                ]
+            ]);
+
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (\Exception $e) {
+            Log::error('MoonPay API Error: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getTransaction($transactionId)
+    {
+        try {
+            $response = $this->client->get("/v1/transactions/{$transactionId}");
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (\Exception $e) {
+            Log::error('MoonPay API Error: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function verifyWebhookSignature($payload, $signature)
+    {
+        $computedSignature = hash_hmac(
+            'sha256',
+            $payload,
+            config('services.moonpay.webhook_secret')
+        );
+
+        return hash_equals($computedSignature, $signature);
+    }
+
+    private function generateTransactionId()
+    {
+        return uniqid('tx_', true);
     }
 
     public function isMoonPayEnabled(): bool

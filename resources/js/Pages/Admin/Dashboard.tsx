@@ -104,9 +104,9 @@ const AdminDashboard: React.FC<DashboardProps> = ({
     <AdminLayout>
       <Head title="Admin Dashboard" />
       <div className="text-gray-900 dark:text-white">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold text-blue-800 dark:text-blue-400">Remittance Dashboard</h2>
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 mt-4 md:mt-0">
             <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
               Export Report
             </button>
@@ -216,8 +216,8 @@ const AdminDashboard: React.FC<DashboardProps> = ({
 
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Remittance Destinations</h3>
-            <div className="flex">
-              <div className="w-1/2">
+            <div className="flex flex-col md:flex-row">
+              <div className="w-full md:w-1/2">
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
@@ -238,7 +238,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="w-1/2">
+              <div className="w-full md:w-1/2 mt-4 md:mt-0">
                 <div className="h-full flex flex-col justify-center">
                   <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-4">Top Destinations</h4>
                   <ul className="space-y-3">
@@ -305,8 +305,8 @@ const AdminDashboard: React.FC<DashboardProps> = ({
 
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Transaction Status Distribution</h3>
-            <div className="flex">
-              <div className="w-1/2">
+            <div className="flex flex-col md:flex-row">
+              <div className="w-full md:w-1/2">
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie
@@ -327,7 +327,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="w-1/2">
+              <div className="w-full md:w-1/2 mt-4 md:mt-0">
                 <div className="h-full flex flex-col justify-center">
                   <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-4">Status Breakdown</h4>
                   <ul className="space-y-3">
@@ -354,7 +354,7 @@ const AdminDashboard: React.FC<DashboardProps> = ({
 
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Stellar Network Status</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
               <div className="flex items-center">
                 <div className={`h-3 w-3 rounded-full mr-2 ${

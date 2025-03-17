@@ -47,7 +47,7 @@ export default function Create() {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold">Add New Recipient</h2>}
+            header={<h2 className="text-xl font-semibold dark:text-white">Add New Recipient</h2>}
         >
             <Head title="Add Recipient" />
 
@@ -57,7 +57,7 @@ export default function Create() {
                         <form onSubmit={submit} className="space-y-6">
                             {/* Personal Information */}
                             <div className="space-y-4">
-                                <h3 className="text-lg font-medium">Personal Information</h3>
+                                <h3 className="text-lg font-medium dark:text-white">Personal Information</h3>
 
                                 <div>
                                     <InputLabel htmlFor="name" value="Full Name" />
@@ -114,7 +114,7 @@ export default function Create() {
 
                             {/* Bank Information */}
                             <div className="space-y-4 pt-6">
-                                <h3 className="text-lg font-medium">Bank Information</h3>
+                                <h3 className="text-lg font-medium dark:text-white">Bank Information</h3>
 
                                 <div>
                                     <InputLabel htmlFor="bank_name" value="Bank Name" />
@@ -169,7 +169,7 @@ export default function Create() {
 
                             {/* Address Information */}
                             <div className="space-y-4 pt-6">
-                                <h3 className="text-lg font-medium">Address Information</h3>
+                                <h3 className="text-lg font-medium dark:text-white">Address Information</h3>
 
                                 <div>
                                     <InputLabel htmlFor="address" value="Address (Optional)" />

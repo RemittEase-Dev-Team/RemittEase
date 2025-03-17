@@ -42,6 +42,7 @@ return [
     'moonpay' => [
         'public_key' => env('MOONPAY_PUBLIC_KEY'),
         'secret_key' => env('MOONPAY_SECRET_KEY'),
+        'base_url' => env('MOONPAY_BASE_URL', 'https://api.moonpay.com'),
     ],
 
 ];
