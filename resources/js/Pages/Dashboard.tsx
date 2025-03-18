@@ -98,7 +98,7 @@ export default function Dashboard({
   wallet,
   transactions,
   currencies,
-  paymentProviders,
+  // paymentProviders,
   exchangeRates
 }: Props) {
   // Inertia form (use if you're posting to your backend)
@@ -122,6 +122,31 @@ export default function Dashboard({
   const [selectedProvider, setSelectedProvider] = useState<PaymentProvider | any | null>(null);
   const [depositStep, setDepositStep] = useState<'provider' | 'amount' | 'payment'>('provider');
   const [processingDeposit, setProcessingDeposit] = useState(false);
+
+
+  const paymentProviders = [
+    {
+      id: 'moonpay',
+      fees: {
+        percentage: 0.00000020,
+        fixed: 0.000000001
+      },
+    },
+    {
+      id: 'linkio',
+      fees: {
+        percentage: 0.00000005,
+        fixed: 0.00000034
+      },
+    },
+    {
+      id: 'yellowcard',
+      fees: {
+        percentage: 0.00000010,
+        fixed: 1
+      },
+    },
+  ]
 
   console.log("p: ", paymentProviders)
 
@@ -167,21 +192,29 @@ export default function Dashboard({
     console.log('Initializing Yellow Card widget with session:', sessionId);
   };
 
-  const handleFiatDeposit: FormEventHandler = async (e) => {
-    e.preventDefault();
+  const handleFiatDeposit = async (formData: {
+    amount: number;
+    currency: string;
+    estimatedXLM: number;
+  }) => {
     setProcessingDeposit(true);
 
-    try {
-      setData({
-        provider: selectedProvider?.id || '',
-        currency: selectedCurrency?.code || '',
-        amount: amount,
-        wallet_address: wallet?.publicKey || ''
-      });
+    setData({
+      provider: selectedProvider?.id || '',
+      currency: formData.currency,
+      amount: formData.amount.toString(),
+      wallet_address: wallet?.publicKey || ''
+    });
 
-      const response = await post(route('deposit.fiat')) as unknown as DepositResponse;
+    try {
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // const response = post(route('deposit.fiat')) as unknown as DepositResponse;
+      const response = post(route('moonpay.create')) as unknown as DepositResponse;
 
       if (response?.data) {
+        // console.log("se. Pro. :", response)
         if (response.data.redirectUrl) {
           window.location.href = response.data.redirectUrl;
         } else if (response.data.sessionId) {
@@ -251,8 +284,8 @@ export default function Dashboard({
               title="MoonPay"
               description="Credit/Debit Card, Bank Transfer"
               onClick={() => {
-                // const provider = paymentProviders.find(p => p.id === 'moonpay');
-                const provider = 'moonpay'
+                const provider = paymentProviders.find(p => p.id === 'moonpay');
+                // const provider = 'moonpay'
                 if (provider) {
                   setSelectedProvider(provider);
                   setDepositStep('amount');
@@ -266,8 +299,8 @@ export default function Dashboard({
               title="Linkio"
               description="Local Bank Transfer"
               onClick={() => {
-                // const provider = paymentProviders.find(p => p.id === 'linkio');
-                const provider = 'linkio'
+                const provider = paymentProviders.find(p => p.id === 'linkio');
+                // const provider = 'linkio'
                 if (provider) {
                   setSelectedProvider(provider);
                   setDepositStep('amount');
@@ -281,8 +314,8 @@ export default function Dashboard({
               title="Yellow Card"
               description="Crypto & Local Currency"
               onClick={() => {
-                // const provider = paymentProviders.find(p => p.id === 'yellowcard');
-                const provider = 'yellowcard'
+                const provider = paymentProviders.find(p => p.id === 'yellowcard');
+                // const provider = 'yellowcard'
                 if (provider) {
                   setSelectedProvider(provider);
                   setDepositStep('amount');
@@ -298,8 +331,12 @@ export default function Dashboard({
           selectedProvider={selectedProvider}
           currencies={currencies}
           exchangeRates={exchangeRates}
-          onSubmit={(data) => {
-            handleFiatDeposit(new Event('submit') as any);
+          initialAmount={amount}
+          initialCurrency={selectedCurrency}
+          onAmountChange={setAmount}
+          onCurrencyChange={setSelectedCurrency}
+          onSubmit={(formData) => {
+            handleFiatDeposit(formData);
           }}
           onBack={() => setDepositStep('provider')}
         />

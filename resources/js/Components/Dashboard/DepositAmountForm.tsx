@@ -25,18 +25,26 @@ interface DepositAmountFormProps {
     estimatedXLM: number;
   }) => void;
   onBack: () => void;
+  onAmountChange: (amount: string) => void;
+  onCurrencyChange: (currency: Currency | null) => void;
+  initialAmount?: string;
+  initialCurrency?: Currency | null;
 }
 
 const DepositAmountForm: React.FC<DepositAmountFormProps> = ({
   selectedProvider,
   currencies,
-  exchangeRates,
+  // exchangeRates,
   onSubmit,
   onBack,
+  onAmountChange,
+  onCurrencyChange,
+  initialAmount = '',
+  initialCurrency = null,
 
 }) => {
-  const [amount, setAmount] = useState<string>('');
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
+  const [amount, setAmount] = useState<string>(initialAmount);
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(initialCurrency);
   const [estimatedXLM, setEstimatedXLM] = useState<number>(0);
   const [fees, setFees] = useState<{
     provider: number;
@@ -68,9 +76,9 @@ const DepositAmountForm: React.FC<DepositAmountFormProps> = ({
     });
 
     // Calculate estimated XLM based on current exchange rate
-    if (selectedCurrency && exchangeRates[selectedCurrency?.code]) {
-      const xlmRate = exchangeRates?.XLM;
-      const currencyRate = exchangeRates[selectedCurrency?.code];
+    if (selectedCurrency && exchangeRates[selectedCurrency.code as any]) {
+      const xlmRate = exchangeRates.XLM || 1;
+      const currencyRate = exchangeRates[selectedCurrency.code as any] || 1;
       const estimatedAmount = (amountNum - providerFee) * (xlmRate / currencyRate);
       setEstimatedXLM(estimatedAmount);
     }
@@ -85,6 +93,25 @@ const DepositAmountForm: React.FC<DepositAmountFormProps> = ({
       currency: selectedCurrency?.code,
       estimatedXLM,
     });
+  };
+
+  const exchangeRates = [
+    {
+      XLM : 10
+    },
+    {
+      USD : 10
+    },
+  ]
+
+  const handleAmountChange = (value: string) => {
+    setAmount(value);
+    onAmountChange(value);
+  };
+
+  const handleCurrencyChange = (currency: Currency | null) => {
+    setSelectedCurrency(currency);
+    onCurrencyChange(currency);
   };
 
   return (
@@ -110,7 +137,7 @@ const DepositAmountForm: React.FC<DepositAmountFormProps> = ({
             <button
               key={currency.code}
               type="button"
-              onClick={() => setSelectedCurrency(currency)}
+              onClick={() => handleCurrencyChange(currency)}
               className={`p-3 rounded-lg border ${
                 selectedCurrency?.code === currency?.code
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
