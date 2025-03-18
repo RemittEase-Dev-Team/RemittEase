@@ -16,6 +16,7 @@ import ProviderCard from '@/Components/Dashboard/ProviderCard';
 import DepositAmountForm from '@/Components/Dashboard/DepositAmountForm';
 import QuickActions from '@/Components/Dashboard/QuickActions';
 import AnalyticsWidget from '@/Components/Dashboard/AnalyticsWidget';
+import CopyConfirmationModal from '@/Components/Dashboard/CopyConfirmationModal';
 import { CurrencyCode } from '@/types/currency';
 
 interface Wallet {
@@ -122,6 +123,8 @@ export default function Dashboard({
   const [selectedProvider, setSelectedProvider] = useState<PaymentProvider | any | null>(null);
   const [depositStep, setDepositStep] = useState<'provider' | 'amount' | 'payment'>('provider');
   const [processingDeposit, setProcessingDeposit] = useState(false);
+  const [showCopyModal, setShowCopyModal] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState('');
 
   console.log("p: ", paymentProviders)
 
@@ -156,7 +159,8 @@ export default function Dashboard({
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert('Address copied to clipboard!');
+    setCopiedAddress(text);
+    setShowCopyModal(true);
   };
 
   const initializeLinkioWidget = (sessionId: string) => {
@@ -346,6 +350,13 @@ export default function Dashboard({
       <Head title="RemittEase Dashboard" />
 
       <LiveCoinWatchTicker />
+
+      {/* Add the CopyConfirmationModal */}
+      <CopyConfirmationModal
+        show={showCopyModal}
+        onClose={() => setShowCopyModal(false)}
+        address={copiedAddress}
+      />
 
       {/* Updated modals */}
       {depositModal && (
