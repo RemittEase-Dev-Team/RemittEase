@@ -60,17 +60,25 @@ Route::middleware([
     Route::post('/moonpay/create', [App\Http\Controllers\MoonPayController::class, 'createTransaction'])->name('moonpay.create');
     Route::post('/moonpay/webhook', [App\Http\Controllers\MoonPayController::class, 'webhook'])->name('moonpay.webhook');
 
-    // Stellar wallet routes
-    Route::get('/stellar/address', [App\Http\Controllers\StellarController::class, 'generateAddress'])->name('stellar.address');
-    Route::post('/stellar/withdraw', [App\Http\Controllers\StellarController::class, 'withdraw'])->name('stellar.withdraw');
-    Route::post('/stellar/send', [App\Http\Controllers\StellarController::class, 'send'])->name('stellar.send');
+//     // Stellar wallet routes
+//     Route::get('/stellar/address', [App\Http\Controllers\StellarController::class, 'generateAddress'])->name('stellar.address');
+//     Route::post('/stellar/withdraw', [App\Http\Controllers\StellarController::class, 'withdraw'])->name('stellar.withdraw');
+//     Route::post('/stellar/send', [App\Http\Controllers\StellarController::class, 'send'])->name('stellar.send');
 });
 
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+
     Route::get('/sections', [SectionController::class, 'index'])->name('admin.sections');
-    Route::post('/sections/{id}/update', [SectionController::class, 'update']);
+
+    // Section bulk update routes
+    Route::put('/heroes/update', [SectionController::class, 'updateHeroes'])->name('admin.sections.heroes.update');
+    Route::put('/features/update', [SectionController::class, 'updateFeatures'])->name('admin.sections.features.update');
+    Route::put('/abouts/update', [SectionController::class, 'updateAbouts'])->name('admin.sections.abouts.update');
+    Route::put('/quest-rewards/update', [SectionController::class, 'updateQuestRewards'])->name('admin.sections.quest-rewards.update');
+    Route::put('/teams/update', [SectionController::class, 'updateTeams'])->name('admin.sections.teams.update');
+
     Route::get('/kyc', [KYCController::class, 'index'])->name('admin.kyc');
     Route::get('/kyc/{id}/approve', [KYCController::class, 'approve'])->name('admin.kyc.approve');
     Route::get('/kyc/{id}/reject', [KYCController::class, 'reject'])->name('admin.kyc.reject');
@@ -92,12 +100,55 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/users/{id}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
     Route::get('/users/{id}/reject', [UserController::class, 'reject'])->name('admin.users.reject');
     Route::get('/currencies', [CurrencyController::class, 'index'])->name('admin.currencies');
-    Route::resource('heroes', HeroController::class);
-    Route::resource('features', FeaturesController::class);
-    Route::resource('roadmaps', RoadmapController::class);
-    Route::resource('abouts', AboutController::class);
-    Route::resource('blogs', BlogController::class);
-    Route::resource('quest-rewards', QuestRewardController::class);
+
+    Route::get('hero', [HeroController::class, 'index'])->name('admin.hero.index');
+    Route::get('hero/create', [HeroController::class, 'create'])->name('admin.hero.create');
+    Route::post('hero', [HeroController::class, 'store'])->name('admin.hero.store');
+    Route::get('hero/{hero}', [HeroController::class, 'show'])->name('admin.hero.show');
+    Route::get('hero/{hero}/edit', [HeroController::class, 'edit'])->name('admin.hero.edit');
+    Route::put('hero/{hero}', [HeroController::class, 'update'])->name('admin.hero.update');
+    Route::delete('hero/{hero}', [HeroController::class, 'destroy'])->name('admin.hero.destroy');
+
+    Route::get('features', [FeaturesController::class, 'index'])->name('admin.features.index');
+    Route::get('features/create', [FeaturesController::class, 'create'])->name('admin.features.create');
+    Route::post('features', [FeaturesController::class, 'store'])->name('admin.features.store');
+    Route::get('features/{feature}', [FeaturesController::class, 'show'])->name('admin.features.show');
+    Route::get('features/{feature}/edit', [FeaturesController::class, 'edit'])->name('admin.features.edit');
+    Route::put('features/{feature}', [FeaturesController::class, 'update'])->name('admin.features.update');
+    Route::delete('features/{feature}', [FeaturesController::class, 'destroy'])->name('admin.features.destroy');
+
+    Route::get('roadmap', [RoadmapController::class, 'index'])->name('admin.roadmap.index');
+    Route::get('roadmap/create', [RoadmapController::class, 'create'])->name('admin.roadmap.create');
+    Route::post('roadmap', [RoadmapController::class, 'store'])->name('admin.roadmap.store');
+    Route::get('roadmap/{roadmap}', [RoadmapController::class, 'show'])->name('admin.roadmap.show');
+    Route::get('roadmap/{roadmap}/edit', [RoadmapController::class, 'edit'])->name('admin.roadmap.edit');
+    Route::put('roadmap/{roadmap}', [RoadmapController::class, 'update'])->name('admin.roadmap.update');
+    Route::delete('roadmap/{roadmap}', [RoadmapController::class, 'destroy'])->name('admin.roadmap.destroy');
+
+    Route::get('about', [AboutController::class, 'index'])->name('admin.about.index');
+    Route::get('about/create', [AboutController::class, 'create'])->name('admin.about.create');
+    Route::post('about', [AboutController::class, 'store'])->name('admin.about.store');
+    Route::get('about/{about}', [AboutController::class, 'show'])->name('admin.about.show');
+    Route::get('about/{about}/edit', [AboutController::class, 'edit'])->name('admin.about.edit');
+    Route::put('about/{about}', [AboutController::class, 'update'])->name('admin.about.update');
+    Route::delete('about/{about}', [AboutController::class, 'destroy'])->name('admin.about.destroy');
+
+    Route::get('blog', [BlogController::class, 'index'])->name('admin.blog.index');
+    Route::get('blog/create', [BlogController::class, 'create'])->name('admin.blog.create');
+    Route::post('blog', [BlogController::class, 'store'])->name('admin.blog.store');
+    Route::get('blog/{blog}', [BlogController::class, 'show'])->name('admin.blog.show');
+    Route::get('blog/{blog}/edit', [BlogController::class, 'edit'])->name('admin.blog.edit');
+    Route::put('blog/{blog}', [BlogController::class, 'update'])->name('admin.blog.update');
+    Route::delete('blog/{blog}', [BlogController::class, 'destroy'])->name('admin.blog.destroy');
+
+    Route::get('quest-rewards', [QuestRewardController::class, 'index'])->name('admin.quest-rewards.index');
+    Route::get('quest-rewards/create', [QuestRewardController::class, 'create'])->name('admin.quest-rewards.create');
+    Route::post('quest-rewards', [QuestRewardController::class, 'store'])->name('admin.quest-rewards.store');
+    Route::get('quest-rewards/{quest_reward}', [QuestRewardController::class, 'show'])->name('admin.quest-rewards.show');
+    Route::get('quest-rewards/{quest_reward}/edit', [QuestRewardController::class, 'edit'])->name('admin.quest-rewards.edit');
+    Route::put('quest-rewards/{quest_reward}', [QuestRewardController::class, 'update'])->name('admin.quest-rewards.update');
+    Route::delete('quest-rewards/{quest_reward}', [QuestRewardController::class, 'destroy'])->name('admin.quest-rewards.destroy');
+
     Route::get('/teams', [TeamController::class, 'index'])->name('admin.teams.index');
     Route::get('/teams/create', [TeamController::class, 'create'])->name('admin.teams.create');
     Route::post('/teams', [TeamController::class, 'store'])->name('admin.teams.store');
