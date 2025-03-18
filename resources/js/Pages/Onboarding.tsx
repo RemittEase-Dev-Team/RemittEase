@@ -13,7 +13,13 @@ export default function OnboardingPage({ email }: Props) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  const { data, setData, post, processing, errors } = useForm({
+  const { data, setData, post, processing, errors } = useForm<{
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+    terms: boolean;
+  }>({
     name: '',
     email: email,
     password: '',
