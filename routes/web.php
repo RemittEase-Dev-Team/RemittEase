@@ -39,7 +39,7 @@ Route::middleware([
         return Inertia::render('MoonPay');
     });
 
-    
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -53,9 +53,9 @@ Route::middleware([
     Route::post('/recipients', [RecipientController::class, 'store'])->name('recipients.store');
     Route::get('/recipients/create', [RecipientController::class, 'create'])->name('recipients.create');
     Route::get('/recipients/{id}/edit', [RecipientController::class, 'edit'])->name('recipients.edit');
-    Route::post('/recipient/{id}/update', [RecipientController::class, 'update'])->name('recipients.update');
+    Route::patch('/recipients/{id}', [RecipientController::class, 'update'])->name('recipients.update');
     Route::get('/recipients/{id}', [RecipientController::class, 'show'])->name('recipients.show');
-    Route::post('/recipients/{id}', [RecipientController::class, 'destroy'])->name('recipients.destroy');
+    Route::delete('/recipients/{id}', [RecipientController::class, 'destroy'])->name('recipients.destroy');
     // MoonPay routes
     Route::post('/moonpay/create', [App\Http\Controllers\MoonPayController::class, 'createTransaction'])->name('moonpay.create');
     Route::post('/moonpay/webhook', [App\Http\Controllers\MoonPayController::class, 'webhook'])->name('moonpay.webhook');
