@@ -1,82 +1,139 @@
 import React, { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 
+interface Hero {
+  id?: number;
+  title: string;
+  subtitle: string;
+  cta: string;
+}
+
+interface Feature {
+  id?: number;
+  title: string;
+  description: string;
+}
+
+interface About {
+  id?: number;
+  mission: string;
+  vision: string;
+  core_values: string;
+  sub_1_fees: string;
+}
+
+interface QuestReward {
+  id?: number;
+  title: string;
+  description: string;
+  rewardPoints: number;
+  progress: number;
+}
+
+interface Team {
+  id?: number;
+  name: string;
+  role: string;
+  description: string;
+}
+
+type SectionContent = Hero[] | Feature[] | About[] | QuestReward[] | Team[];
+
+interface FormData {
+  [key: string]: any;
+  name: string;
+  content: SectionContent;
+}
+
 interface EditSectionModalProps {
   section: {
     name: string;
-    content: any;
+    content: SectionContent;
   };
   onClose: () => void;
 }
 
 const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose }) => {
-  const { data, setData, submit } = useForm(section.content);
+  // Ensure content is always an array
+  const initialData = Array.isArray(section.content) ? section.content : [section.content];
+  const { data, setData, submit } = useForm<FormData>({
+    name: section.name,
+    content: initialData
+  });
 
   const handleSubmit = () => {
-    setData({
-      name: section.name,
-      content: data
-    });
-    submit('put', `/admin/${section.name.toLowerCase()}/${section.name}`, {
+    const routeMap: { [key: string]: string } = {
+      'Heroes': '/admin/heroes/update',
+      'Features': '/admin/features/update',
+      'Abouts': '/admin/abouts/update',
+      'Quest Rewards': '/admin/quest-rewards/update',
+      'Teams': '/admin/teams/update'
+    };
+
+    submit('put', routeMap[section.name], {
       preserveScroll: true,
       onSuccess: () => onClose(),
     });
   };
 
   const addQuest = () => {
-    setData([...data, { title: '', description: '', rewardPoints: 0, progress: 0 }]);
+    const newQuests = [...(data.content as QuestReward[]), { title: '', description: '', rewardPoints: 0, progress: 0 }];
+    setData('content', newQuests);
   };
 
   const removeQuest = (index: number) => {
-    const newQuests = data.filter((_: any, i: number) => i !== index);
-    setData(newQuests);
+    const newQuests = (data.content as QuestReward[]).filter((_, i) => i !== index);
+    setData('content', newQuests);
   };
 
   const addCoreValue = (index: number) => {
-    const newAbouts = [...data];
+    const newAbouts = [...(data.content as About[])];
     newAbouts[index].core_values = JSON.stringify([...JSON.parse(newAbouts[index].core_values), { title: '', description: '' }]);
-    setData(newAbouts);
+    setData('content', newAbouts);
   };
 
   const removeCoreValue = (index: number, coreIndex: number) => {
-    const newAbouts = [...data];
+    const newAbouts = [...(data.content as About[])];
     newAbouts[index].core_values = JSON.stringify(JSON.parse(newAbouts[index].core_values).filter((_: any, i: number) => i !== coreIndex));
-    setData(newAbouts);
+    setData('content', newAbouts);
   };
 
   const addSub1Fee = (index: number) => {
-    const newAbouts = [...data];
+    const newAbouts = [...(data.content as About[])];
     const sub1Fees = JSON.parse(newAbouts[index].sub_1_fees);
     sub1Fees.fees.push(0);
     newAbouts[index].sub_1_fees = JSON.stringify(sub1Fees);
-    setData(newAbouts);
+    setData('content', newAbouts);
   };
 
   const removeSub1Fee = (index: number, feeIndex: number) => {
-    const newAbouts = [...data];
+    const newAbouts = [...(data.content as About[])];
     const sub1Fees = JSON.parse(newAbouts[index].sub_1_fees);
     sub1Fees.fees = sub1Fees.fees.filter((_: any, i: number) => i !== feeIndex);
     newAbouts[index].sub_1_fees = JSON.stringify(sub1Fees);
-    setData(newAbouts);
+    setData('content', newAbouts);
   };
 
   const renderFormFields = () => {
+    // Ensure data is an array before mapping
+    const dataArray = Array.isArray(data.content) ? data.content : [data.content];
+
     switch (section.name) {
       case 'Heroes':
         return (
           <>
-            {data.map((hero: any, index: number) => (
+            {(dataArray as Hero[]).map((hero: Hero, index: number) => (
               <div key={index} className="mb-4 p-4 border rounded shadow-lg bg-gray-800 text-white">
                 <label className="block text-sm font-medium text-gray-300">Title</label>
                 <input
                   type="text"
                   className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                   placeholder="Title"
-                  value={hero.title}
+                  value={hero.title || ''}
                   onChange={(e) => {
-                    const newHeroes = [...data];
+                    const newHeroes = [...(dataArray as Hero[])];
                     newHeroes[index].title = e.target.value;
-                    setData(newHeroes);
+                    setData('content', newHeroes as Hero[]);
                   }}
                 />
                 <label className="block text-sm font-medium text-gray-300">Subtitle</label>
@@ -84,11 +141,11 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose })
                   type="text"
                   className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                   placeholder="Subtitle"
-                  value={hero.subtitle}
+                  value={hero.subtitle || ''}
                   onChange={(e) => {
-                    const newHeroes = [...data];
+                    const newHeroes = [...(dataArray as Hero[])];
                     newHeroes[index].subtitle = e.target.value;
-                    setData(newHeroes);
+                    setData('content', newHeroes as Hero[]);
                   }}
                 />
                 <label className="block text-sm font-medium text-gray-300">CTA</label>
@@ -96,11 +153,11 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose })
                   type="text"
                   className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                   placeholder="CTA"
-                  value={hero.cta}
+                  value={hero.cta || ''}
                   onChange={(e) => {
-                    const newHeroes = [...data];
+                    const newHeroes = [...(dataArray as Hero[])];
                     newHeroes[index].cta = e.target.value;
-                    setData(newHeroes);
+                    setData('content', newHeroes as Hero[]);
                   }}
                 />
               </div>
@@ -110,61 +167,29 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose })
       case 'Features':
         return (
           <>
-            {data.map((feature: any, index: number) => (
+            {(dataArray as Feature[]).map((feature: Feature, index: number) => (
               <div key={index} className="mb-4 p-4 border rounded shadow-lg bg-gray-800 text-white">
                 <label className="block text-sm font-medium text-gray-300">Title</label>
                 <input
                   type="text"
                   className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                   placeholder="Title"
-                  value={feature.title}
+                  value={feature.title || ''}
                   onChange={(e) => {
-                    const newFeatures = [...data];
+                    const newFeatures = [...(dataArray as Feature[])];
                     newFeatures[index].title = e.target.value;
-                    setData(newFeatures);
+                    setData('content', newFeatures as Feature[]);
                   }}
                 />
                 <label className="block text-sm font-medium text-gray-300">Description</label>
                 <textarea
                   className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                   placeholder="Description"
-                  value={feature.description}
+                  value={feature.description || ''}
                   onChange={(e) => {
-                    const newFeatures = [...data];
+                    const newFeatures = [...(dataArray as Feature[])];
                     newFeatures[index].description = e.target.value;
-                    setData(newFeatures);
-                  }}
-                />
-              </div>
-            ))}
-          </>
-        );
-      case 'Roadmaps':
-        return (
-          <>
-            {data.map((roadmap: any, index: number) => (
-              <div key={index} className="mb-4 p-4 border rounded shadow-lg bg-gray-800 text-white">
-                <label className="block text-sm font-medium text-gray-300">Quarter</label>
-                <input
-                  type="text"
-                  className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
-                  placeholder="Quarter"
-                  value={roadmap.quarter}
-                  onChange={(e) => {
-                    const newRoadmaps = [...data];
-                    newRoadmaps[index].quarter = e.target.value;
-                    setData(newRoadmaps);
-                  }}
-                />
-                <label className="block text-sm font-medium text-gray-300">Details</label>
-                <textarea
-                  className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
-                  placeholder="Details"
-                  value={roadmap.details}
-                  onChange={(e) => {
-                    const newRoadmaps = [...data];
-                    newRoadmaps[index].details = e.target.value;
-                    setData(newRoadmaps);
+                    setData('content', newFeatures as Feature[]);
                   }}
                 />
               </div>
@@ -174,18 +199,18 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose })
       case 'Abouts':
         return (
           <>
-            {data.map((about: any, index: number) => (
+            {(dataArray as About[]).map((about: About, index: number) => (
               <div key={index} className="mb-4 p-4 border rounded shadow-lg bg-gray-800 text-white">
                 <label className="block text-sm font-medium text-gray-300">Mission</label>
                 <input
                   type="text"
                   className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                   placeholder="Mission"
-                  value={about.mission}
+                  value={about.mission || ''}
                   onChange={(e) => {
-                    const newAbouts = [...data];
+                    const newAbouts = [...(dataArray as About[])];
                     newAbouts[index].mission = e.target.value;
-                    setData(newAbouts);
+                    setData('content', newAbouts as About[]);
                   }}
                 />
                 <label className="block text-sm font-medium text-gray-300">Vision</label>
@@ -193,39 +218,39 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose })
                   type="text"
                   className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                   placeholder="Vision"
-                  value={about.vision}
+                  value={about.vision || ''}
                   onChange={(e) => {
-                    const newAbouts = [...data];
+                    const newAbouts = [...(dataArray as About[])];
                     newAbouts[index].vision = e.target.value;
-                    setData(newAbouts);
+                    setData('content', newAbouts as About[]);
                   }}
                 />
                 <label className="block text-sm font-medium text-gray-300">Core Values</label>
-                {JSON.parse(about.core_values).map((coreValue: any, coreIndex: number) => (
+                {JSON.parse(about.core_values || '[]').map((coreValue: any, coreIndex: number) => (
                   <div key={coreIndex} className="mb-2">
                     <input
                       type="text"
                       className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                       placeholder="Core Value Title"
-                      value={coreValue.title}
+                      value={coreValue.title || ''}
                       onChange={(e) => {
-                        const newAbouts = [...data];
-                        const updatedCoreValues = JSON.parse(newAbouts[index].core_values);
+                        const newAbouts = [...(dataArray as About[])];
+                        const updatedCoreValues = JSON.parse(newAbouts[index].core_values || '[]');
                         updatedCoreValues[coreIndex].title = e.target.value;
                         newAbouts[index].core_values = JSON.stringify(updatedCoreValues);
-                        setData(newAbouts);
+                        setData('content', newAbouts as About[]);
                       }}
                     />
                     <textarea
                       className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                       placeholder="Core Value Description"
-                      value={coreValue.description}
+                      value={coreValue.description || ''}
                       onChange={(e) => {
-                        const newAbouts = [...data];
-                        const updatedCoreValues = JSON.parse(newAbouts[index].core_values);
+                        const newAbouts = [...(dataArray as About[])];
+                        const updatedCoreValues = JSON.parse(newAbouts[index].core_values || '[]');
                         updatedCoreValues[coreIndex].description = e.target.value;
                         newAbouts[index].core_values = JSON.stringify(updatedCoreValues);
-                        setData(newAbouts);
+                        setData('content', newAbouts as About[]);
                       }}
                     />
                     <button
@@ -246,28 +271,28 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose })
                 <textarea
                   className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                   placeholder="Sub 1 Fees Description"
-                  value={JSON.parse(about.sub_1_fees).description}
+                  value={JSON.parse(about.sub_1_fees || '{}').description || ''}
                   onChange={(e) => {
-                    const newAbouts = [...data];
-                    const updatedSub1Fees = JSON.parse(newAbouts[index].sub_1_fees);
+                    const newAbouts = [...(dataArray as About[])];
+                    const updatedSub1Fees = JSON.parse(newAbouts[index].sub_1_fees || '{}');
                     updatedSub1Fees.description = e.target.value;
                     newAbouts[index].sub_1_fees = JSON.stringify(updatedSub1Fees);
-                    setData(newAbouts);
+                    setData('content', newAbouts as About[]);
                   }}
                 />
-                {JSON.parse(about.sub_1_fees).fees.map((fee: number, feeIndex: number) => (
+                {JSON.parse(about.sub_1_fees || '{}').fees.map((fee: number, feeIndex: number) => (
                   <div key={feeIndex} className="mb-2">
                     <input
                       type="number"
                       className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                       placeholder="Fee"
-                      value={fee}
+                      value={fee || 0}
                       onChange={(e) => {
-                        const newAbouts = [...data];
-                        const updatedSub1Fees = JSON.parse(newAbouts[index].sub_1_fees);
+                        const newAbouts = [...(dataArray as About[])];
+                        const updatedSub1Fees = JSON.parse(newAbouts[index].sub_1_fees || '{}');
                         updatedSub1Fees.fees[feeIndex] = parseFloat(e.target.value);
                         newAbouts[index].sub_1_fees = JSON.stringify(updatedSub1Fees);
-                        setData(newAbouts);
+                        setData('content', newAbouts as About[]);
                       }}
                     />
                     <button
@@ -288,76 +313,32 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose })
             ))}
           </>
         );
-      case 'Teams':
-        return (
-          <>
-            {data.map((team: any, index: number) => (
-              <div key={index} className="mb-4 p-4 border rounded shadow-lg bg-gray-800 text-white">
-                <label className="block text-sm font-medium text-gray-300">Name</label>
-                <input
-                  type="text"
-                  className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
-                  placeholder="Name"
-                  value={team.name}
-                  onChange={(e) => {
-                    const newTeams = [...data];
-                    newTeams[index].name = e.target.value;
-                    setData(newTeams);
-                  }}
-                />
-                <label className="block text-sm font-medium text-gray-300">Role</label>
-                <input
-                  type="text"
-                  className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
-                  placeholder="Role"
-                  value={team.role}
-                  onChange={(e) => {
-                    const newTeams = [...data];
-                    newTeams[index].role = e.target.value;
-                    setData(newTeams);
-                  }}
-                />
-                <label className="block text-sm font-medium text-gray-300">Description</label>
-                <textarea
-                  className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
-                  placeholder="Description"
-                  value={team.description}
-                  onChange={(e) => {
-                    const newTeams = [...data];
-                    newTeams[index].description = e.target.value;
-                    setData(newTeams);
-                  }}
-                />
-              </div>
-            ))}
-          </>
-        );
       case 'Quest Rewards':
         return (
           <>
-            {data.map((quest: any, index: number) => (
+            {(dataArray as QuestReward[]).map((quest: QuestReward, index: number) => (
               <div key={index} className="mb-4 p-4 border rounded shadow-lg bg-gray-800 text-white">
                 <label className="block text-sm font-medium text-gray-300">Title</label>
                 <input
                   type="text"
                   className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                   placeholder="Title"
-                  value={quest.title}
+                  value={quest.title || ''}
                   onChange={(e) => {
-                    const newQuests = [...data];
+                    const newQuests = [...(dataArray as QuestReward[])];
                     newQuests[index].title = e.target.value;
-                    setData(newQuests);
+                    setData('content', newQuests as QuestReward[]);
                   }}
                 />
                 <label className="block text-sm font-medium text-gray-300">Description</label>
                 <textarea
                   className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                   placeholder="Description"
-                  value={quest.description}
+                  value={quest.description || ''}
                   onChange={(e) => {
-                    const newQuests = [...data];
+                    const newQuests = [...(dataArray as QuestReward[])];
                     newQuests[index].description = e.target.value;
-                    setData(newQuests);
+                    setData('content', newQuests as QuestReward[]);
                   }}
                 />
                 <label className="block text-sm font-medium text-gray-300">Reward Points</label>
@@ -365,11 +346,11 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose })
                   type="number"
                   className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                   placeholder="Reward Points"
-                  value={quest.rewardPoints}
+                  value={quest.rewardPoints || 0}
                   onChange={(e) => {
-                    const newQuests = [...data];
-                    newQuests[index].rewardPoints = e.target.value;
-                    setData(newQuests);
+                    const newQuests = [...(dataArray as QuestReward[])];
+                    newQuests[index].rewardPoints = parseInt(e.target.value);
+                    setData('content', newQuests as QuestReward[]);
                   }}
                 />
                 <label className="block text-sm font-medium text-gray-300">Progress</label>
@@ -377,11 +358,11 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose })
                   type="number"
                   className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
                   placeholder="Progress"
-                  value={quest.progress}
+                  value={quest.progress || 0}
                   onChange={(e) => {
-                    const newQuests = [...data];
-                    newQuests[index].progress = e.target.value;
-                    setData(newQuests);
+                    const newQuests = [...(dataArray as QuestReward[])];
+                    newQuests[index].progress = parseInt(e.target.value);
+                    setData('content', newQuests as QuestReward[]);
                   }}
                 />
                 <button
@@ -398,6 +379,50 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose })
             >
               Add Quest
             </button>
+          </>
+        );
+      case 'Teams':
+        return (
+          <>
+            {(dataArray as Team[]).map((team: Team, index: number) => (
+              <div key={index} className="mb-4 p-4 border rounded shadow-lg bg-gray-800 text-white">
+                <label className="block text-sm font-medium text-gray-300">Name</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
+                  placeholder="Name"
+                  value={team.name || ''}
+                  onChange={(e) => {
+                    const newTeams = [...(dataArray as Team[])];
+                    newTeams[index].name = e.target.value;
+                    setData('content', newTeams as Team[]);
+                  }}
+                />
+                <label className="block text-sm font-medium text-gray-300">Role</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
+                  placeholder="Role"
+                  value={team.role || ''}
+                  onChange={(e) => {
+                    const newTeams = [...(dataArray as Team[])];
+                    newTeams[index].role = e.target.value;
+                    setData('content', newTeams as Team[]);
+                  }}
+                />
+                <label className="block text-sm font-medium text-gray-300">Description</label>
+                <textarea
+                  className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
+                  placeholder="Description"
+                  value={team.description || ''}
+                  onChange={(e) => {
+                    const newTeams = [...(dataArray as Team[])];
+                    newTeams[index].description = e.target.value;
+                    setData('content', newTeams as Team[]);
+                  }}
+                />
+              </div>
+            ))}
           </>
         );
       default:

@@ -14,7 +14,7 @@ const Footer: React.FC = () => {
               alt="RemittEase Logo"
               className="h-12 w-auto mr-4"
             />
-           
+
           </div>
 
           {/* Useful Links */}
@@ -73,9 +73,12 @@ const Footer: React.FC = () => {
             Experience the future of borderless remittances.
           </p>
           {/* Replace this with your own button component if needed */}
-          <button className="mt-6 px-6 py-3 text-white bg-neon-cyan hover:bg-cyan-400 rounded-full font-semibold transition-colors">
+          <a
+            href={route('login')}
+            className="mt-6 px-6 py-3 text-white bg-neon-cyan hover:bg-cyan-400 rounded-full font-semibold transition-colors inline-block"
+          >
             Get Started
-          </button>
+          </a>
 
         </div>
 
