@@ -4,9 +4,12 @@ import EarthGlobe from '@/Components/EarthGlobe';
 
 interface HeroSectionProps {
   heroes: any[];
+  email: string;
+  setEmail: (email: string) => void;
+  onGetStarted: (e: React.FormEvent) => void;
 }
 
-const HeroSectionRemittEase: React.FC<HeroSectionProps> = ({ heroes }) => {
+const HeroSectionRemittEase: React.FC<HeroSectionProps> = ({ heroes, email, setEmail, onGetStarted }) => {
   // Use heroes data here
   return (
     <section
@@ -25,18 +28,21 @@ const HeroSectionRemittEase: React.FC<HeroSectionProps> = ({ heroes }) => {
             {hero.subtitle}
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center py-1 px-0">
+          <form onSubmit={onGetStarted} className="flex flex-col sm:flex-row items-center justify-center py-1 px-0">
             <div className="flex flex-col sm:flex-row items-center py-1 px-2 border-2 border-yellow-500 rounded-full">
-          <input
-            type="email"
-            placeholder="Your email address"
-            className="py-1 text-white focus:outline-none border-transparent bg-transparent"
-          />
-          <button className="bg-yellow-500 hover:bg-orange-400 text-white px-6 py-2 rounded-full transition-colors">
-            {hero.cta}
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Your email address"
+                className="py-1 text-white focus:outline-none border-transparent bg-transparent w-full sm:w-auto"
+                required
+              />
+              <button type="submit" className="bg-yellow-500 hover:bg-orange-400 text-white px-6 py-2 rounded-full transition-colors">
+                {hero.cta}
               </button>
             </div>
-          </div>
+          </form>
         </div>
       ))}
       {/* The 3D Canvas in the background */}

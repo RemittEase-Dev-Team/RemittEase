@@ -29,6 +29,11 @@ use Inertia\Inertia;
 
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/about', [HomeController::class, 'about'])->name('about');
+Route::get('/how-it-works', [HomeController::class, 'howItWorks'])->name('how-it-works');
+Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+Route::post('/contact', [HomeController::class, 'sendContact'])->name('contact.send');
+Route::get('/onboarding', [HomeController::class, 'onboarding'])->name('onboarding');
 
 Route::middleware([
     'auth',

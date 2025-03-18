@@ -1,5 +1,5 @@
-import React from 'react';
-import { Head } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Head, router } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react'; // Importing usePage
 import NavBarRemittEase from '@/Components/NavBarRemittEase';
 import HeroSectionRemittEase from '@/Components/Sections/HeroSectionRemittEase';
@@ -14,6 +14,12 @@ import { PageProps } from '@/types'; // Importing PageProps instead of Auth
 
 const LandingPage: React.FC = () => {
   const { auth, questRewards, heroes, features, roadmaps, abouts, blogs, teams } = usePage<PageProps>().props; // Using usePage to get auth with correct type
+  const [email, setEmail] = useState('');
+
+  const handleGetStarted = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.get(route('onboarding'), { email });
+  };
 
   console.log('features', features);
   console.log('heroes', heroes);
@@ -25,7 +31,7 @@ const LandingPage: React.FC = () => {
     <div className="bg-dark-navy text-soft-white font-poppins">
       <Head title="RemittEase - Fast, Low-Cost, Secure Remittances" />
       <NavBarRemittEase />
-      <HeroSectionRemittEase heroes={heroes} />
+      <HeroSectionRemittEase heroes={heroes} onGetStarted={handleGetStarted} email={email} setEmail={setEmail} />
       <AboutSection abouts={abouts} />
       <FeaturesSection features={features} />
       <RoadMapSection roadmaps={roadmaps} />
