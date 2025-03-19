@@ -36,7 +36,7 @@ const LandingPage: React.FC = () => {
       <FeaturesSection features={features} />
       <RoadMapSection roadmaps={roadmaps} />
       <TeamSection teams={teams} />
-      <BlogSection />
+      <BlogSection blogs={blogs} />
       <QuestRewardsSection questRewards={questRewards} />
       <Footer />
     </div>

@@ -18,7 +18,7 @@ interface DepositAmountFormProps {
     };
   };
   currencies: Currency[];
-  exchangeRates: { [key: string]: number };
+  exchangeRates: Record<string, number>;
   onSubmit: (data: {
     amount: number;
     currency: string;
@@ -34,14 +34,13 @@ interface DepositAmountFormProps {
 const DepositAmountForm: React.FC<DepositAmountFormProps> = ({
   selectedProvider,
   currencies,
-  // exchangeRates,
+  exchangeRates,
   onSubmit,
   onBack,
   onAmountChange,
   onCurrencyChange,
   initialAmount = '',
   initialCurrency = null,
-
 }) => {
   const [amount, setAmount] = useState<string>(initialAmount);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(initialCurrency);
@@ -76,11 +75,14 @@ const DepositAmountForm: React.FC<DepositAmountFormProps> = ({
     });
 
     // Calculate estimated XLM based on current exchange rate
-    if (selectedCurrency && exchangeRates[selectedCurrency.code as any]) {
-      const xlmRate = exchangeRates.XLM || 1;
-      const currencyRate = exchangeRates[selectedCurrency.code as any] || 1;
+    if (selectedCurrency && exchangeRates && exchangeRates[selectedCurrency.code]) {
+      const xlmRate = exchangeRates['XLM'] ?? 1;
+      const currencyRate = exchangeRates[selectedCurrency.code] ?? 1;
       const estimatedAmount = (amountNum - providerFee) * (xlmRate / currencyRate);
       setEstimatedXLM(estimatedAmount);
+    } else {
+      // Set a default value if exchange rates are not available
+      setEstimatedXLM(amountNum - providerFee);
     }
   };
 
@@ -94,15 +96,6 @@ const DepositAmountForm: React.FC<DepositAmountFormProps> = ({
       estimatedXLM,
     });
   };
-
-  const exchangeRates = [
-    {
-      XLM : 10
-    },
-    {
-      USD : 10
-    },
-  ]
 
   const handleAmountChange = (value: string) => {
     setAmount(value);

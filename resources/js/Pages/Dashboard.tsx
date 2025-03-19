@@ -99,8 +99,13 @@ export default function Dashboard({
   wallet,
   transactions,
   currencies,
-  // paymentProviders,
-  exchangeRates
+  exchangeRates = {
+    XLM: 1,
+    USD: 1,
+    EUR: 1,
+    GBP: 1,
+    // Add other default rates as needed
+  }
 }: Props) {
   // Inertia form (use if you're posting to your backend)
   const { data, setData, post } = useForm<DepositFormData>({

@@ -20,47 +20,36 @@ const Footer: React.FC = () => {
           {/* Useful Links */}
           <nav className="space-x-4 flex flex-wrap justify-center">
             <a
-              href="#about"
+              href="/"
               className="text-cool-gray hover:text-neon-cyan transition-colors"
             >
-              About
+              Home
             </a>
             <a
               href="#features"
               className="text-cool-gray hover:text-neon-cyan transition-colors"
             >
-              Features
+              About
             </a>
             <a
-              href="#blog"
+              href="/about"
               className="text-cool-gray hover:text-neon-cyan transition-colors"
             >
               Blog
             </a>
             <a
-              href="#roadmap"
+              href="/how-it-works"
               className="text-cool-gray hover:text-neon-cyan transition-colors"
             >
-              Roadmap
+              How it works
             </a>
             <a
-              href="#team"
-              className="text-cool-gray hover:text-neon-cyan transition-colors"
-            >
-              Team
-            </a>
-            <a
-              href="#quests"
-              className="text-cool-gray hover:text-neon-cyan transition-colors"
-            >
-              Quests
-            </a>
-            <a
-              href="#contact"
+              href="/contact"
               className="text-cool-gray hover:text-neon-cyan transition-colors"
             >
               Contact
             </a>
+           
           </nav>
         </div>
 

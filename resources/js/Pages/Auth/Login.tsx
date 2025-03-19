@@ -47,7 +47,7 @@ export default function Login({
 
             <form onSubmit={submit} className="space-y-6">
                 <div>
-                    <InputLabel htmlFor="email" value="Email" className="text-gray-300" />
+                    <InputLabel htmlFor="email" value="Email" className="text-cyan-300 dark:text-white" />
                     <TextInput
                         id="email"
                         type="email"
@@ -62,7 +62,7 @@ export default function Login({
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="password" value="Password" className="text-gray-300" />
+                    <InputLabel htmlFor="password" value="Password" className="text-cyan-300 dark:text-white" />
                     <div className="relative">
                         <TextInput
                             id="password"

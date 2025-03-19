@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Str;
 
@@ -48,16 +49,37 @@ class BlogController extends Controller
     public function update(Request $request, Blog $blog)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
-            'content' => 'required|string',
+            'title' => 'nullable|string|max:255',
+            'content' => 'nullable|string',
+            'image' => 'nullable',
         ]);
 
-        $request->merge(['slug' => Str::slug($request->title)]);
-        $request->merge(['author' => auth()->user()->name]);
-        $request->merge(['image' => $request->file('image')->store('blogs', 'public')]);
-        
-        $blog->update($request->only(['title', 'slug', 'author', 'content', 'image']));
+        if ($request->has('title')) {
+            $slug = Str::slug($request->title);
+            $existingBlog = Blog::where('slug', $slug)->first();
+            if ($existingBlog && $existingBlog->id !== $blog->id) {
+                $slug = $slug . '-' . Str::random(8);
+            }
+            $request->merge(['slug' => $slug]);
+        }
+        if ($request->hasFile('image')) {
+            $request->merge(['image' => $request->file('image')->store('blogs', 'public')]);
+        }
+
+        if ($request->has('title')) {
+            $blog->title = $request->title;
+        }
+        if ($request->has('slug')) {
+            $blog->slug = $request->slug;
+        }
+        if ($request->has('content')) {
+            $blog->content = $request->content;
+        }
+        if ($request->has('image')) {
+            $blog->image = $request->image;
+        }
+        $blog->user_id = auth()->id(); // Set the user_id to the current user's id
+        $blog->save();
 
         return redirect()->back()->with('success', 'Blog post updated successfully.');
     }
