@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Check, ExternalLink } from 'lucide-react';
 
-interface ProviderCardProps {
+interface WithdrawalCardProps {
   provider: 'moonpay' | 'linkio' | 'yellowcard';
   title: string;
   walletAddress: string | any;
-  modal: boolean,
+  modal: boolean;
   description: string;
   supportedCurrencies?: string[];
   fees?: string;
@@ -16,7 +16,7 @@ interface ProviderCardProps {
   onClick: () => void;
 }
 
-const ProviderCard: React.FC<ProviderCardProps> = ({
+const WithdrawalCard: React.FC<WithdrawalCardProps> = ({
   provider,
   title,
   walletAddress,
@@ -31,10 +31,9 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
   onClick,
 }) => {
   const [currency, setCurrency] = useState<string>('ngn');
-  const [amount, setAmount] = useState<string>('50000');
-  const [network, setNetwork] = useState<string>('Stellar');
-  const [type, setType] = useState<string>('buy');
-  // const walletAddress = 'GDKDSKAR6HEBOOEGWQSAX6GTQDOUAMM7Y7ZINM242ES63Y42SMCUKDMH';
+  const [amount, setAmount] = useState<string>('');
+  const [network] = useState<string>('Stellar');
+  const [type] = useState<string>('sell');
 
   const getProviderLogo = () => {
     switch (provider) {
@@ -51,8 +50,11 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    console.log("Bridging here...")
+    
+    if (!amount || Number(amount) < 5000) {
+      alert('Minimum withdrawal amount is 5000');
+      return;
+    }
 
     const Bridge = (window as any).Bridge;
     if (!Bridge) {
@@ -66,19 +68,17 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
       currency: currency,
       data: {
         amount,
-        network,
         wallet_address: walletAddress,
         type,
       },
       onSuccess: (response: any) => console.log(response),
+      onError: (error: any) => console.error(error),
       onLoad: () => console.log('Bridge widget loaded successfully'),
     });
+    
     widget.setup();
     widget.open();
   };
-
-  // console.log("wallet: ", walletAddress)
-
 
   return (
     <div
@@ -144,12 +144,12 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
             View details
             <ExternalLink className="w-4 h-4" />
           </span>
-          <span className={`px-2 py-1 rounded ${isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700'
-            }`}>
+          <span className={`px-2 py-1 rounded ${isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700'}`}>
             {isSelected ? 'Selected' : 'Select'}
           </span>
         </div>
       </div>
+
       {modal && provider === 'linkio' && (
         <form 
           onSubmit={handleSubmit}
@@ -202,4 +202,4 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
   );
 };
 
-export default ProviderCard;
+export default WithdrawalCard;

@@ -13,6 +13,7 @@ import WithdrawalModal from '@/Components/Dashboard//WithdrawalModal';
 import SendModal from '@/Components/Dashboard/SendModal';
 import Modal from '@/Components/Modal';
 import ProviderCard from '@/Components/Dashboard/ProviderCard';
+import WithdrawalCard from '@/Components/Dashboard/WithdrawalCard';
 import DepositAmountForm from '@/Components/Dashboard/DepositAmountForm';
 import QuickActions from '@/Components/Dashboard/QuickActions';
 import AnalyticsWidget from '@/Components/Dashboard/AnalyticsWidget';
@@ -296,7 +297,7 @@ export default function Dashboard({
               walletAddress={wallet?.publicKey}
               modal={modal}
               onClick={() => {
-                window.location.href='/deposit'
+                window.location.href = '/deposit'
                 const provider = paymentProviders.find(p => p.id === 'moonpay');
                 // const provider = 'moonpay'
                 if (provider) {
@@ -333,7 +334,7 @@ export default function Dashboard({
               walletAddress={wallet?.publicKey}
               modal={modal}
               onClick={() => {
-                window.location.href='/deposit'
+                window.location.href = '/deposit'
                 const provider = paymentProviders.find(p => p.id === 'yellowcard');
                 // const provider = 'yellowcard'
                 if (provider) {
@@ -346,6 +347,85 @@ export default function Dashboard({
           )}
         </div>
       )}
+
+      {/* {depositStep === 'amount' && selectedProvider && (
+        <DepositAmountForm
+          selectedProvider={selectedProvider}
+          currencies={currencies}
+          exchangeRates={exchangeRates}
+          initialAmount={amount}
+          initialCurrency={selectedCurrency}
+          onAmountChange={setAmount}
+          onCurrencyChange={setSelectedCurrency}
+          onSubmit={(formData) => {
+            handleFiatDeposit(formData);
+          }}
+          onBack={() => setDepositStep('provider')}
+        />
+      )} */}
+    </div>
+  );
+
+  const WithdrawalModalContent = () => (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {moonpayEnabled && (
+            <WithdrawalCard
+              provider="moonpay"
+              title="MoonPay"
+              description=""
+              walletAddress={wallet?.publicKey}
+              modal={modal}
+              onClick={() => {
+                window.location.href = '/deposit'
+                const provider = paymentProviders.find(p => p.id === 'moonpay');
+                // const provider = 'moonpay'
+                if (provider) {
+                  // setSelectedProvider(provider);
+                  // setDepositStep('amount');
+                  setModal(false)
+                }
+              }}
+            />
+          )}
+          {linkioEnabled && (
+            <WithdrawalCard
+              provider="linkio"
+              title="Linkio"
+              description="Local Bank withdrawal"
+              walletAddress={wallet?.publicKey}
+              modal={modal}
+              onClick={() => {
+                const provider = paymentProviders.find(p => p.id === 'linkio');
+                // const provider = 'linkio'
+                if (provider) {
+                  // setSelectedProvider(provider);
+                  setModal(true)
+                  // setDepositStep('amount');
+                }
+              }}
+            />
+          )}
+          {yellowCardEnabled && (
+            <WithdrawalCard
+              provider="yellowcard"
+              title="Yellow Card"
+              description="Crypto & Local Currency"
+              walletAddress={wallet?.publicKey}
+              modal={modal}
+              onClick={() => {
+                window.location.href = '/deposit'
+                const provider = paymentProviders.find(p => p.id === 'yellowcard');
+                // const provider = 'yellowcard'
+                if (provider) {
+                  // setSelectedProvider(provider);
+                  // setDepositStep('amount');
+                  setModal(false)
+                }
+              }}
+            />
+          )}
+        </div>
 
       {/* {depositStep === 'amount' && selectedProvider && (
         <DepositAmountForm
@@ -424,19 +504,28 @@ export default function Dashboard({
       )}
 
       {withdrawalModal && (
-        <WithdrawalModal
-          search={search}
-          setSearch={setSearch}
-          selectedCurrency={selectedCurrency}
-          setSelectedCurrency={setSelectedCurrency}
-          amount={amount}
-          setAmount={setAmount}
-          walletAddress={walletAddress}
-          setWalletAddress={setWalletAddress}
-          currencies={currencies}
-          CloseModal={CloseModal}
-          handleWithdrawal={handleWithdrawal}
-        />
+
+        <Modal
+          show={withdrawalModal}
+          onClose={CloseModal}
+          maxWidth="2xl"
+        >
+          <WithdrawalModalContent />
+        </Modal>
+
+        // <WithdrawalModal
+        //   search={search}
+        //   setSearch={setSearch}
+        //   selectedCurrency={selectedCurrency}
+        //   setSelectedCurrency={setSelectedCurrency}
+        //   amount={amount}
+        //   setAmount={setAmount}
+        //   walletAddress={walletAddress}
+        //   setWalletAddress={setWalletAddress}
+        //   currencies={currencies}
+        //   CloseModal={CloseModal}
+        //   handleWithdrawal={handleWithdrawal}
+        // />
       )}
 
       {sendModal && (
