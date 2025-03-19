@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, User, X } from 'lucide-react'; // Added X icon from lucide-react
 
-interface BlogPost {
+export interface BlogPost {
   title: string;
   content: string;
   created_at: string;

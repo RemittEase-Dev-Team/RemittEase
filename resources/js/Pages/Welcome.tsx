@@ -5,7 +5,7 @@ import NavBarRemittEase from '@/Components/NavBarRemittEase';
 import HeroSectionRemittEase from '@/Components/Sections/HeroSectionRemittEase';
 import AboutSection from '@/Components/Sections/AboutSection';
 import FeaturesSection from '@/Components/Sections/FeaturesSection';
-import BlogSection from '@/Components/Sections/BlogSection';
+import BlogSection, { BlogPost } from '@/Components/Sections/BlogSection';
 import RoadMapSection from '@/Components/Sections/RoadMapSection';
 import TeamSection from '@/Components/Sections/TeamSection';
 import QuestRewardsSection from '@/Components/Sections/QuestRewardsSection';
@@ -36,7 +36,7 @@ const LandingPage: React.FC = () => {
       <FeaturesSection features={features} />
       <RoadMapSection roadmaps={roadmaps} />
       <TeamSection teams={teams} />
-      <BlogSection blogs={blogs} />
+      <BlogSection blogs={blogs as BlogPost[]} />
       <QuestRewardsSection questRewards={questRewards} />
       <Footer />
     </div>
