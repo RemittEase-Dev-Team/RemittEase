@@ -130,6 +130,7 @@ export default function Dashboard({
   const [processingDeposit, setProcessingDeposit] = useState(false);
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState('');
+  const [modal, setModal] = useState(false)
 
 
   const paymentProviders = [
@@ -156,7 +157,7 @@ export default function Dashboard({
     },
   ]
 
-  console.log("p: ", paymentProviders)
+  // console.log("p: ", wallet_address)
 
   // Dummy balances, totalBalance, chartData, etc.
   const [balance, setBalance] = useState({
@@ -292,12 +293,16 @@ export default function Dashboard({
               provider="moonpay"
               title="MoonPay"
               description="Credit/Debit Card, Bank Transfer"
+              walletAddress={wallet?.publicKey}
+              modal={modal}
               onClick={() => {
+                window.location.href='/deposit'
                 const provider = paymentProviders.find(p => p.id === 'moonpay');
                 // const provider = 'moonpay'
                 if (provider) {
-                  setSelectedProvider(provider);
-                  setDepositStep('amount');
+                  // setSelectedProvider(provider);
+                  // setDepositStep('amount');
+                  setModal(false)
                 }
               }}
             />
@@ -307,12 +312,15 @@ export default function Dashboard({
               provider="linkio"
               title="Linkio"
               description="Local Bank Transfer"
+              walletAddress={wallet?.publicKey}
+              modal={modal}
               onClick={() => {
                 const provider = paymentProviders.find(p => p.id === 'linkio');
                 // const provider = 'linkio'
                 if (provider) {
-                  setSelectedProvider(provider);
-                  setDepositStep('amount');
+                  // setSelectedProvider(provider);
+                  setModal(true)
+                  // setDepositStep('amount');
                 }
               }}
             />
@@ -322,12 +330,16 @@ export default function Dashboard({
               provider="yellowcard"
               title="Yellow Card"
               description="Crypto & Local Currency"
+              walletAddress={wallet?.publicKey}
+              modal={modal}
               onClick={() => {
+                window.location.href='/deposit'
                 const provider = paymentProviders.find(p => p.id === 'yellowcard');
                 // const provider = 'yellowcard'
                 if (provider) {
-                  setSelectedProvider(provider);
-                  setDepositStep('amount');
+                  // setSelectedProvider(provider);
+                  // setDepositStep('amount');
+                  setModal(false)
                 }
               }}
             />
@@ -335,7 +347,7 @@ export default function Dashboard({
         </div>
       )}
 
-      {depositStep === 'amount' && selectedProvider && (
+      {/* {depositStep === 'amount' && selectedProvider && (
         <DepositAmountForm
           selectedProvider={selectedProvider}
           currencies={currencies}
@@ -349,7 +361,7 @@ export default function Dashboard({
           }}
           onBack={() => setDepositStep('provider')}
         />
-      )}
+      )} */}
     </div>
   );
 

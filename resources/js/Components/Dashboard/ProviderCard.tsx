@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, ExternalLink } from 'lucide-react';
 
 interface ProviderCardProps {
   provider: 'moonpay' | 'linkio' | 'yellowcard';
   title: string;
+  walletAddress: string | any;
+  modal: boolean,
   description: string;
   supportedCurrencies?: string[];
   fees?: string;
@@ -17,6 +19,8 @@ interface ProviderCardProps {
 const ProviderCard: React.FC<ProviderCardProps> = ({
   provider,
   title,
+  walletAddress,
+  modal,
   description,
   supportedCurrencies = [],
   fees = 'Varies by payment method',
@@ -26,6 +30,12 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
   isSelected = false,
   onClick,
 }) => {
+  const [currency, setCurrency] = useState<string>('ngn');
+  const [amount, setAmount] = useState<string>('50000');
+  const [network, setNetwork] = useState<string>('Stellar');
+  const [type, setType] = useState<string>('buy');
+  // const walletAddress = 'GDKDSKAR6HEBOOEGWQSAX6GTQDOUAMM7Y7ZINM242ES63Y42SMCUKDMH';
+
   const getProviderLogo = () => {
     switch (provider) {
       case 'moonpay':
@@ -38,6 +48,37 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
         return '';
     }
   };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    console.log("Bridging here...")
+
+    const Bridge = (window as any).Bridge;
+    if (!Bridge) {
+      console.error('Bridge library is not loaded.');
+      return;
+    }
+
+    const widget = new Bridge({
+      key: 'ngnc_p_tk_c05eaad4f8745512660b44d296e2f28916dd26095aec8fabbca0fc65254f2489',
+      type: type,
+      currency: currency,
+      data: {
+        amount: amount,
+        network: network,
+        wallet_address: walletAddress,
+        type: type,
+      },
+      onSuccess: (response: any) => console.log(response),
+      onLoad: () => console.log('Bridge widget loaded successfully'),
+    });
+    widget.setup();
+    widget.open();
+  };
+
+  // console.log("wallet: ", walletAddress)
+
 
   return (
     <div
@@ -103,13 +144,47 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
             View details
             <ExternalLink className="w-4 h-4" />
           </span>
-          <span className={`px-2 py-1 rounded ${
-            isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700'
-          }`}>
+          <span className={`px-2 py-1 rounded ${isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700'
+            }`}>
             {isSelected ? 'Selected' : 'Select'}
           </span>
         </div>
       </div>
+      {modal && title.toLowerCase().trim() === 'linkio' && (
+        <form onSubmit={handleSubmit} className="grid fixed border rounded-b-md p-4 -ml-5 my-3 bg-gray-200">
+          <div className='w-full space-y-2'>
+            <input
+              id="amount"
+              className="w-full px-3 py-2 border rounded-lg outline-none"
+              type="number"
+              placeholder="Amount"
+              min="5000"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+
+            <select
+              id="currency"
+              className="px-3 py-2 border rounded-lg outline-none w-full"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+            >
+              <option value="ngn">NGN</option>
+              <option value="usd">USD</option>
+            </select>
+
+            <button
+              id="submit"
+              type="submit"
+              className="w-full bg-blue-500 text-white font-semibold uppercase px-3 py-2 border rounded-lg outline-none flex text-sm items-center justify-center gap-2"
+            >
+              Fund Wallet
+            </button>
+          </div>
+        </form>
+      )}
+
+
     </div>
   );
 };

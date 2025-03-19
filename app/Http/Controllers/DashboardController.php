@@ -122,4 +122,11 @@ class DashboardController extends Controller
             return redirect()->back()->with('error', 'Unable to load dashboard data.');
         }
     }
+
+    public function deposit()
+    {
+        return Inertia::render('Deposit',[
+            $currencies = Currency::all()
+        ]);
+    }
 }

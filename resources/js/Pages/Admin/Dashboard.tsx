@@ -100,6 +100,8 @@ const AdminDashboard: React.FC<DashboardProps> = ({
     { name: 'Cancelled', value: 5 }
   ];
 
+  console.log("currencies: ", currencies)
+
   return (
     <AdminLayout>
       <Head title="Admin Dashboard" />

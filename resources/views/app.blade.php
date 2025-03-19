@@ -15,6 +15,7 @@
         @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
         @inertiaHead
         <script defer src="https://www.livecoinwatch.com/static/lcw-widget.js"></script>
+        <script src="https://unpkg.com/@ngnc/bridge"></script>
     </head>
     <body class="font-sans antialiased">
         @inertia
