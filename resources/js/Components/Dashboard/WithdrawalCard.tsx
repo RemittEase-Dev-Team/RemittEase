@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, ExternalLink } from 'lucide-react';
+import { Check, ChevronDown, CurrencyIcon, ExternalLink, LockIcon } from 'lucide-react';
 
 interface WithdrawalCardProps {
   provider: 'moonpay' | 'linkio' | 'yellowcard';
@@ -50,7 +50,7 @@ const WithdrawalCard: React.FC<WithdrawalCardProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!amount || Number(amount) < 5000) {
       alert('Minimum withdrawal amount is 5000');
       return;
@@ -75,7 +75,7 @@ const WithdrawalCard: React.FC<WithdrawalCardProps> = ({
       onError: (error: any) => console.error(error),
       onLoad: () => console.log('Bridge widget loaded successfully'),
     });
-    
+
     widget.setup();
     widget.open();
   };
@@ -151,50 +151,92 @@ const WithdrawalCard: React.FC<WithdrawalCardProps> = ({
       </div>
 
       {modal && provider === 'linkio' && (
-        <form 
+        <form
           onSubmit={handleSubmit}
-          className="absolute left-0 right-0 mt-4 p-4 bg-white dark:bg-gray-800 border rounded-lg shadow-lg z-10"
+          className="absolute left-0 right-0 mt-4 p-6 bg-white dark:bg-gray-800 border-2 border-blue-500/20 rounded-2xl shadow-2xl z-10 animate-slide-down"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="amount" className="block text-sm font-medium mb-1 dark:text-gray-200">
-                Amount
+          <div className="space-y-6">
+            <div className="relative">
+              <label htmlFor="amount" className="block text-sm font-medium mb-2 dark:text-gray-200 opacity-80">
+                <span className="flex items-center gap-2">
+                  <CurrencyIcon className="w-5 h-5" />
+                  Withdrawal Amount
+                </span>
               </label>
-              <input
-                id="amount"
-                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                type="number"
-                placeholder="50000"
-                min="5000"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
+              <div className="relative group">
+                <input
+                  id="amount"
+                  className="w-full px-4 py-3 border-2 border-transparent rounded-xl bg-gray-50 dark:bg-gray-900/50 text-xl font-semibold transition-all
+                     focus:border-blue-500 focus:bg-white dark:focus:bg-gray-900 focus:ring-2 focus:ring-blue-500/20
+                     hover:bg-gray-100 dark:hover:bg-gray-900/75 placeholder-gray-400/80"
+                  type="number"
+                  placeholder="50,000"
+                  min="5000"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
+                />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  <span className="text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+                    ~${Number(amount) / 1200} USD
+                  </span>
+                </div>
+              </div>
+              <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                <span>Min: ₦5,000</span>
+                <span>1 NGN = $0.00083</span>
+              </div>
             </div>
 
-            <div>
-              <label htmlFor="currency" className="block text-sm font-medium mb-1 dark:text-gray-200">
-                Currency
-              </label>
-              <select
-                id="currency"
-                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                required
-              >
-                <option value="ngn">NGN</option>
-                <option value="usd">USD</option>
-              </select>
-            </div>
+            <div className="space-y-4">
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label htmlFor="currency" className="block text-sm font-medium mb-2 dark:text-gray-200 opacity-80">
+                    Currency
+                  </label>
+                  <div className="relative group">
+                    <select
+                      id="currency"
+                      className="w-full px-4 py-3 border-2 border-transparent rounded-xl bg-gray-50 dark:bg-gray-900/50 appearance-none
+                         transition-all hover:bg-gray-100 dark:hover:bg-gray-900/75 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                      value={currency}
+                      onChange={(e) => setCurrency(e.target.value)}
+                      required
+                    >
+                      <option value="ngn">🇳🇬 Nigerian Naira (NGN)</option>
+                      <option value="usd">🇺🇸 US Dollar (USD)</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  </div>
+                </div>
+              </div>
 
-            <button
-              type="submit"
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-            >
-              Proceed to Withdraw
-            </button>
+              <div className="">
+                <button
+                  type="submit"
+                  className="w-full group relative bg-blue-500  hover:bg-blue-600  
+                     text-white font-semibold py-2 px-6 rounded-xl transition-all transform hover:scale-[1.01]
+                     focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2"
+                >
+                  <span className="relative z-10">Withdrawal</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl opacity-0 
+                          transition-opacity group-hover:opacity-20" />
+                </button>
+              </div>
+
+              <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+                <span className="inline-flex items-center gap-2">
+                  <LockIcon className="w-4 h-4" />
+                  Secured by Link.io • Fees: 1.5% + ₦100
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute inset-0 -z-10 opacity-10">
+            <div className="absolute top-0 left-1/4 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl animate-float" />
+            <div className="absolute top-1/3 right-1/4 w-24 h-24 bg-blue-500/20 rounded-full blur-xl animate-float delay-200" />
           </div>
         </form>
       )}

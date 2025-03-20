@@ -320,7 +320,7 @@ export default function Dashboard({
                 // const provider = 'linkio'
                 if (provider) {
                   // setSelectedProvider(provider);
-                  setModal(true)
+                  setModal(!modal)
                   // setDepositStep('amount');
                 }
               }}
@@ -400,7 +400,7 @@ export default function Dashboard({
                 // const provider = 'linkio'
                 if (provider) {
                   // setSelectedProvider(provider);
-                  setModal(true)
+                  setModal(!modal)
                   // setDepositStep('amount');
                 }
               }}
