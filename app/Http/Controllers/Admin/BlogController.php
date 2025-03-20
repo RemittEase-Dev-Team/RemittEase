@@ -28,15 +28,16 @@ class BlogController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
+            'tags' => 'required|string'
         ]);
 
         $request->merge(['slug' => Str::slug($request->title)]);
         $request->merge(['author' => auth()->user()->name]);
         $request->merge(['image' => $request->file('image')->store('blogs', 'public')]);
 
-        Blog::create($request->only(['title', 'slug', 'author', 'content', 'image']));
+        Blog::create($request->only(['title', 'slug', 'author', 'content', 'image', 'tags']));
 
-        return redirect()->back()->with('success', 'Blog post created successfully.');
+        return redirect('/blogs')->with('success', 'Blog post created successfully.');
     }
 
     public function edit($id)
@@ -78,7 +79,7 @@ class BlogController extends Controller
         if ($request->has('image')) {
             $blog->image = $request->image;
         }
-        $blog->user_id = auth()->id(); // Set the user_id to the current user's id
+        $blog->user_id = auth()->id();
         $blog->save();
 
         return redirect()->back()->with('success', 'Blog post updated successfully.');

@@ -6,7 +6,7 @@ import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Login({
@@ -108,10 +108,10 @@ export default function Login({
                 </div>
 
                 <PrimaryButton
-                    className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300"
+                    className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center"
                     disabled={processing}
                 >
-                    {processing ? 'Signing in...' : 'Sign in'}
+                    {processing ? <Loader2 className='animate-spin' /> : 'Sign in'}
                 </PrimaryButton>
 
                 <div className="text-center text-sm text-gray-300">

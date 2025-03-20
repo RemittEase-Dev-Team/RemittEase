@@ -8,9 +8,11 @@ const CreateBlog = () => {
         title: "",
         content: "",
         author: "",
-        image: "",
+        image: null as File | null | any,
         tags: "",
     });
+
+    const [previewImage, setPreviewImage] = useState('')
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -20,17 +22,14 @@ const CreateBlog = () => {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setData("image", reader.result as string);
-            };
-            reader.readAsDataURL(file);
+            setData("image", file);
+            setPreviewImage(URL.createObjectURL(file))
         }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post("/admin/blogs/store");
+        post(route('admin.blogs.create'));
     };
 
     return (
@@ -93,7 +92,7 @@ const CreateBlog = () => {
                 </div>
                 <div className="w-1/4 ml-6 mt-10">
                     <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
-                    <label className="block mt-4 text-gray-700 dark:text-gray-300">Image Upload</label>
+                        <label className="block mt-4 text-gray-700 dark:text-gray-300">Image Upload</label>
                         <input
                             type="file"
                             name="image"
@@ -103,7 +102,7 @@ const CreateBlog = () => {
                         />
                         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Preview</h3>
                         {data.image && (
-                            <img src={data.image} alt="Preview" className="w-full h-40 object-cover rounded mt-2" />
+                            <img src={previewImage} alt="Preview" className="w-full h-40 object-cover rounded mt-2" />
                         )}
                         <div className="mt-2">
                             <h4 className="text-md font-semibold text-gray-700 dark:text-gray-300">Tags:</h4>
