@@ -17,10 +17,10 @@ const Sections: React.FC<SectionsProps> = ({ heroes, features, abouts, questRewa
         setEditingSection({ name, content });
     };
 
-    console.log('about', abouts);
-    console.log('features', features);
-    console.log('questRewards', questRewards);
-    console.log('heroes', heroes);
+    // console.log('about', abouts);
+    // console.log('features', features);
+    // console.log('questRewards', questRewards);
+    // console.log('heroes', heroes);
 
     return (
         <AdminLayout>
