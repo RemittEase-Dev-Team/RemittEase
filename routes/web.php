@@ -123,12 +123,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::put('features/{feature}', [FeaturesController::class, 'update'])->name('admin.features.update');
     Route::delete('features/{feature}', [FeaturesController::class, 'destroy'])->name('admin.features.destroy');
 
-    Route::get('roadmap', [RoadmapController::class, 'index'])->name('admin.roadmap.index');
+    Route::get('roadmaps', [RoadmapController::class, 'index'])->name('admin.roadmap.index');
     Route::get('roadmap/create', [RoadmapController::class, 'create'])->name('admin.roadmap.create');
-    Route::post('roadmap', [RoadmapController::class, 'store'])->name('admin.roadmap.store');
+    Route::post('roadmaps', [RoadmapController::class, 'store'])->name('admin.roadmap.store');
     Route::get('roadmap/{roadmap}', [RoadmapController::class, 'show'])->name('admin.roadmap.show');
     Route::get('roadmap/{roadmap}/edit', [RoadmapController::class, 'edit'])->name('admin.roadmap.edit');
-    Route::put('roadmap/{roadmap}', [RoadmapController::class, 'update'])->name('admin.roadmap.update');
+    Route::put('roadmaps/{roadmap}', [RoadmapController::class, 'update'])->name('admin.roadmap.update');
     Route::delete('roadmap/{roadmap}', [RoadmapController::class, 'destroy'])->name('admin.roadmap.destroy');
 
     Route::get('about', [AboutController::class, 'index'])->name('admin.about.index');
