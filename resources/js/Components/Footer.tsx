@@ -26,16 +26,10 @@ const Footer: React.FC = () => {
               Home
             </a>
             <a
-              href="#features"
-              className="text-cool-gray hover:text-neon-cyan transition-colors"
-            >
-              About
-            </a>
-            <a
               href="/about"
               className="text-cool-gray hover:text-neon-cyan transition-colors"
             >
-              Blog
+              About
             </a>
             <a
               href="/how-it-works"
@@ -49,7 +43,7 @@ const Footer: React.FC = () => {
             >
               Contact
             </a>
-           
+
           </nav>
         </div>
 

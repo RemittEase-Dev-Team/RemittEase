@@ -21,7 +21,7 @@ class MoonPayService
         $this->moonpayEnabled = Settings::first()->moonpay_enabled ?? true;
 
         $this->client = new Client([
-            'base_uri' => 'https://api.moonpay.com/v3/',
+            'base_uri' => 'https://api.moonpay.com/v1/',
             'headers' => [
                 'Content-Type' => 'application/json',
                 'X-API-Key' => $this->secretKey,
