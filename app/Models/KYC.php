@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class KYC extends Model
 {
+    protected $table = 'kycs';
     use HasFactory;
 
     protected $fillable = [
