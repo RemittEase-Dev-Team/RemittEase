@@ -33,16 +33,29 @@ class RoadmapController extends Controller
         return redirect()->back()->with('success', 'Roadmap entry created successfully.');
     }
 
+    public function edit($id)
+    {
+        $roadmap = Roadmap::findOrFail($id);
+
+        $roadmap->details = explode(',', $roadmap->details);
+
+        return Inertia::render('Admin/Roadmaps/Edit', [
+            'roadmap' => $roadmap
+        ]);
+    }
+
     public function update(Request $request, Roadmap $roadmap)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'quarter' => 'required|string|max:255',
-            'details' => 'required|string',
+            'details' => 'required|array',
         ]);
 
-        $roadmap->update($request->only(['quarter', 'details']));
+        $validatedData['details'] = implode(',', $validatedData['details']);
 
-        return redirect()->back()->with('success', 'Roadmap entry updated successfully.');
+        $roadmap->update($validatedData);
+
+        return redirect()->route('admin.roadmap.index')->with('success', 'Roadmap entry updated successfully.');
     }
 
     public function destroy(Roadmap $roadmap)

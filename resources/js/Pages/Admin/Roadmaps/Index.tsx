@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { usePage, router } from '@inertiajs/react';
+import { usePage, router, Link } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { PageProps } from '@/types';
 
@@ -15,43 +15,6 @@ const RoadmapsIndex: React.FC = () => {
   const [editingRoadmap, setEditingRoadmap] = useState<Roadmap | null>(null);
   const [deletingRoadmap, setDeletingRoadmap] = useState<Roadmap | null>(null);
 
-  const handleEdit = (roadmap: Roadmap) => {
-    setEditingRoadmap({
-      ...roadmap,
-      details: parseDetails(roadmap.details)
-    });
-  };
-
-  const handleAddDetail = () => {
-    if (editingRoadmap) {
-      setEditingRoadmap({
-        ...editingRoadmap,
-        details: [...parseDetails(editingRoadmap.details), '']
-      });
-    }
-  };
-
-  const handleRemoveDetail = (index: number) => {
-    if (editingRoadmap) {
-      const newDetails = parseDetails(editingRoadmap.details).filter((_, i) => i !== index);
-      setEditingRoadmap({
-        ...editingRoadmap,
-        details: newDetails
-      });
-    }
-  };
-
-  const handleDetailChange = (index: number, value: string) => {
-    if (editingRoadmap) {
-      const newDetails = [...parseDetails(editingRoadmap.details)];
-      newDetails[index] = value;
-      setEditingRoadmap({
-        ...editingRoadmap,
-        details: newDetails
-      });
-    }
-  };
-
   const parseDetails = (details: string | string[]): string[] => {
     if (Array.isArray(details)) {
       return details;
@@ -60,25 +23,6 @@ const RoadmapsIndex: React.FC = () => {
       return JSON.parse(details);
     } catch {
       return [];
-    }
-  };
-
-  const handleSave = () => {
-    if (editingRoadmap) {
-      const formData = {
-        id: editingRoadmap.id,
-        quarter: editingRoadmap.quarter,
-        details: Array.isArray(editingRoadmap.details)
-          ? JSON.stringify(editingRoadmap.details)
-          : editingRoadmap.details
-      };
-
-      router.post(`/admin/roadmaps/${editingRoadmap.id}`, {
-        _method: 'PUT',
-        ...formData
-      });
-
-      setEditingRoadmap(null);
     }
   };
 
@@ -108,14 +52,16 @@ const RoadmapsIndex: React.FC = () => {
                 ))}
               </ul>
               <div className="mt-4">
-                <button onClick={() => handleEdit(roadmap)} className="px-4 py-2 bg-blue-500 text-white rounded mr-2">Edit</button>
+                <Link href={`/admin/roadmap/${roadmap.id}/edit`}>
+                  <button className="px-4 py-2 bg-blue-500 text-white rounded mr-2">Edit</button>
+                </Link>
                 <button onClick={() => setDeletingRoadmap(roadmap)} className="px-4 py-2 bg-red-500 text-white rounded">Delete</button>
               </div>
             </div>
           ))}
         </div>
 
-        {editingRoadmap && (
+        {/* {editingRoadmap && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg max-w-lg w-full">
               <h2 className="text-xl font-bold mb-4 dark:text-white">Edit Roadmap</h2>
@@ -162,7 +108,7 @@ const RoadmapsIndex: React.FC = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {deletingRoadmap && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
