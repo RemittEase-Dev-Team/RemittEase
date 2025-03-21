@@ -31,7 +31,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
   onClick,
 }) => {
   const [currency, setCurrency] = useState<string>('ngn');
-  const [amount, setAmount] = useState<string>('50000');
+  const [amount, setAmount] = useState<string>('');
   const [network, setNetwork] = useState<string>('Stellar');
   const [type, setType] = useState<string>('buy');
   // const walletAddress = 'GDKDSKAR6HEBOOEGWQSAX6GTQDOUAMM7Y7ZINM242ES63Y42SMCUKDMH';
@@ -153,7 +153,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
       {modal && provider === 'linkio' && (
         <form
           onSubmit={handleSubmit}
-          className="absolute left-0 right-0 mt-4 p-6 bg-white dark:bg-gray-800 border-2 border-blue-500/20 rounded-2xl shadow-2xl z-10 animate-slide-down"
+          className="absolute left-0 right-0 -mt-4 p-6 bg-white dark:bg-gray-800 border-2 border-blue-500/20 rounded-2xl shadow-2xl z-10 animate-slide-down"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="space-y-6">
@@ -177,12 +177,14 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
                   onChange={(e) => setAmount(e.target.value)}
                   required
                 />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                  <span className="text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+              </div>
+
+              <div className="my-2 flex items-center gap-2 justify-end">
+                  <span className="text-sm font-medium">
                     ~${Number(amount) / 1200} USD
                   </span>
                 </div>
-              </div>
+
               <div className="mt-2 flex justify-between text-sm text-gray-500 dark:text-gray-400">
                 <span>Min: ₦5,000</span>
                 <span>1 NGN = $0.00083</span>
