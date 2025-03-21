@@ -6,7 +6,6 @@ import { FaChevronLeft } from 'react-icons/fa';
 interface Blog {
     title: string;
     content: string;
-    author_id: string;
     image: string;
     tags: string;
     id: number;
@@ -16,14 +15,13 @@ const EditBlog = ({ blog }: { blog: Blog }) => {
     const { data, setData, post, processing } = useForm({
         title: blog.title || "",
         content: blog.content || "",
-        author: blog.author_id || "",
         image: blog.image || "",
         tags: blog.tags || "",
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setData(name as "title" | "content" | "author" | "image" | "tags", value);
+        setData(name as "title" | "content" | "image" | "tags", value);
     };
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,14 +69,7 @@ const EditBlog = ({ blog }: { blog: Blog }) => {
                             className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
                         ></textarea>
 
-                        <label className="block mt-4 text-gray-700 dark:text-gray-300">Author</label>
-                        <input
-                            type="text"
-                            name="author"
-                            value={data.author}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
-                        />
+                       
 
                         <label className="block mt-4 text-gray-700 dark:text-gray-300">Tags (comma separated)</label>
                         <input

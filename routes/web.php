@@ -91,6 +91,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/transactions', [ManageTransactionController::class, 'index'])->name('admin.transactions');
     Route::get('/transactions/{id}/approve', [ManageTransactionController::class, 'approve'])->name('admin.transactions.approve');
     Route::get('/transactions/{id}/reject', [ManageTransactionController::class, 'reject'])->name('admin.transactions.reject');
+
     Route::get('/blogs', [BlogController::class, 'index'])->name('admin.blogs');
     Route::get('/blogs/create', [BlogController::class, 'create'])->name('admin.blogs.create');
     Route::post('/blogs', [BlogController::class, 'store'])->name('admin.blogs.store');
@@ -98,7 +99,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::post('/blogs/{id}', [BlogController::class, 'update'])->name('admin.blogs.update');
     Route::delete('/blogs/{id}', [BlogController::class, 'destroy'])->name('admin.blogs.destroy');
     Route::get('/blogs/{id}/approve', [BlogController::class, 'approve'])->name('admin.blogs.approve');
-    Route::get('/blogs/{id}/reject', [BlogController::class, 'reject'])->name('admin.blogs.reject');
+     Route::get('/blogs/{id}/reject', [BlogController::class, 'reject'])->name('admin.blogs.reject');
+
     Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings');
     Route::post('/settings/{id}/update', [SettingsController::class, 'update']);
     Route::get('/users', [UserController::class, 'index'])->name('admin.users');

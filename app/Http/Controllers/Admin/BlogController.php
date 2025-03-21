@@ -37,7 +37,7 @@ class BlogController extends Controller
 
         Blog::create($request->only(['title', 'slug', 'author', 'content', 'image', 'tags']));
 
-        return redirect('/blogs')->with('success', 'Blog post created successfully.');
+        return redirect()->route('admin.blogs')->with('success', 'Blog post created successfully.');
     }
 
     public function edit($id)
@@ -82,13 +82,14 @@ class BlogController extends Controller
         $blog->user_id = auth()->id();
         $blog->save();
 
-        return redirect()->back()->with('success', 'Blog post updated successfully.');
+        return redirect()->route('admin.blogs')->with('success', 'Blog post updated successfully.');
     }
 
-    public function destroy(Blog $blog)
-    {
-        $blog->delete();
+    public function destroy($id)
+{
+    $blog = Blog::findOrFail($id);
+    $blog->delete();
 
-        return redirect()->back()->with('success', 'Blog post deleted successfully.');
-    }
+    return redirect()->back()->with('success', 'Blog post deleted successfully.');
+}
 }

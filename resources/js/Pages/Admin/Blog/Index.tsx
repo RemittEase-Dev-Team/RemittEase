@@ -9,11 +9,24 @@ interface BlogProps {
 const Blogs = ({ blogs }: BlogProps) => {
     const { delete: destroy } = useForm();
     const [searchTerm, setSearchTerm] = useState("");
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [blogToDelete, setBlogToDelete] = useState<number | null>(null);
 
-    const handleDelete = (id: number) => {
-        if (confirm("Are you sure you want to delete this blog?")) {
-            destroy(`/admin/blogs/delete/${id}`);
+    const handleDeleteClick = (id: number) => {
+        setBlogToDelete(id);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = () => {
+        if (blogToDelete) {
+            destroy(`/admin/blogs/${blogToDelete}`);
         }
+        setShowDeleteModal(false);
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteModal(false);
+        setBlogToDelete(null);
     };
 
     const filteredBlogs = blogs.filter(blog =>
@@ -60,7 +73,7 @@ const Blogs = ({ blogs }: BlogProps) => {
                                             Edit
                                         </Link>
                                         <button
-                                            onClick={() => handleDelete(blog.id)}
+                                            onClick={() => handleDeleteClick(blog.id)}
                                             className="text-red-500 hover:underline"
                                         >
                                             Delete
@@ -72,6 +85,30 @@ const Blogs = ({ blogs }: BlogProps) => {
                     </table>
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+                        <h3 className="text-lg font-bold mb-4 text-gray-800 dark:text-gray-100">Confirm Deletion</h3>
+                        <p className="mb-6 text-gray-600 dark:text-gray-300">Are you sure you want to delete this blog? This action cannot be undone.</p>
+                        <div className="flex justify-end">
+                            <button
+                                onClick={cancelDelete}
+                                className="bg-gray-300 text-gray-800 px-4 py-2 rounded mr-2 hover:bg-gray-400"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AdminLayout>
     );
 };

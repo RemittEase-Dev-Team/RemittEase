@@ -7,16 +7,15 @@ const CreateBlog = () => {
     const { data, setData, post, processing } = useForm({
         title: "",
         content: "",
-        author: "",
-        image: null as File | null | any,
         tags: "",
+        image: null as File | null | any,
     });
 
     const [previewImage, setPreviewImage] = useState('')
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setData(name as "title" | "content" | "author" | "image" | "tags", value);
+        setData(name as "title" | "content" | "tags", value);
     };
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,17 +59,6 @@ const CreateBlog = () => {
                             onChange={handleChange}
                             className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
                         ></textarea>
-
-                        <label className="block mt-4 text-gray-700 dark:text-gray-300">Author</label>
-                        <input
-                            type="text"
-                            name="author"
-                            value={data.author}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
-                        />
-
-
 
                         <label className="block mt-4 text-gray-700 dark:text-gray-300">Tags (comma separated)</label>
                         <input
