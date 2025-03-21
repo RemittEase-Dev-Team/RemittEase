@@ -1,34 +1,35 @@
 import React, { useState } from "react";
-import { Head, useForm, Link } from "@inertiajs/react";
+import { Head, useForm, Link, usePage } from "@inertiajs/react";
 import AdminLayout from "@/Layouts/AdminLayout";
-import { FaChevronLeft } from 'react-icons/fa';
+import { FaChevronLeft, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
 const CreateBlog = () => {
-    const { data, setData, post, processing } = useForm({
+    const { flash } = usePage().props as any;
+    const { data, setData, post, processing, errors } = useForm({
         title: "",
         content: "",
         tags: "",
-        image: null as File | null | any,
+        image: null as File | null,
     });
 
-    const [previewImage, setPreviewImage] = useState('')
+    const [previewImage, setPreviewImage] = useState<string>('');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setData(name as "title" | "content" | "tags", value);
+        setData(name as any, value);
     };
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setData("image", file);
-            setPreviewImage(URL.createObjectURL(file))
+            setData('image', file);
+            setPreviewImage(URL.createObjectURL(file));
         }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('admin.blogs.create'));
+        post(route('admin.blogs.store'));
     };
 
     return (
@@ -41,38 +42,72 @@ const CreateBlog = () => {
                         <FaChevronLeft className="mr-1" />
                         Back to Blogs
                     </Link>
+
+                    {/* Notification Badge */}
+                    {(flash?.success || flash?.error) && (
+                        <div
+                            className={`mb-4 p-4 rounded-lg flex items-center ${
+                                flash?.success
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                                    : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                            }`}
+                        >
+                            {flash?.success ? (
+                                <FaCheckCircle className="mr-2 text-green-500 dark:text-green-300" />
+                            ) : (
+                                <FaExclamationCircle className="mr-2 text-red-500 dark:text-red-300" />
+                            )}
+                            <span>{flash?.success || flash?.error}</span>
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <label className="block text-gray-700 dark:text-gray-300">Title</label>
-                        <input
-                            type="text"
-                            name="title"
-                            value={data.title}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
-                        />
+                        <div className="mb-4">
+                            <label className="block text-gray-700 dark:text-gray-300">Title</label>
+                            <input
+                                type="text"
+                                name="title"
+                                value={data.title}
+                                onChange={handleChange}
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
+                            />
+                            {errors.title && (
+                                <div className="text-red-500 text-sm mt-1">{errors.title}</div>
+                            )}
+                        </div>
 
-                        <label className="block mt-4 text-gray-700 dark:text-gray-300">Content</label>
-                        <textarea
-                            name="content"
-                            rows={5}
-                            value={data.content}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
-                        ></textarea>
+                        <div className="mb-4">
+                            <label className="block mt-4 text-gray-700 dark:text-gray-300">Content</label>
+                            <textarea
+                                name="content"
+                                rows={5}
+                                value={data.content}
+                                onChange={handleChange}
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
+                            ></textarea>
+                            {errors.content && (
+                                <div className="text-red-500 text-sm mt-1">{errors.content}</div>
+                            )}
+                        </div>
 
-                        <label className="block mt-4 text-gray-700 dark:text-gray-300">Tags (comma separated)</label>
-                        <input
-                            type="text"
-                            name="tags"
-                            value={data.tags}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
-                        />
+                        <div className="mb-4">
+                            <label className="block mt-4 text-gray-700 dark:text-gray-300">Tags (comma separated)</label>
+                            <input
+                                type="text"
+                                name="tags"
+                                value={data.tags}
+                                onChange={handleChange}
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
+                            />
+                            {errors.tags && (
+                                <div className="text-red-500 text-sm mt-1">{errors.tags}</div>
+                            )}
+                        </div>
 
                         <button
                             type="submit"
                             disabled={processing}
-                            className="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                            className="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
                         >
                             {processing ? "Publishing..." : "Publish"}
                         </button>
@@ -80,16 +115,22 @@ const CreateBlog = () => {
                 </div>
                 <div className="w-1/4 ml-6 mt-10">
                     <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
-                        <label className="block mt-4 text-gray-700 dark:text-gray-300">Image Upload</label>
-                        <input
-                            type="file"
-                            name="image"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
-                        />
+                        <div className="mb-4">
+                            <label className="block mt-4 text-gray-700 dark:text-gray-300">Image Upload</label>
+                            <input
+                                type="file"
+                                name="image"
+                                accept="image/*"
+                                onChange={handleImageChange}
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
+                            />
+                            {errors.image && (
+                                <div className="text-red-500 text-sm mt-1">{errors.image}</div>
+                            )}
+                        </div>
+
                         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Preview</h3>
-                        {data.image && (
+                        {previewImage && (
                             <img src={previewImage} alt="Preview" className="w-full h-40 object-cover rounded mt-2" />
                         )}
                         <div className="mt-2">

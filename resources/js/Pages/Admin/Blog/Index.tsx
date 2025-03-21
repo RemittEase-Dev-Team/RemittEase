@@ -3,7 +3,14 @@ import AdminLayout from "@/Layouts/AdminLayout";
 import React, { useState } from "react";
 
 interface BlogProps {
-    blogs: Array<{ id: number; title: string; author: string }>;
+    blogs: Array<{
+        id: number;
+        title: string;
+        author: string;
+        image?: string;
+        image_url?: string; // Added image_url property
+        content: string; // Added content property
+    }>;
 }
 
 const Blogs = ({ blogs }: BlogProps) => {
@@ -29,9 +36,11 @@ const Blogs = ({ blogs }: BlogProps) => {
         setBlogToDelete(null);
     };
 
+    // Improved search functionality to include content and author
     const filteredBlogs = blogs.filter(blog =>
         blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        blog.author.toLowerCase().includes(searchTerm.toLowerCase())
+        blog.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        blog.content.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -55,34 +64,36 @@ const Blogs = ({ blogs }: BlogProps) => {
                     />
                 </div>
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-                    <table className="w-full border-collapse">
-                        <thead className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100">
-                            <tr className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100">
-                                <th className="p-2 text-left">Title</th>
-                                <th className="p-2 text-left">Author</th>
-                                <th className="p-2 text-left">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-gray-800 dark:text-gray-100">
-                            {filteredBlogs.map((blog) => (
-                                <tr key={blog.id} className="border-t dark:border-gray-600">
-                                    <td className="p-2">{blog.title}</td>
-                                    <td className="p-2">{blog.author}</td>
-                                    <td className="p-2">
-                                        <Link href={`/admin/blogs/${blog.id}/edit`} className="text-blue-500 hover:underline mr-4">
-                                            Edit
-                                        </Link>
-                                        <button
-                                            onClick={() => handleDeleteClick(blog.id)}
-                                            className="text-red-500 hover:underline"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {filteredBlogs.map((blog) => (
+                            <div key={blog.id} className="border p-4 rounded-lg shadow-md dark:bg-gray-700">
+                                <div className="mb-4">
+                                    {blog.image_url && (
+                                        <img
+                                            src={blog.image_url}
+                                            alt={blog.title}
+                                            className="w-full h-48 object-cover rounded"
+                                        />
+                                    )}
+                                </div>
+                                <h3 className="text-lg dark:text-blue-700 font-bold mb-2">{blog.title}</h3>
+                                <p className="mb-4 text-gray-600 dark:text-gray-300">
+                                    {blog.content.substring(0, 100)}...
+                                </p>
+                                <div className="flex justify-end">
+                                    <Link href={`/admin/blogs/${blog.id}/edit`} className="text-blue-500 hover:underline mr-4">
+                                        Edit
+                                    </Link>
+                                    <button
+                                        onClick={() => handleDeleteClick(blog.id)}
+                                        className="text-red-500 hover:underline"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
