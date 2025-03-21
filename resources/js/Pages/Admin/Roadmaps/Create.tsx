@@ -40,8 +40,8 @@ const CreateRoadmap: React.FC = () => {
 
   return (
     <AdminLayout>
-      <div className="flex justify-start items-start p-6 dark:bg-gray-900 min-h-screen">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-2xl">
+      <div className="w-full flex justify-start items-start p-6 dark:bg-gray-900 min-h-screen">
+        <div className="w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-2xl">
           <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">Create Roadmap</h2>
           {message && <div className="mb-4 text-green-500 dark:text-green-400">{message}</div>}
           <div className="mb-4">
