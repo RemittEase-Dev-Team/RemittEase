@@ -170,6 +170,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
 });
 
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin/kyc', [KYCController::class, 'index'])->name('admin.kyc.index');
+    Route::get('/admin/kyc/{id}', [KYCController::class, 'show'])->name('admin.kyc.show');
+    Route::post('/admin/kyc/initiate', [KYCController::class, 'initiateKYC'])->name('admin.kyc.initiate');
+});
 
 // Staff Routes - Only Staff & Admin Can Access
 Route::middleware(['auth', 'role:admin|staff'])->prefix('staff')->group(function () {

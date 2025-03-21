@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('kycs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('onfido_applicant_id')->nullable();
-            $table->enum('status', ['pending', 'verified', 'rejected'])->default('pending');
+            $table->foreignId('user_id')->constrained();
+            $table->string('applicant_id')->nullable();
+            $table->string('check_id')->nullable();
+            $table->string('status')->default('pending');
             $table->timestamps();
         });
     }

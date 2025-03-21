@@ -45,4 +45,9 @@ return [
         'base_url' => env('MOONPAY_BASE_URL', 'https://api.moonpay.com'),
     ],
 
+    'onfido' => [
+        'api_token' => env('ONFIDO_API_TOKEN'),
+        'webhook_token' => env('ONFIDO_WEBHOOK_TOKEN'),
+    ],
+
 ];
