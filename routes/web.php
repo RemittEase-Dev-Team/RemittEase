@@ -85,9 +85,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::put('/quest-rewards/update', [SectionController::class, 'updateQuestRewards'])->name('admin.sections.quest-rewards.update');
     Route::put('/teams/update', [SectionController::class, 'updateTeams'])->name('admin.sections.teams.update');
 
-    Route::get('/kyc', [KYCController::class, 'index'])->name('admin.kyc');
-    Route::get('/kyc/{id}/approve', [KYCController::class, 'approve'])->name('admin.kyc.approve');
-    Route::get('/kyc/{id}/reject', [KYCController::class, 'reject'])->name('admin.kyc.reject');
+    // Route::get('/kyc', [KYCController::class, 'index'])->name('admin.kyc');
+    // Route::get('/kyc/{id}/approve', [KYCController::class, 'approve'])->name('admin.kyc.approve');
+    // Route::get('/kyc/{id}/reject', [KYCController::class, 'reject'])->name('admin.kyc.reject');
+    Route::get('/kyc', [KYCController::class, 'index'])->name('admin.kyc.index');
+    Route::get('/kyc/{id}', [KYCController::class, 'show'])->name('admin.kyc.show');
+    Route::post('/kyc/initiate', [KYCController::class, 'initiateKYC'])->name('admin.kyc.initiate');
+
     Route::get('/transactions', [ManageTransactionController::class, 'index'])->name('admin.transactions');
     Route::get('/transactions/{id}/approve', [ManageTransactionController::class, 'approve'])->name('admin.transactions.approve');
     Route::get('/transactions/{id}/reject', [ManageTransactionController::class, 'reject'])->name('admin.transactions.reject');
@@ -170,11 +174,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
 });
 
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin/kyc', [KYCController::class, 'index'])->name('admin.kyc.index');
-    Route::get('/admin/kyc/{id}', [KYCController::class, 'show'])->name('admin.kyc.show');
-    Route::post('/admin/kyc/initiate', [KYCController::class, 'initiateKYC'])->name('admin.kyc.initiate');
-});
+// Route::middleware(['auth', 'role:admin'])->group(function () {
+   
+// });
 
 // Staff Routes - Only Staff & Admin Can Access
 Route::middleware(['auth', 'role:admin|staff'])->prefix('staff')->group(function () {
