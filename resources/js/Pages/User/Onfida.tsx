@@ -1,7 +1,13 @@
 import React, { useEffect } from 'react';
 import { Onfido } from 'onfido-sdk-ui';
 
-const OnfidoComponent = ({ sdkToken, workflowRunId, onComplete } : { sdkToken: any, workflowRunId: any, onComplete: any }) => {
+interface OnfidoComponentProps {
+  sdkToken: string;
+  workflowRunId: string;
+  onComplete: (data: any) => void;
+}
+
+const OnfidoComponent: React.FC<OnfidoComponentProps> = ({ sdkToken, workflowRunId, onComplete }) => {
   useEffect(() => {
     if (!sdkToken || !workflowRunId) {
       console.error('SDK token or workflowRunId is missing!');
@@ -18,16 +24,44 @@ const OnfidoComponent = ({ sdkToken, workflowRunId, onComplete } : { sdkToken: a
         console.log('Onfido flow complete:', data);
         if (onComplete) onComplete(data);
       },
+      onError: (error) => {
+        console.error('Onfido error:', error);
+      },
+      steps: [
+        {
+          type: 'welcome',
+          options: {
+            title: 'Identity Verification',
+            descriptions: [
+              'To ensure the security of our platform and comply with regulations, we need to verify your identity.',
+              'This process will take just a few minutes.'
+            ]
+          }
+        },
+        {
+          type: 'document',
+          options: {
+            documentTypes: {
+              passport: true,
+              driving_licence: true,
+              national_identity_card: true
+            }
+          }
+        },
+        'face',
+        'complete'
+      ]
     });
-
-    // Optional: return a cleanup function if your integration requires it.
-    return () => {
-      // For example, if Onfido has a teardown method:
-      // Onfido.teardown();
-    };
   }, [sdkToken, workflowRunId, onComplete]);
 
-  return <div id="onfido-mount"></div>;
+  return (
+    <div className="flex flex-col items-center justify-center w-full">
+      <div
+        id="onfido-mount"
+        className="w-full max-w-2xl min-h-[600px] bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+      />
+    </div>
+  );
 };
 
 export default OnfidoComponent;

@@ -6,21 +6,35 @@ use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Onfido\Client;
+use Onfido\Api\DefaultApi;
+use Onfido\Configuration;
+use GuzzleHttp\Client;
 
 class KYCController extends Controller
 {
-    protected Client $onfido;
+    protected DefaultApi $onfido;
 
     public function __construct()
     {
-        $this->onfido = new Client(config('services.onfido.api_token'));
+        $token = 'Token token=' . config('services.onfido.api_token');
+        $httpClient = new Client([
+            'base_uri' => 'https://api.onfido.com/v3',
+            'headers' => [
+                'Authorization' => $token,
+                'User-Agent' => 'RemittEase/1.0'
+            ]
+        ]);
+
+        $this->onfido = new DefaultApi(
+            $httpClient,
+            new Configuration()
+        );
     }
 
     public function index()
     {
         $users = User::with('kyc')->paginate(10);
-        
+
         return Inertia::render('Admin/KYC/Index', [
             'users' => $users
         ]);
@@ -33,7 +47,7 @@ class KYCController extends Controller
 
         if ($user->kyc && $user->kyc->check_id) {
             try {
-                $kycCheck = $this->onfido->check->find($user->kyc->check_id);
+                $kycCheck = $this->onfido->getCheck($user->kyc->check_id);
             } catch (\Exception $e) {
                 // Handle error
             }
@@ -56,14 +70,14 @@ class KYCController extends Controller
 
         try {
             // Create an applicant
-            $applicant = $this->onfido->applicant->create([
+            $applicant = $this->onfido->createApplicant([
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'email' => $request->email,
             ]);
 
             // Create an SDK token for the applicant
-            $sdkToken = $this->onfido->sdkToken->generate([
+            $sdkToken = $this->onfido->generateSdkToken([
                 'applicant_id' => $applicant['id'],
                 'referrer' => config('app.url')
             ]);
@@ -95,10 +109,10 @@ class KYCController extends Controller
         }
 
         $payload = $request->all();
-        
+
         if ($payload['resource_type'] === 'check' && $payload['action'] === 'check.completed') {
-            $check = $this->onfido->check->find($payload['object']['id']);
-            
+            $check = $this->onfido->getCheck($payload['object']['id']);
+
             // Update KYC status based on check result
             $kyc = KYC::where('check_id', $check['id'])->first();
             if ($kyc) {
