@@ -27,13 +27,16 @@ const RoadmapsIndex: React.FC = () => {
   };
 
   const handleDelete = (roadmapId: number) => {
-    router.delete(`/admin/roadmaps/${roadmapId}`, {
+    router.delete(`/admin/roadmap/${roadmapId}`, {
       onSuccess: () => {
-        // Optionally, you can add logic here to update the UI after deletion
-      }
+        setDeletingRoadmap(null);
+      },
+      onError: (errors) => {
+        console.error("Deletion failed:", errors);
+      },
     });
-    setDeletingRoadmap(null);
   };
+  
 
   return (
     <AdminLayout>

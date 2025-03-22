@@ -96,39 +96,46 @@ class SectionController extends Controller
     }
 
     public function updateQuestRewards(Request $request)
-{
-    // dd($request);
-    $request->validate([
-        'content' => 'required|array',
-        'content.*.title' => 'required|string|max:255',
-        'content.*.description' => 'required|string',
-        'content.*.rewardPoints' => 'required|integer',
-        'content.*.progress' => 'required|integer',
-    ]);
-
-    foreach ($request->content as $quest) {
-        if(isset($quest['created_at'])){
-            $quest['created_at'] = Carbon::parse($quest['created_at'])->format('Y-m-d H:i:s');
+    {
+        $request->validate([
+            'content' => 'required|array',
+            'content.*.title' => 'required|string|max:255',
+            'content.*.description' => 'required|string',
+            'content.*.rewardPoints' => 'required|integer',
+            'content.*.progress' => 'required|integer',
+        ]);
+    
+        foreach ($request->content as $quest) {
+            if (isset($quest['created_at'])) {
+                $quest['created_at'] = Carbon::parse($quest['created_at'])->format('Y-m-d H:i:s');
+            }
+            if (isset($quest['updated_at'])) {
+                $quest['updated_at'] = Carbon::parse($quest['updated_at'])->format('Y-m-d H:i:s');
+            }
+    
+            // If an ID is provided, update. Otherwise, create a new record.
+            if (isset($quest['id']) && $quest['id']) {
+                QuestReward::where('id', $quest['id'])->update([
+                    'title'         => $quest['title'],
+                    'description'   => $quest['description'],
+                    'reward_points' => $quest['rewardPoints'],
+                    'progress'      => $quest['progress'],
+                    'created_at'    => $quest['created_at'] ?? null,
+                    'updated_at'    => $quest['updated_at'] ?? null,
+                ]);
+            } else {
+                QuestReward::create([
+                    'title'         => $quest['title'],
+                    'description'   => $quest['description'],
+                    'reward_points' => $quest['rewardPoints'],
+                    'progress'      => $quest['progress'],
+                ]);
+            }
         }
-        if(isset($quest['updated_at'])){
-            $quest['updated_at'] = Carbon::parse($quest['updated_at'])->format('Y-m-d H:i:s');
-        }
-
-        QuestReward::where('id', $quest['id'])->update( 
-            // $quest
-            [
-            'title' => $quest['title'],
-            'description' => $quest['description'],
-            'reward_points' => $quest['rewardPoints'],
-            'progress' => $quest['progress'],
-            'created_at' => $quest['created_at'] ?? null,
-            'updated_at' => $quest['updated_at'] ?? null,
-        ]
-        );
+    
+        return redirect()->back()->with('success', 'Quest rewards updated successfully.');
     }
-
-    return redirect()->back()->with('success', 'Quest rewards updated successfully.');
-}
+    
 
     public function updateTeams(Request $request)
     {
