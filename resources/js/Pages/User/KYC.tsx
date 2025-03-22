@@ -3,7 +3,7 @@ import { Head, useForm } from '@inertiajs/react';
 import UserLayout from '@/Layouts/AuthenticatedLayout';
 import OnfidoComponent from './Onfida';
 
-const KYC = ({ kyc_status, can_skip, wallet_balance, sdkToken, workflowRunId } : { kyc_status: any, can_skip: any, wallet_balance: any, sdkToken: any, workflowRunId: any }) => {
+const KYC = ({ kyc_status, can_skip, wallet_balance, sdkToken, workflowRunId, flash } : { kyc_status: any, can_skip: any, wallet_balance: any, sdkToken: any, workflowRunId: any, flash: any }) => {
     const {data, post} = useForm({})
   if (kyc_status === "verified") {
     return (
@@ -51,6 +51,11 @@ const KYC = ({ kyc_status, can_skip, wallet_balance, sdkToken, workflowRunId } :
               <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => post(route('kyc.start'))} >Click here</button>
             </div>
             </>
+          )}
+          {flash.error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {flash.error}
+            </div>
           )}
         </div>
       </div>
