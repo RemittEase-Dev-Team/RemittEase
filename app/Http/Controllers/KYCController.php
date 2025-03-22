@@ -7,19 +7,30 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Onfido\Api\DefaultApi;
-use Onfido\Model\Applicant;
-use Onfido\Model\CheckCreationRequest;
+use Onfido\Configuration;
 use App\Models\User;
 use App\Models\Transaction;
 use GuzzleHttp\Client;
 
 class KYCController extends Controller
 {
-    protected $onfido;
+    protected DefaultApi $onfido;
 
-    public function __construct(DefaultApi $onfido)
+    public function __construct()
     {
-        $this->onfido = $onfido;
+        $token = 'Token token=' . config('services.onfido.api_token');
+        $httpClient = new Client([
+            'base_uri' => 'https://api.onfido.com/v3',
+            'headers' => [
+                'Authorization' => $token,
+                'User-Agent' => 'RemittEase/1.0'
+            ]
+        ]);
+
+        $this->onfido = new DefaultApi(
+            $httpClient,
+            new Configuration()
+        );
     }
 
     /**
@@ -30,16 +41,12 @@ class KYCController extends Controller
         $user = Auth::user();
         $totalTransactions = Transaction::where('user_id', $user->id)->sum('amount');
 
-        // Retrieve SDK token and workflow run ID from the user model
-        $sdkToken = $user->onfido_sdk_token; 
-        $workflowRunId = $user->onfido_check_id;
-
         return Inertia::render('User/KYC', [
-            'kyc_status'     => $user->kyc_status,
-            'can_skip'       => $totalTransactions < 100,
+            'kyc_status' => $user->kyc_status,
+            'can_skip' => $totalTransactions < 100,
             'wallet_balance' => optional($user->wallet)->balance ?? 0,
-            'sdkToken'       => $sdkToken,
-            'workflowRunId'  => $workflowRunId,
+            'sdkToken' => $user->onfido_sdk_token,
+            'workflowRunId' => $user->onfido_check_id,
         ]);
     }
 
@@ -49,68 +56,57 @@ class KYCController extends Controller
     public function initiateKYC(Request $request)
     {
         $user = Auth::user();
-        
-        // Create an Onfido applicant using user details
-        $applicant = new Applicant([
-            'first_name' => $user->name,
-            'last_name'  => $user->last_name ?? 'Unknown',
-            'email'      => $user->email,
-        ]);
 
-        Log::info('applicant: ' . $applicant );
-        Log::info('Onfido API Token: ' . env('ONFIDO_API_TOKEN'));
         try {
-            // Create the applicant on Onfido
-            $createdApplicant = $this->onfido->createApplicant($applicant);
-            $user->onfido_applicant_id = $createdApplicant->getId();
+            // Create an applicant
+            $applicantData = [
+                'first_name' => $user->name,
+                'last_name' => $user->last_name ?? 'Unknown',
+                'email' => $user->email,
+            ];
+
+            $applicant = $this->onfido->createApplicant($applicantData);
+
+            // Store the applicant ID
+            $user->onfido_applicant_id = $applicant['id'];
             $user->kyc_status = 'pending';
             $user->save();
 
-            // Prepare data for SDK token generation
+            // Generate SDK token
             $sdkTokenData = [
-                'applicant_id'    => $createdApplicant->getId(),
-                'allowed_origins' => [env('APP_URL')], // e.g., "http://remittease.test"
+                'applicant_id' => $applicant['id'],
+                'referrer' => config('app.url')
             ];
 
-            $client = new Client();
-            // Use the SDK token endpoint, not the applicants endpoint
-            $response = $client->post('https://api.eu.onfido.com/v3/sdk_token', [
-                'headers' => [
-                    'Authorization' => 'Token token=' . env('ONFIDO_API_TOKEN'),
-                    'Content-Type'  => 'application/json',
-                ],
-                'json' => $sdkTokenData,
-            ]);
-
-
-            $body = $response->getBody()->getContents();
-            Log::info('Onfido SDK Token Response: ' . $body);
-            $responseData = json_decode($body, true);
-
-            // Documentation indicates the response should include sdk_token
-            $sdkToken = $responseData['sdk_token'] ?? null;
-            if (!$sdkToken) {
-                Log::error('Failed to generate SDK token. Full response: ' . $body);
-                throw new \Exception('Failed to generate SDK token.');
-            }
-
-            // Save the generated SDK token
-            $user->onfido_sdk_token = $sdkToken;
+            $sdkToken = $this->onfido->generateSdkToken($sdkTokenData);
+            $user->onfido_sdk_token = $sdkToken['token'];
             $user->save();
 
-            // Create a KYC check (which will serve as the workflow run ID)
-            $checkRequest = new CheckCreationRequest([
-                'applicant_id' => $createdApplicant->getId(),
+            // Create a workflow run (check)
+            $checkData = [
+                'applicant_id' => $applicant['id'],
                 'report_names' => ['document', 'facial_similarity_photo'],
-            ]);
-            $check = $this->onfido->createCheck($checkRequest);
-            $user->onfido_check_id = $check->getId();
+                'consider' => [
+                    'document_authenticity',
+                    'facial_similarity',
+                    'visual_authenticity',
+                    'police_record',
+                    'right_to_work'
+                ]
+            ];
+
+            $check = $this->onfido->createCheck($checkData);
+            $user->onfido_check_id = $check['id'];
             $user->save();
 
-            return redirect()->route('dashboard')->with('success', 'KYC verification initiated.');
+            return back()->with([
+                'sdkToken' => $sdkToken['token'],
+                'workflowRunId' => $check['id']
+            ]);
+
         } catch (\Exception $e) {
             Log::error('Onfido API error: ' . $e->getMessage());
-            return redirect()->route('dashboard')->with('error', 'KYC verification failed. Try again later.');
+            return back()->with('error', 'Failed to initiate KYC verification');
         }
     }
 
@@ -137,23 +133,62 @@ class KYCController extends Controller
     {
         Log::info('Onfido Webhook Received', $request->all());
 
-        $event = $request->input('payload.object');
-        $checkId = $event['id'];
-        $status = $event['status'];
-
-        $user = User::where('onfido_check_id', $checkId)->first();
-        if (!$user) {
-            return response()->json(['error' => 'User not found'], 404);
+        // Verify webhook signature
+        if (!$this->verifyWebhookSignature($request)) {
+            return response()->json(['error' => 'Invalid signature'], 401);
         }
 
-        // Update KYC Status based on webhook status
-        if ($status === 'completed') {
-            $user->kyc_status = 'verified';
-        } elseif ($status === 'rejected') {
-            $user->kyc_status = 'rejected';
-        }
-        $user->save();
+        $payload = $request->all();
 
-        return response()->json(['message' => 'KYC status updated']);
+        if ($payload['resource_type'] === 'check' && $payload['action'] === 'check.completed') {
+            $check = $this->onfido->getCheck($payload['object']['id']);
+
+            $user = User::where('onfido_check_id', $check['id'])->first();
+            if ($user) {
+                $user->kyc_status = $check['result'] === 'clear' ? 'verified' : 'rejected';
+                $user->save();
+            }
+        }
+
+        return response()->json(['message' => 'Webhook processed']);
+    }
+
+    private function verifyWebhookSignature(Request $request): bool
+    {
+        $signature = $request->header('X-Sha2-Signature');
+        $payload = $request->getContent();
+        $webhookToken = config('services.onfido.webhook_token');
+
+        return hash_hmac('sha256', $payload, $webhookToken) === $signature;
+    }
+
+    /**
+     * Complete KYC Verification
+     */
+    public function completeKYC(Request $request)
+    {
+        $user = Auth::user();
+
+        try {
+            // Get the check result
+            $check = $this->onfido->getCheck($user->onfido_check_id);
+
+            // Update user's KYC status based on the check result
+            if ($check['result'] === 'clear') {
+                $user->kyc_status = 'verified';
+                $user->kyc_verified_at = now();
+                $user->save();
+
+                return back()->with('success', 'KYC verification completed successfully');
+            } else {
+                $user->kyc_status = 'failed';
+                $user->save();
+
+                return back()->with('error', 'KYC verification failed. Please try again.');
+            }
+        } catch (\Exception $e) {
+            Log::error('Onfido check completion error: ' . $e->getMessage());
+            return back()->with('error', 'Failed to complete KYC verification');
+        }
     }
 }

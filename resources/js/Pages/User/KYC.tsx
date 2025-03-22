@@ -46,8 +46,10 @@ const KYC = ({ kyc_status, can_skip, wallet_balance, sdkToken, workflowRunId } :
             />
           ) : (
             <>
-            <p>Loading verification tools...</p>
-            <button onClick={() => post(route('kyc.start'))} >Click here</button>
+            <p className="text-gray-600 dark:text-white text-center">Loading verification tools...</p>
+            <div className="flex justify-center">
+              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => post(route('kyc.start'))} >Click here</button>
+            </div>
             </>
           )}
         </div>
