@@ -65,7 +65,7 @@ const EditSectionModal: React.FC<EditSectionModalProps> = ({ section, onClose })
     const routeMap: { [key: string]: string } = {
       'Heroes': '/admin/heroes/update',
       'Features': '/admin/features/update',
-      'Abouts': '/admin/about/update',
+      'Abouts': '/admin/abouts/update',
       'Quest Rewards': '/admin/quest-rewards/update',
       'Teams': '/admin/teams/update'
     };
