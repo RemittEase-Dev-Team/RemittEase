@@ -10,7 +10,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\KYC;
-Use App\Models\Currency;
+use App\Models\Currency;
 use App\Services\StellarWalletService;
 use Illuminate\Support\Facades\Log;
 
@@ -125,8 +125,13 @@ class DashboardController extends Controller
 
     public function deposit()
     {
-        return Inertia::render('Deposit',[
-            $currencies = Currency::all()
+        $wallet = auth()->user()->wallet; 
+        $formattedPublicKey = substr($wallet->public_key, 0, 4) . '...' . substr($wallet->public_key, -4);
+    
+        return Inertia::render('Deposit', [
+            'formattedPublicKey' => $formattedPublicKey,
+            'wallet' => $wallet,
         ]);
     }
+    
 }

@@ -297,7 +297,7 @@ export default function Dashboard({
               walletAddress={wallet?.publicKey}
               modal={modal}
               onClick={() => {
-                window.location.href = '/deposit'
+                window.location.href = '/deposit/2'
                 const provider = paymentProviders.find(p => p.id === 'moonpay');
                 // const provider = 'moonpay'
                 if (provider) {
@@ -316,11 +316,12 @@ export default function Dashboard({
               walletAddress={wallet?.publicKey}
               modal={modal}
               onClick={() => {
+                window.location.href = '/deposit/1'
                 const provider = paymentProviders.find(p => p.id === 'linkio');
                 // const provider = 'linkio'
                 if (provider) {
                   // setSelectedProvider(provider);
-                  setModal(!modal)
+                  // setModal(!modal)
                   // setDepositStep('amount');
                 }
               }}
@@ -334,7 +335,7 @@ export default function Dashboard({
               walletAddress={wallet?.publicKey}
               modal={modal}
               onClick={() => {
-                window.location.href = '/deposit'
+                window.location.href = '/deposit/3'
                 const provider = paymentProviders.find(p => p.id === 'yellowcard');
                 // const provider = 'yellowcard'
                 if (provider) {
