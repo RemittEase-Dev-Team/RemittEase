@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('description');
             $table->integer('reward_points');
             $table->integer('progress');
-            $table->string('icon'); // Added icon column
+            $table->string('icon')->nullable(); 
             $table->timestamps();
         });
     }
