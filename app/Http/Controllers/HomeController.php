@@ -18,6 +18,13 @@ class HomeController extends Controller
 {
     public function index()
     {
+
+        // $abouts = About::all();
+
+
+        // dd($abouts);
+
+
         return Inertia::render('Welcome', [
             'heroes' => Hero::all(),
             'features' => Features::all(),
