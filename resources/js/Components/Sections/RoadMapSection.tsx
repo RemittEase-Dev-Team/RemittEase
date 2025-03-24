@@ -4,7 +4,7 @@ import { Rocket, Milestone, Users, Globe, Star, DollarSign, Shield, Gift, Zap, T
 
 interface RoadmapItem {
   quarter: string;
-  details: string; // Adjusted to match the data structure
+  details: string;
 }
 
 interface RoadMapSectionProps {
@@ -12,6 +12,16 @@ interface RoadMapSectionProps {
 }
 
 const RoadMapSection: React.FC<RoadMapSectionProps> = ({ roadmaps }) => {
+  // Helper function to safely parse JSON
+  const parseDetails = (details: string): string[] => {
+    try {
+      return JSON.parse(details);
+    } catch (error) {
+      console.error('Error parsing roadmap details:', error);
+      return ['Error loading roadmap details'];
+    }
+  };
+
   return (
     <section
       className="relative py-16 bg-dark-navy text-soft-white overflow-hidden"
@@ -47,7 +57,7 @@ const RoadMapSection: React.FC<RoadMapSectionProps> = ({ roadmaps }) => {
               {/* Card for bullet points */}
               <div className="ml-8 md:ml-12 bg-black bg-opacity-30 rounded-lg p-4 shadow-lg">
                 <ul className="list-none space-y-2 text-cool-gray">
-                  {JSON.parse(item.details).map((point: string, idx: number) => (
+                  {parseDetails(item.details).map((point: string, idx: number) => (
                     <li key={idx} className="flex items-start">
                       <Star className="text-neon-cyan w-4 h-4 mt-1 flex-shrink-0 mr-2" />
                       <span>{point}</span>
