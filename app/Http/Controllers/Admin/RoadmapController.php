@@ -37,7 +37,12 @@ class RoadmapController extends Controller
     {
         $roadmap = Roadmap::findOrFail($id);
 
-        $roadmap->details = explode(',', $roadmap->details);
+        // Parse the JSON string to array
+        try {
+            $roadmap->details = json_decode($roadmap->details, true) ?? [];
+        } catch (\Exception $e) {
+            $roadmap->details = [];
+        }
 
         return Inertia::render('Admin/Roadmaps/Edit', [
             'roadmap' => $roadmap
@@ -48,14 +53,27 @@ class RoadmapController extends Controller
     {
         $validatedData = $request->validate([
             'quarter' => 'required|string|max:255',
-            'details' => 'required|array',
+            'details' => 'required|string',
         ]);
 
-        $validatedData['details'] = implode(',', $validatedData['details']);
+        try {
+            // Ensure details is a valid JSON array
+            $details = json_decode($validatedData['details'], true);
+            if (!is_array($details)) {
+                throw new \Exception('Invalid details format');
+            }
 
-        $roadmap->update($validatedData);
+            $roadmap->update([
+                'quarter' => $validatedData['quarter'],
+                'details' => json_encode($details) // Re-encode to ensure proper JSON format
+            ]);
 
-        return redirect()->route('admin.roadmap.index')->with('success', 'Roadmap entry updated successfully.');
+            return redirect()->route('admin.roadmap.index')
+                ->with('success', 'Roadmap entry updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to update roadmap. Please ensure details are in correct format.');
+        }
     }
 
     public function destroy(Roadmap $roadmap)

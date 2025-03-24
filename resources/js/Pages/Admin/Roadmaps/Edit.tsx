@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Head, useForm, Link, usePage, router } from "@inertiajs/react";
+import React from "react";
+import { Head, useForm, Link, usePage } from "@inertiajs/react";
 import AdminLayout from "@/Layouts/AdminLayout";
 import { FaChevronLeft, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
@@ -9,53 +9,57 @@ interface RoadMap {
     details: string[];
 }
 
+type FormData = {
+    quarter: string;
+    details: string;
+    _method: string;
+}
+
 const EditRoadmap = ({ roadmap }: { roadmap: RoadMap }) => {
     const { flash } = usePage().props as any;
 
-    // Parse and clean the details array
-    const parseDetails = (details: string[]): string[] => {
-        if (!Array.isArray(details)) return [];
+    // Parse the initial details if it's a string
+    const initialDetails = React.useMemo(() => {
+        try {
+            return Array.isArray(roadmap.details)
+                ? roadmap.details
+                : JSON.parse(roadmap.details || '[]');
+        } catch {
+            return [];
+        }
+    }, [roadmap.details]);
 
-        return details.map((detail: string, index: number) => {
-            // Remove array brackets from first and last items
-            let cleanDetail = detail;
-            if (index === 0) cleanDetail = cleanDetail.replace(/^\[/, '');
-            if (index === details.length - 1) cleanDetail = cleanDetail.replace(/\]$/, '');
+    const [details, setDetails] = React.useState<string[]>(initialDetails);
 
-            // Parse Unicode escape sequences
-            try {
-                return JSON.parse(`"${cleanDetail.replace(/"/g, '\\"')}"`);
-            } catch {
-                return cleanDetail;
-            }
-        });
-    };
-
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm<FormData>({
         quarter: roadmap.quarter || "",
-        details: parseDetails(roadmap.details),
+        details: JSON.stringify(initialDetails),
         _method: "PUT",
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setData(name as keyof typeof data, value);
+        setData(name as keyof FormData, value);
     };
 
     const handleDetailChange = (index: number, value: string) => {
-        const newDetails = [...data.details];
+        const newDetails = [...details];
         newDetails[index] = value;
-        setData("details", newDetails);
+        setDetails(newDetails);
+        setData("details", JSON.stringify(newDetails));
     };
 
     const handleAddDetail = () => {
-        setData("details", [...data.details, ""]);
+        const newDetails = [...details, ""];
+        setDetails(newDetails);
+        setData("details", JSON.stringify(newDetails));
     };
 
     const handleRemoveDetail = (index: number) => {
-        const newDetails = [...data.details];
+        const newDetails = [...details];
         newDetails.splice(index, 1);
-        setData("details", newDetails);
+        setDetails(newDetails);
+        setData("details", JSON.stringify(newDetails));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -100,7 +104,7 @@ const EditRoadmap = ({ roadmap }: { roadmap: RoadMap }) => {
 
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Details</label>
-                            {data.details.map((detail: string, index: number) => (
+                            {details.map((detail: string, index: number) => (
                                 <div key={index} className="flex items-center mb-2">
                                     <input
                                         type="text"
