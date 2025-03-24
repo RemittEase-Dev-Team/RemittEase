@@ -21,12 +21,12 @@ const LandingPage: React.FC = () => {
     router.get(route('onboarding'), { email });
   };
 
-  console.log('features', features);
-  console.log('heroes', heroes);
-  console.log('roadmaps', roadmaps);
+//   console.log('features', features);
+//   console.log('heroes', heroes);
+//   console.log('roadmaps', roadmaps);
   console.log('abouts', abouts);
-  console.log('blogs', blogs);
-  console.log('teams', teams);
+  //   console.log('blogs', blogs);
+//   console.log('teams', teams);
   return (
     <div className="bg-dark-navy text-soft-white font-poppins">
       <Head title="RemittEase - Fast, Low-Cost, Secure Remittances" />

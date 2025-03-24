@@ -6,7 +6,7 @@ export interface BlogPost {
   content: string;
   created_at: string;
   author: string;
-  image: string;
+  image: string; // Image path will be prefixed with 'storage/' in the component
 }
 
 interface BlogSectionProps {
@@ -46,7 +46,7 @@ const BlogSection: React.FC<BlogSectionProps> = ({ blogs }) => {
                 onClick={() => handleBlogClick(post)}
               >
                 <img
-                  src={post.image}
+                  src={`storage/${post.image}`} // Prefixing 'storage/' to the image path
                   alt={post.title}
                   className="w-full h-40 object-cover rounded-lg mb-4"
                 />
@@ -81,7 +81,7 @@ const BlogSection: React.FC<BlogSectionProps> = ({ blogs }) => {
             </div>
             <div>
               <img
-                src={selectedBlog.image}
+                src={`storage/${selectedBlog.image}`} // Prefixing 'storage/' to the image path
                 alt={selectedBlog.title}
                 className="w-full h-60 object-cover rounded-lg mb-4"
               />
