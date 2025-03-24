@@ -561,7 +561,7 @@ export default function ContactPage({ canLogin, canRegister }: Props) {
       </div>
 
       {/* Global Styles */}
-      <style jsx global>{`
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0) translateX(0); }
           25% { transform: translateY(-10px) translateX(10px); }
