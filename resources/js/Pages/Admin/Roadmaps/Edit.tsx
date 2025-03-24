@@ -7,18 +7,35 @@ interface RoadMap {
     id: number;
     quarter: string;
     details: string[];
-    // message: string;
 }
 
 const EditRoadmap = ({ roadmap }: { roadmap: RoadMap }) => {
     const { flash } = usePage().props as any;
+
+    // Parse and clean the details array
+    const parseDetails = (details: string[]): string[] => {
+        if (!Array.isArray(details)) return [];
+
+        return details.map((detail: string, index: number) => {
+            // Remove array brackets from first and last items
+            let cleanDetail = detail;
+            if (index === 0) cleanDetail = cleanDetail.replace(/^\[/, '');
+            if (index === details.length - 1) cleanDetail = cleanDetail.replace(/\]$/, '');
+
+            // Parse Unicode escape sequences
+            try {
+                return JSON.parse(`"${cleanDetail.replace(/"/g, '\\"')}"`);
+            } catch {
+                return cleanDetail;
+            }
+        });
+    };
+
     const { data, setData, post, processing, errors } = useForm({
         quarter: roadmap.quarter || "",
-        details: roadmap.details || [],
-        // message: roadmap.message || "",
+        details: parseDetails(roadmap.details),
         _method: "PUT",
     });
-
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -78,26 +95,45 @@ const EditRoadmap = ({ roadmap }: { roadmap: RoadMap }) => {
                                 value={data.quarter}
                                 onChange={handleChange}
                             />
+                            {errors.quarter && <div className="text-red-500 text-sm mt-1">{errors.quarter}</div>}
                         </div>
 
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Details</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Details</label>
                             {data.details.map((detail: string, index: number) => (
                                 <div key={index} className="flex items-center mb-2">
                                     <input
                                         type="text"
-                                        className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
+                                        className="flex-1 p-2 border rounded dark:bg-gray-700 dark:text-white"
                                         value={detail}
                                         onChange={(e) => handleDetailChange(index, e.target.value)}
+                                        placeholder="Enter detail"
                                     />
-                                    <button type="button" onClick={() => handleRemoveDetail(index)} className="ml-2 px-2 py-1 bg-red-500 text-white rounded">Remove</button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveDetail(index)}
+                                        className="ml-2 px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    >
+                                        Remove
+                                    </button>
                                 </div>
                             ))}
-                            <button type="button" onClick={handleAddDetail} className="mt-2 px-4 py-2 bg-green-500 text-white rounded">Add Detail</button>
+                            <button
+                                type="button"
+                                onClick={handleAddDetail}
+                                className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                            >
+                                Add Detail
+                            </button>
+                            {errors.details && <div className="text-red-500 text-sm mt-1">{errors.details}</div>}
                         </div>
 
                         <div className="flex justify-end">
-                            <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded" disabled={processing}>
+                            <button
+                                type="submit"
+                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                disabled={processing}
+                            >
                                 {processing ? "Saving..." : "Save"}
                             </button>
                         </div>

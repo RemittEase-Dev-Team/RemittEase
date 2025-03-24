@@ -75,6 +75,10 @@ class RoadmapSeeder extends Seeder
             ],
         ];
 
+        // Clear existing roadmaps
+        Roadmap::truncate();
+
+        // Insert new roadmaps
         foreach ($roadmaps as $roadmap) {
             Roadmap::create($roadmap);
         }

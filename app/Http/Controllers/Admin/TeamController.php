@@ -8,13 +8,21 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use function str_replace;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class TeamController extends Controller
 {
     public function index()
     {
         try {
-            $teams = Team::all();
+            $teams = Team::all()->map(function ($team) {
+                if ($team->image) {
+                    $team->image_url = asset('storage/' . $team->image);
+                }
+                return $team;
+            });
+
             return Inertia::render('Admin/Teams/Index', [
                 'teams' => $teams
             ]);
@@ -31,29 +39,42 @@ class TeamController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name'               => 'nullable|string|max:255',
-            'role'               => 'nullable|string|max:255',
-            'short_desc'         => 'nullable|string',
-            'full_desc'          => 'nullable|string',
-            'socials'            => 'array',  // or 'socials' => 'nullable|array'
-            'socials.twitter'    => 'nullable|string',
-            'socials.github'     => 'nullable|string',
-            'socials.linkedin'   => 'nullable|string',
-            'image'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'role' => 'required|string|max:255',
+                'short_desc' => 'required|string',
+                'full_desc' => 'required|string',
+                'socials' => 'required|array',
+                'socials.twitter' => 'nullable|string',
+                'socials.github' => 'nullable|string',
+                'socials.linkedin' => 'nullable|string',
+                'image' => 'nullable|image|max:5120'
+            ]);
 
-        // If file was uploaded, store it
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('public/team-images');
-            // Convert "public/team-images/xxxx" -> "storage/team-images/xxxx"
-            $validated['image'] = str_replace('public/', 'storage/', $path);
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $fileName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+                $imagePath = $file->storeAs('team-images', $fileName, 'public');
+            }
+
+            $team = new Team;
+            $team->name = $request->name;
+            $team->role = $request->role;
+            $team->short_desc = $request->short_desc;
+            $team->full_desc = $request->full_desc;
+            $team->socials = $request->socials;
+            $team->image = $imagePath;
+            $team->save();
+
+            return redirect()->route('admin.teams.index')->with('success', 'Team member created successfully.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to create team member: ' . $e->getMessage());
         }
-
-        // Now create the model
-        Team::create($validated);
-
-        return redirect()->route('admin.teams.index')->with('success', 'Team member created successfully!');
     }
 
     public function show(Team $team)
@@ -71,6 +92,11 @@ class TeamController extends Controller
     public function edit(Team $team)
     {
         try {
+            // Add the full image URL
+            if ($team->image) {
+                $team->image_url = asset('storage/' . $team->image);
+            }
+
             return Inertia::render('Admin/Teams/Edit', [
                 'team' => $team
             ]);
@@ -82,41 +108,59 @@ class TeamController extends Controller
 
     public function update(Request $request, Team $team)
     {
-        $validated = $request->validate([
-            'name'               => 'nullable|string|max:255',
-            'role'               => 'nullable|string|max:255',
-            'short_desc'         => 'nullable|string',
-            'full_desc'          => 'nullable|string',
-            'socials'            => 'nullable|array',  // or 'socials' => 'nullable|array'
-            'socials.twitter'    => 'nullable|string',
-            'socials.github'     => 'nullable|string',
-            'socials.linkedin'   => 'nullable|string',
-            'image'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'nullable|string|max:255',
+                'role' => 'nullable|string|max:255',
+                'short_desc' => 'nullable|string',
+                'full_desc' => 'nullable|string',
+                'socials' => 'nullable|array',
+                'socials.twitter' => 'nullable|string',
+                'socials.github' => 'nullable|string',
+                'socials.linkedin' => 'nullable|string',
+                'image' => 'nullable|image|max:5120'
+            ]);
 
-        // If a new file is uploaded, store it
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('public/team-images');
-            $validated['image'] = str_replace('public/', 'storage/', $path);
-        } else {
-            // If user didn't select a new file, remove 'image' to avoid overwriting
-            unset($validated['image']);
+            if ($request->has('name')) {
+                $team->name = $request->name;
+            }
+
+            if ($request->has('role')) {
+                $team->role = $request->role;
+            }
+
+            if ($request->has('short_desc')) {
+                $team->short_desc = $request->short_desc;
+            }
+
+            if ($request->has('full_desc')) {
+                $team->full_desc = $request->full_desc;
+            }
+
+            if ($request->has('socials')) {
+                $team->socials = $request->socials;
+            }
+
+            if ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($team->image && Storage::disk('public')->exists($team->image)) {
+                    Storage::disk('public')->delete($team->image);
+                }
+
+                $file = $request->file('image');
+                $fileName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+                $team->image = $file->storeAs('team-images', $fileName, 'public');
+            }
+
+            $team->save();
+
+            return redirect()->back()->with('success', 'Team member updated successfully.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to update team member: ' . $e->getMessage());
         }
-
-        // Check if the possible data is set for every value to add it to the updated and update the db with the model of the arrays of data to ensure they always set and post
-        if($team && $team != null) {
-            if(isset($validated['name'])) $team->name = $validated['name'];
-            if(isset($validated['role'])) $team->role = $validated['role'];
-            if(isset($validated['short_desc'])) $team->short_desc = $validated['short_desc'];
-            if(isset($validated['full_desc'])) $team->full_desc = $validated['full_desc'];
-            if(isset($validated['socials'])) $team->socials = $validated['socials'];
-            if(isset($validated['image'])) $team->image = $validated['image'];
-            $team->update();
-        }else{
-            $team = Team::create($validated);
-        }
-
-        return redirect()->route('admin.teams.index')->with('success', 'Team member updated successfully!');
     }
 
     public function destroy(Team $team)

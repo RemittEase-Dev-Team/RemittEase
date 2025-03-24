@@ -167,7 +167,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::post('/teams', [TeamController::class, 'store'])->name('admin.teams.store');
     Route::get('/teams/{team}', [TeamController::class, 'show'])->name('admin.teams.show');
     Route::get('/teams/{team}/edit', [TeamController::class, 'edit'])->name('admin.teams.edit');
-    Route::patch('/teams/{team}', [TeamController::class, 'update'])->name('admin.teams.update');
+    Route::post('/teams/{team}/update', [TeamController::class, 'update'])->name('admin.teams.update');
     Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('admin.teams.destroy');
     Route::resource('transactions', ManageTransactionController::class);
 

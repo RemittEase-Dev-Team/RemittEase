@@ -4,7 +4,7 @@ import { Rocket, Milestone, Users, Globe, Star, DollarSign, Shield, Gift, Zap, T
 
 interface RoadmapItem {
   quarter: string;
-  details: string;
+  details: string | string[];
 }
 
 interface RoadMapSectionProps {
@@ -12,13 +12,17 @@ interface RoadMapSectionProps {
 }
 
 const RoadMapSection: React.FC<RoadMapSectionProps> = ({ roadmaps }) => {
-  // Helper function to safely parse JSON
-  const parseDetails = (details: string): string[] => {
+  // Helper function to safely parse details
+  const parseDetails = (details: string | string[]): string[] => {
+    if (Array.isArray(details)) {
+      return details;
+    }
     try {
-      return JSON.parse(details);
+      const parsed = JSON.parse(details);
+      return Array.isArray(parsed) ? parsed : [details];
     } catch (error) {
       console.error('Error parsing roadmap details:', error);
-      return ['Error loading roadmap details'];
+      return [details];
     }
   };
 

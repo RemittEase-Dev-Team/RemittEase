@@ -38,7 +38,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({ teams }) => {
                 onClick={() => setSelectedMemberIndex(index)}
               >
                 <img
-                  src={member.image}
+                  src={`storage/${member.image}`}
                   alt={member.name}
                   className="w-full h-48 object-cover"
                 />
@@ -98,11 +98,10 @@ const TeamSection: React.FC<TeamSectionProps> = ({ teams }) => {
             {/* Member Content */}
             {(() => {
               const member = teams[selectedMemberIndex];
-              const socials = JSON.parse(member.socials);
               return (
                 <>
                   <img
-                    src={member.image}
+                    src={member.image_url || `storage/${member.image}`}
                     alt={member.name}
                     className="w-full h-64 object-cover rounded-lg mb-4"
                   />
@@ -110,30 +109,30 @@ const TeamSection: React.FC<TeamSectionProps> = ({ teams }) => {
                     {member.name}
                   </h3>
                   <p className="text-cool-gray text-sm mb-2">{member.role}</p>
-                  <p className="mt-2 text-gray-200">{member.fullDesc}</p>
+                  <p className="mt-2 text-gray-200">{member.full_desc}</p>
                   {/* Social Icons Row */}
                   <div className="mt-4 flex justify-center space-x-6 text-neon-cyan">
-                    {socials.twitter && (
+                    {member.socials?.twitter && (
                       <a
-                        href={socials.twitter}
+                        href={member.socials.twitter}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
                         <Twitter className="w-5 h-5 hover:text-white" />
                       </a>
                     )}
-                    {socials.github && (
+                    {member.socials?.github && (
                       <a
-                        href={socials.github}
+                        href={member.socials.github}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
                         <Github className="w-5 h-5 hover:text-white" />
                       </a>
                     )}
-                    {socials.linkedin && (
+                    {member.socials?.linkedin && (
                       <a
-                        href={socials.linkedin}
+                        href={member.socials.linkedin}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

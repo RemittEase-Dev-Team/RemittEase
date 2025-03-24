@@ -9,6 +9,7 @@ interface Team {
   role: string;
   description: string;
   image: string;
+  image_url?: string;
 }
 
 const TeamsIndex: React.FC = () => {
@@ -19,8 +20,6 @@ const TeamsIndex: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState({
     id: 0,
     name: '',
-
-
   })
 
   return (
@@ -31,7 +30,7 @@ const TeamsIndex: React.FC = () => {
             <div className='w-[25rem] bg-white rounded-md p-4 text-center space-y-2'>
               <p>Are you sure you want to delete <span className='italic text-red-500 font-bold'>{selectedItem.name}?</span></p>
               <div className='flex items-center justify-between'>
-              <a
+                <a
                   onClick={() => setConf(false)}
                   className="px-4 py-2 bg-blue-500 text-white rounded cursor-pointer"
                 >
@@ -43,7 +42,7 @@ const TeamsIndex: React.FC = () => {
                 >
                   Delete
                 </a>
-                </div>
+              </div>
             </div>
           </section>
         )}
@@ -53,31 +52,35 @@ const TeamsIndex: React.FC = () => {
             Add New Team Member
           </a>
         </div>
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {teams.map((team: Team) => (
-            <div key={team.id} className="bg-white dark:bg-gray-800 p-4 rounded shadow">
-              <img src={team.image} alt={team.name} className="w-full h-32 object-cover rounded mb-4" />
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{team.name}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{team.role}</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{team.description}</p>
-              <div className="mt-2">
-                <a
-                  href={`/admin/teams/${team.id}/edit`}
-                  className="px-4 py-2 bg-blue-500 text-white rounded mr-2"
-                >
-                  Edit
-                </a>
-                <a
-                  onClick={() =>{setConf(true); setSelectedItem({
-                    id: team.id,
-                    name: team.name,
-                
-                
-                  })}}
-                  className="px-4 py-2 bg-red-500 text-white rounded cursor-pointer"
-                >
-                  Delete
-                </a>
+            <div key={team.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+              <img
+                src={team.image_url || team.image}
+                alt={team.name}
+                className="w-full h-48 object-cover"
+              />
+              <div className="p-4">
+                <h3 className="text-lg font-semibold">{team.name}</h3>
+                <p className="text-gray-600 dark:text-gray-300">{team.role}</p>
+                <div className="mt-4 flex space-x-2">
+                  <a
+                    href={`/admin/teams/${team.id}/edit`}
+                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Edit
+                  </a>
+                  <button
+                    onClick={() => {
+                      setSelectedItem({ id: team.id, name: team.name });
+                      setConf(true);
+                    }}
+                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}
