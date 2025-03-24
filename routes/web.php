@@ -49,13 +49,13 @@ Route::middleware([
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
-<<<<<<< HEAD
+
     Route::get('/deposit/{id}', [DashboardController::class, 'deposit'])->name('deposit.deposit');
     Route::get('/kyc', [App\Http\Controllers\KYCController::class, 'show'])->name('kyc.view');
-=======
-    Route::get('/deposit', [DashboardController::class, 'deposit'])->name('deposit.deposit');
-    Route::get('/kyc', [App\Http\Controllers\KYCController::class, 'show'])->name('kyc.show');
->>>>>>> bd3052f8f92d32455aa81e7b623c346a5a2ad75f
+
+    // Route::get('/deposit', [DashboardController::class, 'deposit'])->name('deposit.deposit');
+    // Route::get('/kyc', [App\Http\Controllers\KYCController::class, 'show'])->name('kyc.show');
+
     Route::post('/kyc/start', [App\Http\Controllers\KYCController::class, 'initiateKYC'])->name('kyc.start');
     Route::post('/kyc/webhook', [App\Http\Controllers\KYCController::class, 'handleOnfidoWebhook'])->name('kyc.webhook');
     Route::post('/kyc/skip', [App\Http\Controllers\KYCController::class, 'skipKYC'])->name('kyc.skip');
