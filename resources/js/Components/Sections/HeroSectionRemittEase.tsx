@@ -1,4 +1,6 @@
 import React from 'react';
+// import Canvas3DRemittEase from '@/Components/ui/Canvas3DRemittEase';
+import EarthGlobe from '@/Components/EarthGlobe';
 
 interface HeroSectionProps {
   heroes: any[];
@@ -8,6 +10,7 @@ interface HeroSectionProps {
 }
 
 const HeroSectionRemittEase: React.FC<HeroSectionProps> = ({ heroes, email, setEmail, onGetStarted }) => {
+  // Use heroes data here
   return (
     <section
       className="relative w-full min-svh-screen flex flex-col items-center justify-center text-white overflow-hidden"
@@ -15,6 +18,7 @@ const HeroSectionRemittEase: React.FC<HeroSectionProps> = ({ heroes, email, setE
         background: 'linear-gradient(to bottom, rgba(0, 0, 22, 1),rgba(0, 0, 22, 1), rgba(0, 20, 221, 0.6), rgba(0, 0, 0, 1))',
       }}
     >
+      {/* Example usage of heroes data */}
       {heroes.map((hero, index) => (
         <div key={index} className="z-10 text-center max-w-3xl px-4">
           <h1 className="text-5xl sm:text-6xl font-bold mb-6 pt-10">
@@ -41,18 +45,14 @@ const HeroSectionRemittEase: React.FC<HeroSectionProps> = ({ heroes, email, setE
           </form>
         </div>
       ))}
-
-      {/* Video Background */}
-      <video
-        className="absolute inset-0 w-full h-full object-cover z-0"
-        autoPlay
-        loop
-        muted
-        playsInline
-      >
-        <source src="/images/3d-animation-of-planet-earth-rotating-in-global-futuristic-cyber-network-with--SBV-324901182-preview.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
+      {/* The 3D Canvas in the background */}
+      <EarthGlobe
+        height="50vh"
+        width="100%"
+        rotationSpeed={0.0055}
+        meshColor="#fff"
+        vertexGlowColor="#007bff"
+      />
     </section>
   );
 };
