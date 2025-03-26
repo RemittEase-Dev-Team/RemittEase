@@ -83,6 +83,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
     Route::get('/sections', [SectionController::class, 'index'])->name('admin.sections');
+    Route::get('/section/edit_home', [SectionController::class, 'home'])->name('admin.section.home');
 
     // Section bulk update routes
     Route::put('/heroes/update', [SectionController::class, 'updateHeroes'])->name('admin.sections.heroes.update');

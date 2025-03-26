@@ -28,6 +28,12 @@ class SectionController extends Controller
         ]);
     }
 
+    public function home(){
+        return Inertia::render('Admin/Sections/Home', [
+            'hero' => Hero::all(),
+        ]);
+    }
+
     public function updateHeroes(Request $request)
     {
         $request->validate([
@@ -47,8 +53,8 @@ class SectionController extends Controller
             
             Hero::where('id', $hero['id'])->update($hero);
         }
-    
-        return redirect()->back()->with('success', 'Heroes updated successfully.');
+
+        return redirect()->route('admin.sections')->with('success', 'Heroes updated successfully.');
     }
 
     public function updateFeatures(Request $request)

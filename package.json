@@ -26,6 +26,7 @@
         "vite": "^6.0.11"
     },
     "dependencies": {
+        "@inertiajs/inertia": "^0.11.1",
         "@moonpay/moonpay-js": "^0.6.6",
         "@moonpay/moonpay-react": "^1.8.10",
         "@react-three/drei": "^10.0.0",
