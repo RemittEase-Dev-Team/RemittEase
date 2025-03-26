@@ -112,12 +112,6 @@ const Sections: React.FC<SectionsProps> = ({ heroes, features, abouts, questRewa
                                     </div>
                                 );
                             })}
-                            <button
-                                onClick={() => handleEdit('Abouts', abouts)}
-                                className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                            >
-                                Edit
-                            </button>
                         </div>
                     </SectionCard>
 
