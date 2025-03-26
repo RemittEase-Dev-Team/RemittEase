@@ -34,6 +34,12 @@ class SectionController extends Controller
         ]);
     }
 
+    public function features(){
+        return Inertia::render('Admin/Sections/Features', [
+            'features' => Features::all(),
+        ]);
+    }
+
     public function updateHeroes(Request $request)
     {
         $request->validate([
@@ -75,7 +81,7 @@ class SectionController extends Controller
             Features::where('id', $feature['id'])->update($feature);
         }
 
-        return redirect()->back()->with('success', 'Features updated successfully.');
+        return redirect()->route('admin.sections')->with('success', 'Features updated successfully.');
     }
 
     public function updateAbouts(Request $request)

@@ -66,7 +66,7 @@ const Sections: React.FC<SectionsProps> = ({ heroes, features, abouts, questRewa
                         ))}
                     </SectionCard>
 
-                    <SectionCard title="Features" onEdit={() => handleEdit('Features', features)} onEdit2={''}>
+                    <SectionCard title="Features" onEdit={() => {}} onEdit2={'/admin/section/edit_features'}>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {features.map((feature, index) => (
                                 <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
@@ -81,7 +81,6 @@ const Sections: React.FC<SectionsProps> = ({ heroes, features, abouts, questRewa
                         <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
                             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Abouts</h3>
                             {abouts.map((about, index) => {
-                                // Parse core_values if it's a string, otherwise use directly
                                 const coreValues = typeof about.core_values === 'string'
                                     ? JSON.parse(about.core_values)
                                     : about.core_values;
