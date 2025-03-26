@@ -3,6 +3,11 @@ import React from 'react';
 interface EarthVideoProps {
   width?: number | string;
   height?: number | string;
+  gradientBackground?: string;
+  rotationSpeed?: number;
+  meshColor?: string;
+  vertexGlowColor?: string;
+  vertexDensity?: number;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -10,6 +15,7 @@ interface EarthVideoProps {
 const EarthVideo: React.FC<EarthVideoProps> = ({
   width = '100%',
   height = '100%',
+  gradientBackground = 'linear-gradient(to bottom, rgba(0, 115, 255, 0), rgba(247, 220, 111, 0))',
   className = '',
   style = {},
 }) => {
@@ -19,6 +25,7 @@ const EarthVideo: React.FC<EarthVideoProps> = ({
       style={{
         width,
         height,
+        background: gradientBackground,
         borderRadius: '8px',
         overflow: 'hidden',
         ...style
