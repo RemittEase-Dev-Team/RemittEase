@@ -453,6 +453,7 @@ export default function Dashboard({
           <h2 className="text-2xl font-bold leading-tight text-blue-800 dark:text-blue-200">
             Dashboard
           </h2>
+          
 
           {/* KYC Alert */}
           {user.kyc_status !== 'approved' && (

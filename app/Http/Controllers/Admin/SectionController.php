@@ -40,6 +40,12 @@ class SectionController extends Controller
         ]);
     }
 
+    public function about(){
+        return Inertia::render('Admin/Sections/About', [
+            'about' => About::all(),
+        ]);
+    }
+
     public function updateHeroes(Request $request)
     {
         $request->validate([

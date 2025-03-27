@@ -176,96 +176,6 @@ const Deposit: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         </div>
       ) : Number(id) === 2 ? (
         <div>
-          {/* <div className="px-4 py-8 md:py-12">
-            <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg dark:bg-gray-800 transition-all duration-300">
-              <div className="p-6 md:p-8">
-                <h3 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">
-                  Moonpay Account Funding
-                </h3>
-
-                <form
-                  //  onSubmit={handleSubmit} 
-                  className="space-y-6">
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Amount
-                      </label>
-                      <input
-                        id="amount"
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                        type="number"
-                        placeholder="Enter amount"
-                        min="5000"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Currency
-                      </label>
-                      <select
-                        id="currency"
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                        value={currency}
-                        onChange={(e) => setCurrency(e.target.value)}
-                      >
-                        <option value="ngn">NGN - Nigerian Naira</option>
-                        <option value="usd">USD - US Dollar</option>
-                        <option value="xml">XML - Steller</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Network
-                      </label>
-                      <select
-                        id="network"
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                        value={network}
-                        onChange={(e) => setNetwork(e.target.value)}
-                      >
-                        <option value="Stellar">Stellar Network</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Wallet Address
-                      </label>
-                      <input
-                        id="wallet_address"
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 cursor-not-allowed dark:bg-gray-600 dark:border-gray-600 dark:text-gray-300"
-                        placeholder="Wallet Address"
-                        value={wallet?.public_key}
-                        disabled
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    // type="submit"
-                    onClick={() => setIsMoonPay(true)}
-                    className="w-full px-6 py-4 text-lg font-semibold text-white transition-all bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 flex items-center justify-center gap-3"
-                  >
-                    Initiate Funding
-                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                  </button>
-                </form>
-
-                <div className="mt-6 text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Secure transaction powered by{' '}
-                    <span className="font-semibold text-blue-600 dark:text-blue-400">
-                      Moonpay
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div> */}
-          {/* {isMoonpay && ( */}
           <section className='flex w-full justify-center fixed w-full h-full inset-0 items-center mt-20'>
             <div className='bg-white rounded-md'>
               <MoonPayProvider apiKey="pk_test_8v5c0U65vmujfNeSrA1b3hQSgTd9iE2" debug>
@@ -279,97 +189,35 @@ const Deposit: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               </MoonPayProvider>
             </div>
           </section>
-          {/* )} */}
         </div>
       ) : (
         <div className="px-4 py-8 md:py-12">
-          <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg dark:bg-gray-800 transition-all duration-300">
-            <div className="p-6 md:p-8">
-              <h3 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">
-                YellowCard Account Funding
-              </h3>
+        <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg dark:bg-gray-800 transition-all duration-300">
+          <div className="p-6 md:p-8">
+            <h3 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">
+              YellowCard Account Funding
+            </h3>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Amount
-                    </label>
-                    <input
-                      id="amount"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                      type="number"
-                      placeholder="Enter amount"
-                      min="5000"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                    />
-                  </div>
+            <iframe
+              id="ycWidgetIframe"
+              src={`https://sandbox--payments-widget.netlify.app/landing/${'2fb1938589171c01c5d6ae465afa41aa'}`}
+              title="Buy crypto with Yellow Card"
+              allow="camera https://sandbox--payments-widget.netlify.app;"
+              style={{ width: '100%', height: '600px', border: 'none' }}
+            ></iframe>
 
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Currency
-                    </label>
-                    <select
-                      id="currency"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                      value={currency}
-                      onChange={(e) => setCurrency(e.target.value)}
-                    >
-                      <option value="ngn">NGN - Nigerian Naira</option>
-                      <option value="usd">USD - US Dollar</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Network
-                    </label>
-                    <select
-                      id="network"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                      value={network}
-                      onChange={(e) => setNetwork(e.target.value)}
-                    >
-                      <option value="Stellar">Stellar Network</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Wallet Address
-                    </label>
-                    <input
-                      id="wallet_address"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 cursor-not-allowed dark:bg-gray-600 dark:border-gray-600 dark:text-gray-300"
-                      placeholder="Wallet Address"
-                      value={wallet?.public_key}
-                      disabled
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full px-6 py-4 text-lg font-semibold text-white transition-all bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 flex items-center justify-center gap-3"
-                >
-                  Initiate Funding
-                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </button>
-              </form>
-
-              <div className="mt-6 text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Secure transaction powered by{' '}
-                  <span className="font-semibold text-blue-600 dark:text-blue-400">
-                    YellowCard
-                  </span>
-                </p>
-              </div>
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Secure transaction powered by{' '}
+                <span className="font-semibold text-blue-600 dark:text-blue-400">
+                  YellowCard
+                </span>
+              </p>
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
     </AuthenticatedLayout>
   );
 };
