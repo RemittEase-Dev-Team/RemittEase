@@ -200,7 +200,7 @@ const Deposit: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
             <iframe
               id="ycWidgetIframe"
-              src={`https://sandbox--payments-widget.netlify.app/landing/${'2fb1938589171c01c5d6ae465afa41aa'}`}
+              src={`https://sandbox--payments-widget.netlify.app/landing/8f6255069509983b925ce24ccff7bf74d5e0e652ab233a7421d9c3cd134654cc`}
               title="Buy crypto with Yellow Card"
               allow="camera https://sandbox--payments-widget.netlify.app;"
               style={{ width: '100%', height: '600px', border: 'none' }}
