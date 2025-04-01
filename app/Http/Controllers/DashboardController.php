@@ -76,6 +76,16 @@ class DashboardController extends Controller
                 $wallet->formatted_public_key = $formattedPublicKey;
             }
 
+            $balances = null;
+            if ($wallet) {
+                try {
+                    $balances = $this->walletService->getTokenBalances($wallet->public_key);
+                } catch (\Exception $e) {
+                    Log::error('Failed to get token balances: ' . $e->getMessage());
+                    $balances = ['native' => '0', 'token' => '0'];
+                }
+            }
+
             // Get recent transactions
             $recentTransactions = Transaction::where('user_id', $user->id)
                 ->orderBy('created_at', 'desc')
@@ -116,6 +126,7 @@ class DashboardController extends Controller
                 'linkioEnabled' => $linkioEnabled,
                 'transactions' => $recentTransactions,
                 'currencies' => $currencies,
+                'balances' => $balances,
             ]);
 
         } catch (\Exception $e) {

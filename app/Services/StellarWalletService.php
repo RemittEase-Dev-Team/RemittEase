@@ -279,4 +279,42 @@ class StellarWalletService
             throw $e;
         }
     }
+
+    public function getTokenBalances($publicKey)
+    {
+        try {
+            $account = $this->sdk->accounts()->account($publicKey);
+            $balances = [
+                'native' => '0', // XLM balance
+                'token' => '0'   // Your token balance
+            ];
+
+            // Get XLM and other asset balances
+            foreach ($account->getBalances() as $balance) {
+                if ($balance->getAssetType() === 'native') {
+                    $balances['native'] = $balance->getBalance();
+                } else if ($balance->getAssetCode() === 'RMT') { // Your token code
+                    $balances['token'] = $balance->getBalance();
+                }
+            }
+
+            // Get contract token balance using Soroban
+            try {
+                $contractBalance = $this->contractInterface->getTokenBalance($publicKey);
+                if ($contractBalance) {
+                    $balances['token'] = $contractBalance;
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to get contract token balance: ' . $e->getMessage());
+            }
+
+            return $balances;
+        } catch (\Exception $e) {
+            Log::error('Failed to get token balances: ' . $e->getMessage());
+            return [
+                'native' => '0',
+                'token' => '0'
+            ];
+        }
+    }
 }

@@ -12,7 +12,8 @@ interface Wallet {
 
 interface BalanceData {
   amount: number | string;
-  // ... other properties
+  native: string;  // XLM balance
+  token: string;   // Your token balance
 }
 
 interface BalanceWidgetProps {
@@ -24,6 +25,8 @@ interface BalanceWidgetProps {
   onWithdraw: () => void;
   onSend: () => void;
   moonpayEnabled: boolean;
+  balances: BalanceData;
+  isLoading?: boolean;
 }
 
 const BalanceWidget: React.FC<BalanceWidgetProps> = ({
@@ -34,7 +37,9 @@ const BalanceWidget: React.FC<BalanceWidgetProps> = ({
   onDeposit,
   onWithdraw,
   onSend,
-  moonpayEnabled
+  moonpayEnabled,
+  balances,
+  isLoading
 }) => {
   console.log("currencyMain: ", currencyMain)
   return (
@@ -109,6 +114,33 @@ const BalanceWidget: React.FC<BalanceWidgetProps> = ({
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="mt-5">
+        <h2 className="text-xl font-semibold mb-4 dark:text-white">Wallet Balance</h2>
+
+        {isLoading ? (
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">XLM Balance</span>
+              <span className="text-lg font-medium dark:text-white">
+                {Number(balances.native).toFixed(7)} XLM
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Token Balance</span>
+              <span className="text-lg font-medium dark:text-white">
+                {Number(balances.token).toFixed(2)} RMT
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -495,4 +495,47 @@ class RemitteaseContractInterface
             throw $e;
         }
     }
+
+    public function getTokenBalance($publicKey)
+    {
+        try {
+            // Get admin account
+            $adminPublicKey = $this->adminKeypair->getAccountId();
+            $account = $this->sdk->accounts()->account($adminPublicKey);
+
+            // Create Soroban parameters
+            $walletAddress = ScAddressObject::fromAccountId($publicKey);
+
+            // Create invoke contract operation
+            $operation = \Soneso\StellarSDK\Soroban\SorobanInvokeHostFunctionOperation::forContractFn(
+                $this->contractId,
+                "get_balance",
+                [$walletAddress]
+            );
+
+            // Add the operation to the transaction
+            $transaction = (new \Soneso\StellarSDK\TransactionBuilder($account))
+                ->addOperation($operation)
+                ->build();
+
+            // Add transaction signature
+            $transaction->sign($this->adminKeypair, $this->sdk->getNetwork());
+
+            // Submit the transaction
+            $response = $this->sdk->submitTransaction($transaction);
+
+            if ($response->isSuccessful()) {
+                $txHash = $response->getHash();
+                $sorobanTxData = $this->sorobanServer->getTransaction($txHash);
+
+                // Parse the result (you'll need to implement this based on your contract's return format)
+                return $this->parseBalanceResult($sorobanTxData);
+            }
+
+            return '0';
+        } catch (\Exception $e) {
+            Log::error('Failed to get token balance: ' . $e->getMessage());
+            return '0';
+        }
+    }
 }
