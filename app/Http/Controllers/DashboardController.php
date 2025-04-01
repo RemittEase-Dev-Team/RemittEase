@@ -137,9 +137,11 @@ class DashboardController extends Controller
 
     public function deposit($id)
     {
-        $user = auth()->user();
-        $wallet = $user->wallet;
-        $formattedPublicKey = $wallet ? Str::limit($wallet->public_key, 8) : null;
+        // $user = auth()->user();
+        // $wallet = $user->wallet;
+        // $formattedPublicKey = $wallet ? Str::limit($wallet->public_key, 8) : null;
+        $wallet = auth()->user()->wallet;
+        $formattedPublicKey = substr($wallet->public_key, 0, 4) . '...' . substr($wallet->public_key, -4);
 
         // Get YellowCard configuration
         $yellowcardConfig = [

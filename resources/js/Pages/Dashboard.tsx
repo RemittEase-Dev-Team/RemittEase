@@ -86,6 +86,11 @@ interface Props {
     flag: string;
     selected: boolean;
   }>;
+  balances?: {
+    native: string;
+    token: string;
+    amount: string;
+  };
   paymentProviders: PaymentProvider[];
   exchangeRates: {
     [key: string]: number;
@@ -100,12 +105,12 @@ export default function Dashboard({
   wallet,
   transactions,
   currencies,
+  balances,
   exchangeRates = {
     XLM: 1,
     USD: 1,
     EUR: 1,
     GBP: 1,
-    // Add other default rates as needed
   }
 }: Props) {
   // Inertia form (use if you're posting to your backend)
@@ -446,6 +451,13 @@ export default function Dashboard({
     </div>
   );
 
+  // Default balances if not provided
+  const defaultBalances = {
+    native: '0',
+    token: '0',
+    amount: '0'
+  };
+
   return (
     <AuthenticatedLayout
       header={
@@ -453,7 +465,6 @@ export default function Dashboard({
           <h2 className="text-2xl font-bold leading-tight text-blue-800 dark:text-blue-200">
             Dashboard
           </h2>
-          
 
           {/* KYC Alert */}
           {user.kyc_status !== 'approved' && (
@@ -493,6 +504,54 @@ export default function Dashboard({
         onClose={() => setShowCopyModal(false)}
         address={copiedAddress}
       />
+
+      <div className="py-12 dark:bg-gray-900 bg-gray-100">
+        <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+          {/* Quick Actions */}
+          <QuickActions
+            onDeposit={() => setDepositModal(true)}
+            onSendRemittance={() => {
+              setSendModal(true);
+            }}
+            onViewRecipients={() => {
+              window.location.href = route('recipients.index');
+            }}
+            wallet={wallet}
+          />
+
+          {/* Balance and Chart Widgets */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-5">
+            <BalanceWidget
+              wallet={wallet}
+              balance={balance}
+              currencyMain={currencyMain}
+              setCurrencyMain={setCurrencyMain}
+              onDeposit={() => setDepositModal(true)}
+              onWithdraw={() => setWithdrawalModal(true)}
+              onSend={() => setSendModal(true)}
+              moonpayEnabled={moonpayEnabled}
+              balances={balances || defaultBalances}
+              isLoading={false}
+            />
+            <TotalBalanceChart
+              chartData={chartData}
+              totalBalance={{
+                amount: totalBalance.amount,
+                percentage: totalBalance.percentage
+              }}
+              activeTimeFilter={activeTimeFilter}
+              setActiveTimeFilter={setActiveTimeFilter}
+              className="md:col-span-2"
+            />
+          </div>
+
+          {/* Transaction History and Analytics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+            <TransactionHistory transactions={transactions} />
+            <AnalyticsWidget wallet={wallet} transactions={transactions} />
+          </div>
+        </div>
+      </div>
 
       {/* Updated modals */}
       {depositModal && (
@@ -545,54 +604,6 @@ export default function Dashboard({
           handleSend={handleSend}
         />
       )}
-
-      <div className="py-12 dark:bg-gray-900 bg-gray-100">
-        <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-          {/* Quick Actions */}
-          <QuickActions
-            onDeposit={() => setDepositModal(true)}
-            onSendRemittance={() => {
-              // This should open your remittance flow modal
-              setSendModal(true);
-            }}
-            onViewRecipients={() => {
-              // Navigate to recipients management
-              window.location.href = route('recipients.index');
-            }}
-            wallet={wallet}
-          />
-
-          {/* Balance and Chart Widgets */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-5">
-            <BalanceWidget
-              wallet={wallet}
-              balance={balance}
-              currencyMain={currencyMain}
-              setCurrencyMain={(currency: CurrencyCode) => setCurrencyMain(currency)}
-              onDeposit={() => setDepositModal(true)}
-              onWithdraw={() => setWithdrawalModal(true)}
-              onSend={() => setSendModal(true)}
-              moonpayEnabled={moonpayEnabled}
-            />
-            <TotalBalanceChart
-              chartData={chartData}
-              totalBalance={{
-                amount: totalBalance.amount,
-                percentage: totalBalance.percentage
-              }}
-              activeTimeFilter={activeTimeFilter}
-              setActiveTimeFilter={setActiveTimeFilter}
-              className="md:col-span-2"
-            />
-          </div>
-
-          {/* Transaction History and Analytics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-            <TransactionHistory transactions={transactions} />
-            <AnalyticsWidget wallet={wallet} transactions={transactions} />
-          </div>
-        </div>
-      </div>
     </AuthenticatedLayout>
   );
 }

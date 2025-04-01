@@ -25,9 +25,15 @@ interface BalanceWidgetProps {
   onWithdraw: () => void;
   onSend: () => void;
   moonpayEnabled: boolean;
-  balances: BalanceData;
+  balances?: BalanceData;
   isLoading?: boolean;
 }
+
+const defaultBalances: BalanceData = {
+  amount: '0',
+  native: '0',
+  token: '0'
+};
 
 const BalanceWidget: React.FC<BalanceWidgetProps> = ({
   wallet,
@@ -38,10 +44,12 @@ const BalanceWidget: React.FC<BalanceWidgetProps> = ({
   onWithdraw,
   onSend,
   moonpayEnabled,
-  balances,
-  isLoading
+  balances = defaultBalances,
+  isLoading = false
 }) => {
-  console.log("currencyMain: ", currencyMain)
+  // Use the provided balances or default to 0s if undefined
+  const currentBalances = balances || defaultBalances;
+
   return (
     <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl p-5 shadow-sm md:col-span-1 lg:col-span-1">
       <div className="bg-gradient-to-r from-blue-100 to-orange-300 dark:bg-gradient-to-r dark:from-blue-900 dark:to-orange-700 rounded-lg p-3">
@@ -66,13 +74,13 @@ const BalanceWidget: React.FC<BalanceWidgetProps> = ({
         </div>
         <div
           className={`text-sm flex items-center gap-1 ${
-            balance[currencyMain].change >= 0 ? 'text-green-600' : 'text-red-600'
+            balance[currencyMain]?.change >= 0 ? 'text-green-600' : 'text-red-600'
           }`}
         >
-          {balance[currencyMain].change >= 0
-            ? `+${balance[currencyMain].change.toLocaleString()}`
-            : `-${Math.abs(balance[currencyMain].change).toLocaleString()}`}
-          <span className="ml-2">{balance[currencyMain].percentage.toFixed(2)}%</span>
+          {balance[currencyMain]?.change >= 0
+            ? `+${balance[currencyMain]?.change?.toLocaleString() || '0'}`
+            : `-${Math.abs(balance[currencyMain]?.change || 0).toLocaleString()}`}
+          <span className="ml-2">{(balance[currencyMain]?.percentage || 0).toFixed(2)}%</span>
         </div>
       </div>
 
@@ -129,14 +137,14 @@ const BalanceWidget: React.FC<BalanceWidgetProps> = ({
             <div className="flex justify-between items-center">
               <span className="text-gray-600 dark:text-gray-400">XLM Balance</span>
               <span className="text-lg font-medium dark:text-white">
-                {Number(balances.native).toFixed(7)} XLM
+                {Number(currentBalances.native).toFixed(7)} XLM
               </span>
             </div>
 
             <div className="flex justify-between items-center">
               <span className="text-gray-600 dark:text-gray-400">Token Balance</span>
               <span className="text-lg font-medium dark:text-white">
-                {Number(balances.token).toFixed(2)} RMT
+                {Number(currentBalances.token).toFixed(2)} RMT
               </span>
             </div>
           </div>
