@@ -45,6 +45,13 @@ return [
         'base_url' => env('MOONPAY_BASE_URL', 'https://api.moonpay.com'),
     ],
 
+    'yellowcard' => [
+        'api_key' => env('YELLOWCARD_API_KEY'),
+        'webhook_secret' => env('YELLOWCARD_WEBHOOK_SECRET'),
+        'sandbox' => env('YELLOWCARD_SANDBOX', true),
+        'widget_key' => env('YELLOWCARD_WIDGET_KEY'),
+    ],
+
     'onfido' => [
         'api_token' => env('ONFIDO_API_TOKEN'),
         'webhook_token' => env('ONFIDO_WEBHOOK_TOKEN'),
