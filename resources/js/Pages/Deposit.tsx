@@ -176,7 +176,7 @@ const Deposit: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         </div>
       ) : Number(id) === 2 ? (
         <div>
-          <section className='flex w-full justify-center fixed w-full h-full inset-0 items-center mt-20'>
+          <section className='flex justify-center fixed w-full h-full inset-0 items-center mt-20'>
             <div className='bg-white rounded-md'>
               <MoonPayProvider apiKey="pk_test_8v5c0U65vmujfNeSrA1b3hQSgTd9iE2" debug>
                 <MoonPayBuyWidget
