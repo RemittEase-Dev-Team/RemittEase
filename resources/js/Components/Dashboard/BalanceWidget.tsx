@@ -36,6 +36,7 @@ const BalanceWidget: React.FC<BalanceWidgetProps> = ({
   onSend,
   moonpayEnabled
 }) => {
+  console.log("currencyMain: ", currencyMain)
   return (
     <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl p-5 shadow-sm md:col-span-1 lg:col-span-1">
       <div className="bg-gradient-to-r from-blue-100 to-orange-300 dark:bg-gradient-to-r dark:from-blue-900 dark:to-orange-700 rounded-lg p-3">

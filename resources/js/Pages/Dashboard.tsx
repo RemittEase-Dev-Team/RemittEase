@@ -162,11 +162,11 @@ export default function Dashboard({
 
   // Dummy balances, totalBalance, chartData, etc.
   const [balance, setBalance] = useState({
-    XLM: { amount: 12000, change: 800, percentage: 7.14 },
-    USDC: { amount: 10000, change: 699, percentage: 6.00 },
-    NGNC: { amount: 50000, change: 2500, percentage: 5.25 },
-    EURC: { amount: 8500, change: -340, percentage: -3.85 },
-    GBPC: { amount: 7800, change: 156, percentage: 2.04 },
+    XLM: { amount: 0, change: 800, percentage: 7.14 },
+    USDC: { amount: 0, change: 699, percentage: 6.00 },
+    NGNC: { amount: 0, change: 2500, percentage: 5.25 },
+    EURC: { amount: 0, change: -340, percentage: -3.85 },
+    GBPC: { amount: 0, change: 156, percentage: 2.04 },
   });
 
   const [totalBalance, setTotalBalance] = useState({
