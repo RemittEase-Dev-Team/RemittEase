@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -20,23 +20,47 @@ interface WalletProps {
   }
 }
 
+interface YellowCardConfig {
+  widget_key: string;
+  sandbox: boolean;
+}
+
 const Deposit: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-  const { formattedPublicKey, wallet } = usePage<PageProps>().props as unknown as { formattedPublicKey: WalletProps, wallet: any };
-  const { url } = usePage()
+  const { formattedPublicKey, wallet, yellowcard_config } = usePage<PageProps>().props as unknown as {
+    formattedPublicKey: WalletProps,
+    wallet: any,
+    yellowcard_config: YellowCardConfig
+  };
+  const { url } = usePage();
+  const id = url.split('/')[2];
 
-  const id = url.split('/')[2]
-
-  // const {data, setData, post} = useForm<DepositFormData>({
-  //   wallet: '',
-  //   format: ''
-
-  // })
   const [amount, setAmount] = useState<string>('5000');
   const [currency, setCurrency] = useState<string>('ngn');
   const [network, setNetwork] = useState<string>('Stellar');
   const [type, setType] = useState<string>('buy');
-  const [isMoonpay, setIsMoonPay] = useState(false)
+  const [isMoonpay, setIsMoonPay] = useState(false);
+  const [isYellowCardLoading, setIsYellowCardLoading] = useState(false);
 
+  // Handle YellowCard widget messages
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin === (yellowcard_config.sandbox ? 'https://sandbox--payments-widget.netlify.app' : 'https://payments-widget.yellowcard.io')) {
+        const data = event.data;
+        if (data.type === 'transaction_completed') {
+          setIsYellowCardLoading(false);
+          // Handle successful transaction
+          console.log('YellowCard transaction completed:', data);
+        } else if (data.type === 'transaction_failed') {
+          setIsYellowCardLoading(false);
+          // Handle failed transaction
+          console.error('YellowCard transaction failed:', data);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [yellowcard_config.sandbox]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,8 +70,6 @@ const Deposit: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       console.error('Bridge library is not loaded.');
       return;
     }
-
-
 
     const widget = new Bridge({
       key: 'ngnc_p_tk_c05eaad4f8745512660b44d296e2f28916dd26095aec8fabbca0fc65254f2489',
@@ -65,8 +87,6 @@ const Deposit: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     widget.setup();
     widget.open();
   };
-
-  // console.log("des: ", url.split('/')[2])
 
   return (
     <AuthenticatedLayout
@@ -192,32 +212,39 @@ const Deposit: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         </div>
       ) : (
         <div className="px-4 py-8 md:py-12">
-        <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg dark:bg-gray-800 transition-all duration-300">
-          <div className="p-6 md:p-8">
-            <h3 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">
-              YellowCard Account Funding
-            </h3>
+          <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg dark:bg-gray-800 transition-all duration-300">
+            <div className="p-6 md:p-8">
+              <h3 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">
+                YellowCard Account Funding
+              </h3>
 
-            <iframe
-              id="ycWidgetIframe"
-              src={`https://sandbox--payments-widget.netlify.app/landing/2fb1938589171c01c5d6ae465afa41aa`}
-              title="Buy crypto with Yellow Card"
-              allow="camera https://sandbox--payments-widget.netlify.app;"
-              style={{ width: '100%', height: '600px', border: 'none' }}
-            ></iframe>
+              {isYellowCardLoading && (
+                <div className="mb-4 p-4 bg-blue-50 text-blue-700 rounded-lg">
+                  Processing your transaction...
+                </div>
+              )}
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Secure transaction powered by{' '}
-                <span className="font-semibold text-blue-600 dark:text-blue-400">
-                  YellowCard
-                </span>
-              </p>
+              <iframe
+                id="ycWidgetIframe"
+                src={`${yellowcard_config.sandbox ? 'https://sandbox--payments-widget.netlify.app' : 'https://payments-widget.yellowcard.io'}/landing/${yellowcard_config.widget_key}`}
+                title="Buy crypto with Yellow Card"
+                allow={`camera ${yellowcard_config.sandbox ? 'https://sandbox--payments-widget.netlify.app' : 'https://payments-widget.yellowcard.io'};`}
+                style={{ width: '100%', height: '600px', border: 'none' }}
+                onLoad={() => setIsYellowCardLoading(true)}
+              ></iframe>
+
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Secure transaction powered by{' '}
+                  <span className="font-semibold text-blue-600 dark:text-blue-400">
+                    YellowCard
+                  </span>
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
     </AuthenticatedLayout>
   );
 };

@@ -47,9 +47,8 @@ return [
 
     'yellowcard' => [
         'api_key' => env('YELLOWCARD_API_KEY'),
-        'webhook_secret' => env('YELLOWCARD_WEBHOOK_SECRET'),
+        'widget_key' => env('YELLOWCARD_WIDGET_KEY', 'e7d65154c62410ccf970443269ecb1'),
         'sandbox' => env('YELLOWCARD_SANDBOX', true),
-        'widget_key' => env('YELLOWCARD_WIDGET_KEY'),
     ],
 
     'onfido' => [

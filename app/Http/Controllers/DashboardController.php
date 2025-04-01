@@ -13,6 +13,7 @@ use App\Models\KYC;
 use App\Models\Currency;
 use App\Services\StellarWalletService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -123,15 +124,23 @@ class DashboardController extends Controller
         }
     }
 
-    public function deposit()
+    public function deposit($id)
     {
-        $wallet = auth()->user()->wallet; 
-        $formattedPublicKey = substr($wallet->public_key, 0, 4) . '...' . substr($wallet->public_key, -4);
-    
+        $user = auth()->user();
+        $wallet = $user->wallet;
+        $formattedPublicKey = $wallet ? Str::limit($wallet->public_key, 8) : null;
+
+        // Get YellowCard configuration
+        $yellowcardConfig = [
+            'widget_key' => config('services.yellowcard.widget_key'),
+            'sandbox' => config('services.yellowcard.sandbox', true),
+        ];
+
         return Inertia::render('Deposit', [
             'formattedPublicKey' => $formattedPublicKey,
             'wallet' => $wallet,
+            'yellowcard_config' => $yellowcardConfig,
         ]);
     }
-    
+
 }
