@@ -57,6 +57,14 @@ interface DepositFormData {
   wallet_address: string;
 }
 
+interface TransferFormData extends Record<string, string> {
+  amount: string;
+  currency: string;
+  narration: string;
+  bank_code: string;
+  account_number: string;
+}
+
 interface Props {
   moonpayEnabled: boolean;
   linkioEnabled: boolean;

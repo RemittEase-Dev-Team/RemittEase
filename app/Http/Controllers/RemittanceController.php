@@ -8,9 +8,24 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Wallet;
 use App\Services\MoonPayService;
 use Inertia\Inertia;
+use App\Services\FlutterwaveService;
+use App\Services\StellarWalletService;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class RemittanceController extends Controller
 {
+    protected $flutterwaveService;
+    protected $stellarWalletService;
+
+    public function __construct(
+        FlutterwaveService $flutterwaveService,
+        StellarWalletService $stellarWalletService
+    ) {
+        $this->flutterwaveService = $flutterwaveService;
+        $this->stellarWalletService = $stellarWalletService;
+    }
+
     public function loadCash(Request $request)
     {
         $moonpayService = new MoonPayService();
@@ -93,7 +108,7 @@ class RemittanceController extends Controller
             'business_id' => env('LINKIO_BUSINESS_ID'),
             'link_tag' => Auth::user()->id,
             'type' => 'deposit',
-            'currency' => 'USD', 
+            'currency' => 'USD',
             'amount' => $request->amount,
         ]);
 
@@ -116,5 +131,101 @@ class RemittanceController extends Controller
                 'message' => 'Deposit failed',
             ]);
         }
+    }
+
+    public function getBanks(Request $request)
+    {
+        try {
+            $country = $request->input('country', 'NG');
+            Log::info('Fetching banks for country', ['country' => $country]);
+
+            $result = $this->flutterwaveService->getBanks($country);
+
+            Log::info('Banks fetch result', [
+                'success' => $result['success'],
+                'count' => count($result['data'] ?? []),
+                'message' => $result['message']
+            ]);
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            Log::error('Error fetching banks', [
+                'error' => $e->getMessage(),
+                'country' => $country ?? null
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch banks',
+                'errors' => [$e->getMessage()]
+            ], 500);
+        }
+    }
+
+    public function verifyAccount(Request $request)
+    {
+        $validated = $request->validate([
+            'account_number' => 'required|string',
+            'bank_code' => 'required|string'
+        ]);
+
+        $result = $this->flutterwaveService->verifyBankAccount(
+            $validated['account_number'],
+            $validated['bank_code']
+        );
+
+        return response()->json($result);
+    }
+
+    public function initiateTransfer(Request $request)
+    {
+        $validated = $request->validate([
+            'recipient_id' => 'required|exists:recipients,id',
+            'amount' => 'required|numeric|min:1',
+            'currency' => 'required|string|in:NGN,GHS,KES,UGX,TZS,ZAR',
+            'narration' => 'nullable|string|max:100'
+        ]);
+
+        $recipient = \App\Models\Recipient::find($validated['recipient_id']);
+        $user = auth()->user();
+        $wallet = $user->wallet;
+
+        // Check if user has sufficient balance
+        $xlmBalance = $this->stellarWalletService->getBalance($wallet);
+        if ($xlmBalance < $validated['amount']) {
+            return back()->withErrors(['amount' => 'Insufficient balance']);
+        }
+
+        // Create transfer reference
+        $reference = 'RMTEASE_' . Str::random(10);
+
+        // Prepare transfer data
+        $transferData = [
+            'bank_code' => $recipient->bank_code,
+            'account_number' => $recipient->account_number,
+            'amount' => $validated['amount'],
+            'currency' => $validated['currency'],
+            'narration' => $validated['narration'] ?? 'RemittEase Transfer',
+            'reference' => $reference
+        ];
+
+        // Initiate transfer
+        $result = $this->flutterwaveService->createTransfer($transferData);
+
+        if ($result['success']) {
+            // Record the remittance
+            $remittance = new \App\Models\Remittance([
+                'user_id' => $user->id,
+                'recipient_id' => $recipient->id,
+                'amount' => $validated['amount'],
+                'currency' => $validated['currency'],
+                'status' => 'pending',
+                'reference' => $reference
+            ]);
+            $remittance->save();
+
+            return back()->with('success', 'Transfer initiated successfully');
+        }
+
+        return back()->withErrors(['transfer' => $result['message']]);
     }
 }

@@ -93,12 +93,12 @@ const BalanceWidget: React.FC<BalanceWidgetProps> = ({
             Deposit
           </button>
         )}
-        <button
+        {/* <button
           onClick={onWithdraw}
           className="bg-blue-700 hover:bg-blue-600 text-white py-2 px-4 rounded-lg flex-1 font-medium"
         >
           Withdraw
-        </button>
+        </button> */}
         <button
           onClick={onSend}
           className="bg-green-700 hover:bg-green-600 text-white py-2 px-4 rounded-lg flex-1 font-medium"

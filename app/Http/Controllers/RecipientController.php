@@ -186,4 +186,36 @@ class RecipientController extends Controller
         $recipient->delete();
         return redirect()->route('recipients.index')->with('status', 'Recipient deleted successfully.');
     }
+
+    public function getRecipientsForTransfer()
+    {
+        try {
+            $recipients = Recipient::where('user_id', auth()->id())
+                ->latest()
+                ->get()
+                ->map(function ($recipient) {
+                    return [
+                        'id' => $recipient->id,
+                        'name' => $recipient->name,
+                        'bank_code' => $recipient->bank_name, // Using bank_name as bank_code for now
+                        'account_number' => $recipient->account_number,
+                        'account_name' => $recipient->name,
+                        'country' => $recipient->country,
+                        'currency' => $recipient->country === 'NG' ? 'NGN' : 'USD', // Default to NGN for Nigeria, USD for others
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $recipients,
+                'message' => 'Recipients retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve recipients',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

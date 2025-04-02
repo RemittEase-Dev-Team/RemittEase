@@ -56,4 +56,13 @@ return [
         'webhook_token' => env('ONFIDO_WEBHOOK_TOKEN'),
     ],
 
+    'flutterwave' => [
+        'public_key' => env('FLUTTERWAVE_PUBLIC_KEY'),
+        'secret_key' => env('FLUTTERWAVE_SECRET_KEY'),
+        'base_url' => env('FLUTTERWAVE_BASE_URL', 'https://api.flutterwave.com'),
+        'encryption_key' => env('FLUTTERWAVE_ENCRYPTION_KEY'),
+        'webhook_secret' => env('FLUTTERWAVE_WEBHOOK_SECRET'),
+        'sandbox' => env('FLUTTERWAVE_SANDBOX', true),
+    ],
+
 ];

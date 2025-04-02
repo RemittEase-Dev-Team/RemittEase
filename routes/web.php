@@ -72,6 +72,14 @@ Route::middleware([
     Route::post('/moonpay/create', [App\Http\Controllers\MoonPayController::class, 'createTransaction'])->name('moonpay.create');
     Route::post('/moonpay/webhook', [App\Http\Controllers\MoonPayController::class, 'webhook'])->name('moonpay.webhook');
 
+    // Add this new route for fetching recipients for transfer
+    Route::get('/api/recipients/transfer', [RecipientController::class, 'getRecipientsForTransfer'])->name('recipients.transfer');
+
+    // Add these remittance routes
+    Route::get('/remittance/banks', [RemittanceController::class, 'getBanks'])->name('remittance.banks');
+    Route::post('/remittance/verify-account', [RemittanceController::class, 'verifyAccount'])->name('remittance.verify-account');
+    Route::post('/remittance/transfer', [RemittanceController::class, 'initiateTransfer'])->name('remittance.transfer');
+
 //     // Stellar wallet routes
 //     Route::get('/stellar/address', [App\Http\Controllers\StellarController::class, 'generateAddress'])->name('stellar.address');
 //     Route::post('/stellar/withdraw', [App\Http\Controllers\StellarController::class, 'withdraw'])->name('stellar.withdraw');
