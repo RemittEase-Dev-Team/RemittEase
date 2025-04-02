@@ -37,7 +37,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
       bgColor: 'bg-blue-100 dark:bg-blue-900/20',
       textColor: 'text-blue-600 dark:text-blue-400',
       iconBg: 'bg-blue-500/10',
-      enabled: wallet?.status === 'active' && (wallet?.balance || 0) > 0,
+      enabled: Boolean(wallet?.publicKey && wallet?.balance > 0),
     },
     {
       title: 'Recipients',
@@ -70,7 +70,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {actions.map((action, index) => (
           <button
-            key={index}
+            key={`action-${index}`}
             onClick={action.onClick}
             disabled={!action.enabled}
             className={`
@@ -101,7 +101,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
         ))}
       </div>
 
-      {!wallet && (
+      {!wallet?.publicKey && (
         <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
           <p className="text-sm text-yellow-800 dark:text-yellow-200">
             Fund your account to start sending money internationally

@@ -164,19 +164,63 @@ class FlutterwaveService
     public function verifyBankAccount(string $accountNumber, string $bankCode): array
     {
         try {
+            Log::info('Verifying bank account', [
+                'account_number' => $accountNumber,
+                'bank_code' => $bankCode
+            ]);
+
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->secretKey,
+                'Content-Type' => 'application/json',
             ])->post($this->baseUrl . '/accounts/resolve', [
                 'account_number' => $accountNumber,
                 'account_bank' => $bankCode
             ]);
 
-            return $response->json();
-        } catch (\Exception $e) {
-            Log::error('Failed to verify bank account', ['error' => $e->getMessage()]);
+            Log::info('Bank account verification response', [
+                'status' => $response->status(),
+                'response' => $response->json()
+            ]);
+
+            if ($response->successful()) {
+                $result = $response->json();
+
+                if (!isset($result['status']) || $result['status'] !== 'success') {
+                    Log::error('Invalid response status from Flutterwave', [
+                        'response' => $result
+                    ]);
+                    return [
+                        'success' => false,
+                        'message' => $result['message'] ?? 'Failed to verify account',
+                        'errors' => [$result['message'] ?? 'Invalid response status']
+                    ];
+                }
+
+                return [
+                    'success' => true,
+                    'data' => $result['data'],
+                    'message' => 'Account verified successfully'
+                ];
+            }
+
+            Log::error('Failed to verify bank account', [
+                'status' => $response->status(),
+                'response' => $response->json()
+            ]);
+
             return [
                 'success' => false,
-                'message' => 'Failed to verify bank account',
+                'message' => 'Failed to verify account',
+                'errors' => $response->json()['errors'] ?? ['Unknown error occurred']
+            ];
+        } catch (\Exception $e) {
+            Log::error('Bank account verification exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Failed to verify account',
                 'errors' => [$e->getMessage()]
             ];
         }

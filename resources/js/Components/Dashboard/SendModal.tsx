@@ -45,14 +45,20 @@ interface Props {
 type TransferType = 'crypto' | 'cash';
 
 interface FormData extends Record<string, string> {
-  bank_code: string;
-  account_number: string;
   amount: string;
   currency: string;
+  wallet_address: string;
+  transfer_type: 'crypto' | 'cash';
+  bank_code: string;
+  account_number: string;
   narration: string;
   recipient_id: string;
-  transfer_type: 'crypto' | 'cash';
-  wallet_address: string;
+}
+
+interface TransferResponse {
+  success: boolean;
+  message?: string;
+  data?: any;
 }
 
 const SUPPORTED_COUNTRIES = {
@@ -150,28 +156,28 @@ export default function SendModal({
   onClose = CloseModal
 }: Props) {
   const [transferType, setTransferType] = useState<TransferType>('crypto');
-  const [banks, setBanks] = useState<Bank[]>([]);
-  const [recipients, setRecipients] = useState<Recipient[]>([]);
-  const [selectedBank, setSelectedBank] = useState<string>('');
+  const [selectedCountry, setSelectedCountry] = useState('NG');
+  const [selectedBank, setSelectedBank] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
-  const [isLoadingBanks, setIsLoadingBanks] = useState(true);
-  const [bankError, setBankError] = useState<string | null>(null);
-  const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(null);
-  const [transferError, setTransferError] = useState<string | null>(null);
   const [isTransferring, setIsTransferring] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState<string>('NG');
+  const [transferError, setTransferError] = useState<string | null>(null);
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [isLoadingBanks, setIsLoadingBanks] = useState(false);
+  const [bankError, setBankError] = useState<string | null>(null);
+  const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(null);
 
   const { data, setData, post, processing, errors } = useForm<FormData>({
+    amount: '',
+    currency: '',
+    wallet_address: '',
+    transfer_type: 'crypto',
     bank_code: '',
     account_number: '',
-    amount: '',
-    currency: 'NGN',
     narration: '',
-    recipient_id: '',
-    transfer_type: 'crypto',
-    wallet_address: ''
+    recipient_id: ''
   });
 
   useEffect(() => {
@@ -253,7 +259,7 @@ export default function SendModal({
           return;
         }
 
-        const formData = {
+        const formData: FormData = {
           amount,
           currency: selectedCurrency.code,
           wallet_address: walletAddress,
@@ -262,16 +268,23 @@ export default function SendModal({
           account_number: '',
           narration: '',
           recipient_id: ''
-        } as const;
+        };
 
-        await post(route('remittance.transfer'), formData as Record<string, string>);
+        post(route('remittance.transfer'), {
+          onSuccess: () => {
+            CloseModal();
+          },
+          onError: (errors) => {
+            setTransferError(Object.values(errors)[0] || 'Transfer failed');
+          }
+        });
       } else {
         if (!selectedRecipient || !amount || !selectedBank || !accountNumber) {
           setTransferError('Please fill in all required fields');
           return;
         }
 
-        const formData = {
+        const formData: FormData = {
           recipient_id: selectedRecipient.id.toString(),
           amount,
           currency: SUPPORTED_COUNTRIES[selectedCountry as keyof typeof SUPPORTED_COUNTRIES].currency,
@@ -280,12 +293,17 @@ export default function SendModal({
           narration: data.narration,
           transfer_type: 'cash',
           wallet_address: ''
-        } as const;
+        };
 
-        await post(route('remittance.transfer'), formData as Record<string, string>);
+        post(route('remittance.transfer'), {
+          onSuccess: () => {
+            CloseModal();
+          },
+          onError: (errors) => {
+            setTransferError(Object.values(errors)[0] || 'Transfer failed');
+          }
+        });
       }
-
-      CloseModal();
     } catch (error) {
       console.error('Transfer failed:', error);
       setTransferError('Failed to process transfer. Please try again.');
@@ -352,7 +370,7 @@ export default function SendModal({
                 >
                   <option value="">Select Currency</option>
                   {currencies.map((currency) => (
-                    <option key={currency.code} value={currency.code}>
+                    <option key={`currency-${currency.code}`} value={currency.code}>
                       {currency.name} ({currency.code})
                     </option>
                   ))}
@@ -392,7 +410,7 @@ export default function SendModal({
                   className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 >
                   {Object.entries(SUPPORTED_COUNTRIES).map(([code, { name, currency }]) => (
-                    <option key={code} value={code}>
+                    <option key={`country-${code}`} value={code}>
                       {name} ({currency})
                     </option>
                   ))}
@@ -416,7 +434,7 @@ export default function SendModal({
                 >
                   <option value="">Select Recipient</option>
                   {recipients.map((recipient) => (
-                    <option key={recipient.id} value={recipient.id}>
+                    <option key={`recipient-${recipient.id}`} value={recipient.id}>
                       {recipient.name} - {recipient.account_number}
                     </option>
                   ))}
@@ -433,7 +451,7 @@ export default function SendModal({
                 >
                   <option value="">Select Bank</option>
                   {banks.map((bank) => (
-                    <option key={bank.code} value={bank.code}>
+                    <option key={`bank-${bank.code}-${bank.country}`} value={bank.code}>
                       {bank.name}
                     </option>
                   ))}
