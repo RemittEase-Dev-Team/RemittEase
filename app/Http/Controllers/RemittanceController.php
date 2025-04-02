@@ -11,7 +11,6 @@ use Inertia\Inertia;
 use App\Services\FlutterwaveService;
 use App\Services\StellarWalletService;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 
 class RemittanceController extends Controller
 {
@@ -135,30 +134,10 @@ class RemittanceController extends Controller
 
     public function getBanks(Request $request)
     {
-        try {
-            $country = $request->input('country', 'NG');
-            Log::info('Fetching banks for country', ['country' => $country]);
+        $country = $request->get('country', 'NG');
+        $banks = $this->flutterwaveService->getBanks($country);
 
-            $result = $this->flutterwaveService->getBanks($country);
-
-            Log::info('Banks fetch result', [
-                'success' => $result['success'],
-                'count' => count($result['data'] ?? []),
-                'message' => $result['message']
-            ]);
-
-            return response()->json($result);
-        } catch (\Exception $e) {
-            Log::error('Error fetching banks', [
-                'error' => $e->getMessage(),
-                'country' => $country ?? null
-            ]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch banks',
-                'errors' => [$e->getMessage()]
-            ], 500);
-        }
+        return response()->json($banks);
     }
 
     public function verifyAccount(Request $request)

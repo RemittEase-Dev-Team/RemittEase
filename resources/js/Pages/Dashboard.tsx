@@ -524,6 +524,9 @@ export default function Dashboard({
             onViewRecipients={() => {
               window.location.href = route('recipients.index');
             }}
+            onViewTransactions={() => {
+              window.location.href = route('transactions');
+            }}
             wallet={wallet}
           />
 

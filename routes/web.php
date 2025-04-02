@@ -80,6 +80,8 @@ Route::middleware([
     Route::post('/remittance/verify-account', [RemittanceController::class, 'verifyAccount'])->name('remittance.verify-account');
     Route::post('/remittance/transfer', [RemittanceController::class, 'initiateTransfer'])->name('remittance.transfer');
 
+    Route::get('/transactions', [App\Http\Controllers\TransactionController::class, 'index'])->name('transactions');
+
 //     // Stellar wallet routes
 //     Route::get('/stellar/address', [App\Http\Controllers\StellarController::class, 'generateAddress'])->name('stellar.address');
 //     Route::post('/stellar/withdraw', [App\Http\Controllers\StellarController::class, 'withdraw'])->name('stellar.withdraw');

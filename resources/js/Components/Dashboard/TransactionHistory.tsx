@@ -1,4 +1,5 @@
 import { Search, ArrowUp, Plus } from 'lucide-react';
+import { Link } from '@inertiajs/react';
 
 interface Transaction {
   id: number;
@@ -61,9 +62,9 @@ export default function TransactionHistory({ transactions }: Props) {
         </div>
       ))}
 
-      <button className="bg-blue-50 dark:bg-blue-600 text-blue-600 dark:text-gray-100 w-full py-3 rounded-lg mt-4 font-medium">
+      <Link href={route('transactions')} className="bg-blue-50 dark:bg-blue-600 text-blue-600 dark:text-gray-100 w-full py-3 rounded-lg mt-4 font-medium block text-center">
         See all
-      </button>
+      </Link>
     </div>
   );
 }

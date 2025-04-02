@@ -5,6 +5,7 @@ interface QuickActionsProps {
   onDeposit: () => void;
   onSendRemittance: () => void;
   onViewRecipients: () => void;
+  onViewTransactions: () => void;
   wallet: {
     publicKey: string;
     balance: number;
@@ -16,6 +17,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
   onDeposit,
   onSendRemittance,
   onViewRecipients,
+  onViewTransactions,
   wallet
 }) => {
   const actions = [
@@ -53,9 +55,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({
       title: 'Transfer History',
       description: 'View past transfers',
       icon: <History className="w-6 h-6" />,
-      onClick: () => {
-        // Implement transfer history view
-      },
+      onClick: onViewTransactions,
       bgColor: 'bg-orange-100 dark:bg-orange-900/20',
       textColor: 'text-orange-600 dark:text-orange-400',
       iconBg: 'bg-orange-500/10',

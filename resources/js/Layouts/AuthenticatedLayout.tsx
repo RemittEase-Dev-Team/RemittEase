@@ -40,7 +40,7 @@ export default function Authenticated({
                                     Recipients
                                 </NavLink>
                                 <NavLink
-                                    href="#"
+                                    href={route('transactions')}
                                     active={false}
                                 >
                                     Transactions
