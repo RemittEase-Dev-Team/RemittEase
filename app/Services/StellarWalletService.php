@@ -285,16 +285,24 @@ class StellarWalletService
         try {
             $account = $this->sdk->accounts()->account($publicKey);
             $balances = [
-                'native' => '0', // XLM balance
-                'token' => '0'   // Your token balance
+                'native' => '0',    // XLM balance
+                'USDC' => '0',      // USDC balance
+                'NGNC' => '0',      // Nigerian Naira Coin
+                'EURC' => '0',      // Euro Coin
+                'GBPC' => '0',      // British Pound Coin
+                'GHCC' => '0',      // Ghana Cedis Coin
+                'contract' => '0'   // Soroban contract token balance
             ];
 
             // Get XLM and other asset balances
             foreach ($account->getBalances() as $balance) {
                 if ($balance->getAssetType() === 'native') {
                     $balances['native'] = $balance->getBalance();
-                } else if ($balance->getAssetCode() === 'RMT') { // Your token code
-                    $balances['token'] = $balance->getBalance();
+                } else {
+                    $assetCode = $balance->getAssetCode();
+                    if (in_array($assetCode, ['USDC', 'NGNC', 'EURC', 'GBPC', 'GHCC'])) {
+                        $balances[$assetCode] = $balance->getBalance();
+                    }
                 }
             }
 
@@ -302,19 +310,81 @@ class StellarWalletService
             try {
                 $contractBalance = $this->contractInterface->getTokenBalance($publicKey);
                 if ($contractBalance) {
-                    $balances['token'] = $contractBalance;
+                    $balances['contract'] = $contractBalance;
                 }
             } catch (\Exception $e) {
                 Log::warning('Failed to get contract token balance: ' . $e->getMessage());
             }
+
+            // Log available balances for debugging
+            Log::info('Wallet balances for ' . $publicKey . ':', $balances);
 
             return $balances;
         } catch (\Exception $e) {
             Log::error('Failed to get token balances: ' . $e->getMessage());
             return [
                 'native' => '0',
-                'token' => '0'
+                'USDC' => '0',
+                'NGNC' => '0',
+                'EURC' => '0',
+                'GBPC' => '0',
+                'GHCC' => '0',
+                'contract' => '0'
             ];
+        }
+    }
+
+    /**
+     * Get available tokens for the wallet
+     */
+    public function getAvailableTokens($publicKey)
+    {
+        try {
+            $account = $this->sdk->accounts()->account($publicKey);
+            $availableTokens = [];
+
+            // Check native XLM balance
+            foreach ($account->getBalances() as $balance) {
+                if ($balance->getAssetType() === 'native') {
+                    $availableTokens[] = [
+                        'code' => 'XLM',
+                        'balance' => $balance->getBalance(),
+                        'type' => 'native'
+                    ];
+                } else {
+                    $assetCode = $balance->getAssetCode();
+                    if (in_array($assetCode, ['USDC', 'NGNC', 'EURC', 'GBPC', 'GHCC'])) {
+                        $availableTokens[] = [
+                            'code' => $assetCode,
+                            'balance' => $balance->getBalance(),
+                            'type' => 'stellar',
+                            'issuer' => $balance->getAssetIssuer()
+                        ];
+                    }
+                }
+            }
+
+            // Get Soroban contract tokens
+            try {
+                $contractTokens = $this->contractInterface->getAvailableTokens($publicKey);
+                if ($contractTokens) {
+                    foreach ($contractTokens as $token) {
+                        $availableTokens[] = [
+                            'code' => $token['code'],
+                            'balance' => $token['balance'],
+                            'type' => 'soroban',
+                            'contract_id' => $token['contract_id']
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to get Soroban contract tokens: ' . $e->getMessage());
+            }
+
+            return $availableTokens;
+        } catch (\Exception $e) {
+            Log::error('Failed to get available tokens: ' . $e->getMessage());
+            return [];
         }
     }
 }

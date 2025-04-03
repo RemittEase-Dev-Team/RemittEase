@@ -77,12 +77,23 @@ class DashboardController extends Controller
             }
 
             $balances = null;
+            $availableTokens = [];
             if ($wallet) {
                 try {
                     $balances = $this->walletService->getTokenBalances($wallet->public_key);
+                    $availableTokens = $this->walletService->getAvailableTokens($wallet->public_key);
                 } catch (\Exception $e) {
                     Log::error('Failed to get token balances: ' . $e->getMessage());
-                    $balances = ['native' => '0', 'token' => '0'];
+                    $balances = [
+                        'native' => '0',
+                        'USDC' => '0',
+                        'NGNC' => '0',
+                        'EURC' => '0',
+                        'GBPC' => '0',
+                        'GHCC' => '0',
+                        'contract' => '0'
+                    ];
+                    $availableTokens = [];
                 }
             }
 
@@ -127,6 +138,7 @@ class DashboardController extends Controller
                 'transactions' => $recentTransactions,
                 'currencies' => $currencies,
                 'balances' => $balances,
+                'availableTokens' => $availableTokens,
             ]);
 
         } catch (\Exception $e) {

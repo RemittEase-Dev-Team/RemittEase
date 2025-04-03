@@ -538,4 +538,85 @@ class RemitteaseContractInterface
             return '0';
         }
     }
+
+    /**
+ * Get all available tokens for a wallet from the Soroban contract
+ */
+public function getAvailableTokens($publicKey)
+{
+    try {
+        // Get admin account
+        $adminPublicKey = $this->adminKeypair->getAccountId();
+        $account = $this->sdk->accounts()->account($adminPublicKey);
+
+        // Create a transaction builder
+        $transactionBuilder = new \Soneso\StellarSDK\TransactionBuilder($account);
+
+        // Create Soroban parameters
+        $walletAddress = ScAddressObject::fromAccountId($publicKey);
+
+        // Create invoke contract operation
+        $operation = \Soneso\StellarSDK\Soroban\SorobanInvokeHostFunctionOperation::forContractFn(
+            $this->contractId,
+            "get_available_tokens",
+            [$walletAddress]
+        );
+
+        // Add the operation to the transaction
+        $transaction = $transactionBuilder
+            ->addOperation($operation)
+            ->build();
+
+        // Add transaction signature
+        $transaction->sign($this->adminKeypair, $this->sdk->getNetwork());
+
+        // Submit the transaction
+        $response = $this->sdk->submitTransaction($transaction);
+
+        if ($response->isSuccessful()) {
+            // Get the Soroban transaction data
+            $txHash = $response->getHash();
+            $sorobanTxData = $this->sorobanServer->getTransaction($txHash);
+
+            // In a real implementation, parse the XDR result to get the tokens
+            // This would depend on your contract's return format
+            // For now, returning an empty array as placeholder
+
+            // You would need to implement a method to parse the result
+            return $this->parseTokensResult($sorobanTxData);
+        } else {
+            $resultCodes = $response->getExtras()->getResultCodes();
+            Log::warning("Failed to get available tokens: " . $resultCodes->getOperationResultCodes()[0]);
+            return [];
+        }
+
+    } catch (\Exception $e) {
+        Log::error('Failed to get available tokens from contract: ' . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Parse tokens result from Soroban transaction data
+ * You'll need to implement this based on your contract's return format
+ */
+protected function parseTokensResult($sorobanTxData)
+{
+    // Example implementation - replace with actual parsing logic
+    if ($sorobanTxData->getStatus() !== "SUCCESS") {
+        return [];
+    }
+
+    // Here you would parse the result based on your contract's return format
+    // This is just a placeholder implementation
+    return [
+        [
+            'code' => 'XLM',
+            'balance' => '0',
+            'contract_id' => null
+        ]
+    ];
+}
+
+
 }

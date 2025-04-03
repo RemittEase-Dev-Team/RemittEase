@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
-import { FormEventHandler, useState } from 'react';
+import { FormEventHandler, useState, useEffect } from 'react';
 import { Copy } from 'lucide-react';
 import LiveCoinWatchTicker from '@/Components/LiveCoinWatchTicker';
 import BalanceWidget from '@/Components/Dashboard/BalanceWidget';
@@ -63,6 +63,19 @@ interface TransferFormData extends Record<string, string> {
   narration: string;
   bank_code: string;
   account_number: string;
+}
+
+interface ChartData {
+  time: string;
+  value: number;
+  date: Date;
+}
+
+interface Currency {
+  code: string;
+  name: string;
+  flag: string;
+  selected: boolean;
 }
 
 interface Props {
@@ -136,7 +149,12 @@ export default function Dashboard({
   const [withdrawalModal, setWithdrawalModal] = useState(false);
   const [sendModal, setSendModal] = useState(false);
   const [search, setSearch] = useState('');
-  const [selectedCurrency, setSelectedCurrency] = useState<any | null>(null);
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>({
+    code: 'XLM',
+    name: 'Stellar Lumens',
+    flag: 'XLM',
+    selected: true
+  });
   const [amount, setAmount] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<PaymentProvider | any | null>(null);
@@ -145,7 +163,10 @@ export default function Dashboard({
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState('');
   const [modal, setModal] = useState(false)
-
+  const [totalBalanceUSD, setTotalBalanceUSD] = useState(0);
+  const [chartData, setChartData] = useState<ChartData[]>([]);
+  const [xlmPrice, setXlmPrice] = useState(0);
+  const [chartCurrency, setChartCurrency] = useState('XLM');
 
   const paymentProviders = [
     {
@@ -171,8 +192,6 @@ export default function Dashboard({
     },
   ]
 
-  // console.log("p: ", wallet_address)
-
   // Dummy balances, totalBalance, chartData, etc.
   const [balance, setBalance] = useState({
     XLM: { amount: 0, change: 800, percentage: 7.14 },
@@ -187,18 +206,117 @@ export default function Dashboard({
     percentage: 1.0,
   });
 
-  const chartData = [
-    { time: '09:00', value: 2000 },
-    { time: '10:00', value: 2800 },
-    { time: '11:00', value: 2600 },
-    { time: '12:00', value: 1800 },
-    { time: '13:00', value: 2600 },
-    { time: '14:00', value: 3300 },
-    { time: '15:00', value: 2100 },
-    { time: '16:00', value: 2400 },
-    { time: '17:00', value: 1800 },
-    { time: '18:00', value: 4500 },
-  ];
+  // Fetch XLM price from CoinGecko
+  useEffect(() => {
+    const fetchXlmPrice = async () => {
+      try {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd');
+        const data = await response.json();
+        setXlmPrice(data.stellar.usd);
+      } catch (error) {
+        console.error('Error fetching XLM price:', error);
+      }
+    };
+
+    fetchXlmPrice();
+    // Update price every 5 minutes
+    const interval = setInterval(fetchXlmPrice, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Calculate total balance in USD and prepare chart data
+  useEffect(() => {
+    if (wallet && xlmPrice) {
+      // Calculate total balance in USD
+      const xlmBalance = wallet.balance || 0;
+      const totalUSD = xlmBalance * xlmPrice;
+      setTotalBalanceUSD(totalUSD);
+
+      // Prepare chart data from transactions
+      const now = new Date();
+      const chartDataMap = new Map<string, number>();
+
+      // Initialize chart data with current balance
+      chartDataMap.set(now.toISOString().split('T')[0], totalUSD);
+
+      // Process transactions
+      transactions.forEach(transaction => {
+        const date = new Date(transaction.date);
+        const dateStr = date.toISOString().split('T')[0];
+
+        // Convert transaction amount to USD if it's in XLM
+        const amountUSD = transaction.currency === 'XLM'
+          ? transaction.amount * xlmPrice
+          : transaction.amount;
+
+        // Add or update the balance for this date
+        const currentBalance = chartDataMap.get(dateStr) || 0;
+        chartDataMap.set(dateStr, currentBalance + (transaction.isOutgoing ? -amountUSD : amountUSD));
+      });
+
+      // Convert map to array and sort by date
+      const sortedData = Array.from(chartDataMap.entries())
+        .map(([date, balance]) => ({
+          time: new Date(date).toISOString(),
+          value: balance,
+          date: new Date(date)
+        }))
+        .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+      // Ensure we have at least one data point for today
+      const today = new Date().toISOString().split('T')[0];
+      if (!sortedData.some(d => d.time.startsWith(today))) {
+        sortedData.push({
+          time: new Date().toISOString(),
+          value: totalUSD,
+          date: new Date()
+        });
+      }
+
+      setChartData(sortedData);
+    }
+  }, [wallet, transactions, xlmPrice]);
+
+  // Filter chart data based on active time filter
+  const getFilteredChartData = (filter: string) => {
+    if (!chartData.length) return [];
+
+    const now = new Date();
+    const filterDate = new Date();
+
+    switch (filter) {
+      case 'Today':
+        filterDate.setHours(0, 0, 0, 0);
+        break;
+      case '24H':
+        filterDate.setHours(now.getHours() - 24);
+        break;
+      case '1W':
+        filterDate.setDate(now.getDate() - 7);
+        break;
+      case '1M':
+        filterDate.setMonth(now.getMonth() - 1);
+        break;
+      case 'All':
+        return chartData;
+      default:
+        return chartData;
+    }
+
+    return chartData.filter(data => data.date >= filterDate);
+  };
+
+  // Calculate percentage change
+  const calculatePercentageChange = (filter: string) => {
+    const filteredData = getFilteredChartData(filter);
+    if (filteredData.length < 2) return 0;
+
+    const oldestValue = filteredData[0].value;
+    const newestValue = filteredData[filteredData.length - 1].value;
+
+    if (oldestValue === 0) return 0;
+    return ((newestValue - oldestValue) / oldestValue) * 100;
+  };
 
   // Methods
 
@@ -264,7 +382,7 @@ export default function Dashboard({
       try {
         const response = post(
           route('withdraw', {
-            currency: selectedCurrency.code,
+            currency: selectedCurrency,
             amount,
           })
         );
@@ -290,7 +408,12 @@ export default function Dashboard({
     setWithdrawalModal(false);
     setSendModal(false);
     setSearch('');
-    setSelectedCurrency(null);
+    setSelectedCurrency({
+      code: 'XLM',
+      name: 'Stellar Lumens',
+      flag: 'XLM',
+      selected: true
+    });
     setAmount('');
     setWalletAddress('');
     setSelectedProvider(null);
@@ -545,13 +668,16 @@ export default function Dashboard({
               isLoading={false}
             />
             <TotalBalanceChart
-              chartData={chartData}
+              chartData={getFilteredChartData(activeTimeFilter)}
               totalBalance={{
-                amount: totalBalance.amount,
-                percentage: totalBalance.percentage
+                amount: totalBalanceUSD,
+                percentage: calculatePercentageChange(activeTimeFilter)
               }}
               activeTimeFilter={activeTimeFilter}
               setActiveTimeFilter={setActiveTimeFilter}
+              selectedCurrency={chartCurrency}
+              setSelectedCurrency={setChartCurrency}
+              exchangeRates={exchangeRates}
               className="md:col-span-2"
             />
           </div>
