@@ -44,97 +44,96 @@ interface Props {
 
 type TransferType = 'crypto' | 'cash';
 
-interface SendFormData {
-  [key: string]: string | TransferType;
+interface FormData extends Record<string, string> {
   bank_code: string;
   account_number: string;
   amount: string;
   currency: string;
   narration: string;
   recipient_id: string;
-  transfer_type: TransferType;
+  transfer_type: 'crypto' | 'cash';
   wallet_address: string;
 }
 
 const SUPPORTED_COUNTRIES = {
-    NG: { name: 'Nigeria', currency: 'NGN' },
-    GH: { name: 'Ghana', currency: 'GHS' },
-    KE: { name: 'Kenya', currency: 'KES' },
-    UG: { name: 'Uganda', currency: 'UGX' },
-    TZ: { name: 'Tanzania', currency: 'TZS' },
-    ZA: { name: 'South Africa', currency: 'ZAR' },
-    ZM: { name: 'Zambia', currency: 'ZMW' },
-    CM: { name: 'Cameroon', currency: 'XAF' },
-    CI: { name: 'Côte d\'Ivoire', currency: 'XOF' },
-    EG: { name: 'Egypt', currency: 'EGP' },
-    MA: { name: 'Morocco', currency: 'MAD' },
-    SN: { name: 'Senegal', currency: 'XOF' },
-    BF: { name: 'Burkina Faso', currency: 'XOF' },
-    ML: { name: 'Mali', currency: 'XOF' },
-    NE: { name: 'Niger', currency: 'XOF' },
-    TG: { name: 'Togo', currency: 'XOF' },
-    BJ: { name: 'Benin', currency: 'XOF' },
-    GA: { name: 'Gabon', currency: 'XAF' },
-    CF: { name: 'Central African Republic', currency: 'XAF' },
-    GQ: { name: 'Equatorial Guinea', currency: 'XAF' },
-    TD: { name: 'Chad', currency: 'XAF' },
-    CG: { name: 'Republic of Congo', currency: 'XAF' },
-    AO: { name: 'Angola', currency: 'AOA' },
-    MZ: { name: 'Mozambique', currency: 'MZN' },
-    BW: { name: 'Botswana', currency: 'BWP' },
-    NA: { name: 'Namibia', currency: 'NAD' },
-    LS: { name: 'Lesotho', currency: 'LSL' },
-    SZ: { name: 'Eswatini', currency: 'SZL' },
-    MG: { name: 'Madagascar', currency: 'MGA' },
-    RW: { name: 'Rwanda', currency: 'RWF' },
-    BI: { name: 'Burundi', currency: 'BIF' },
-    ET: { name: 'Ethiopia', currency: 'ETB' },
-    SD: { name: 'Sudan', currency: 'SDG' },
-    SS: { name: 'South Sudan', currency: 'SSP' },
-    SO: { name: 'Somalia', currency: 'SOS' },
-    DJ: { name: 'Djibouti', currency: 'DJF' },
-    ER: { name: 'Eritrea', currency: 'ERN' },
-    LY: { name: 'Libya', currency: 'LYD' },
-    TN: { name: 'Tunisia', currency: 'TND' },
-    DZ: { name: 'Algeria', currency: 'DZD' },
-    MR: { name: 'Mauritania', currency: 'MRU' },
-    GM: { name: 'Gambia', currency: 'GMD' },
-    GN: { name: 'Guinea', currency: 'GNF' },
-    GW: { name: 'Guinea-Bissau', currency: 'XOF' },
-    SL: { name: 'Sierra Leone', currency: 'SLL' },
-    LR: { name: 'Liberia', currency: 'LRD' },
-    ST: { name: 'São Tomé and Príncipe', currency: 'STN' },
-    CV: { name: 'Cape Verde', currency: 'CVE' },
-    KM: { name: 'Comoros', currency: 'KMF' },
-    SC: { name: 'Seychelles', currency: 'SCR' },
-    MU: { name: 'Mauritius', currency: 'MUR' },
-    RE: { name: 'Réunion', currency: 'EUR' },
-    YT: { name: 'Mayotte', currency: 'EUR' },
-    SH: { name: 'Saint Helena', currency: 'SHP' },
-    IO: { name: 'British Indian Ocean Territory', currency: 'USD' },
-    TF: { name: 'French Southern Territories', currency: 'EUR' },
-    EH: { name: 'Western Sahara', currency: 'MAD' },
-    AC: { name: 'Ascension Island', currency: 'SHP' },
-    CP: { name: 'Clipperton Island', currency: 'EUR' },
-    DG: { name: 'Diego Garcia', currency: 'USD' },
-    EA: { name: 'Ceuta', currency: 'EUR' },
-    IC: { name: 'Canary Islands', currency: 'EUR' },
-    TA: { name: 'Tristan da Cunha', currency: 'SHP' },
-    XA: { name: 'Saint-Martin', currency: 'EUR' },
-    XB: { name: 'Saint-Barthélemy', currency: 'EUR' },
-    XC: { name: 'Curaçao', currency: 'ANG' },
-    XE: { name: 'Sint Eustatius', currency: 'ANG' },
-    XM: { name: 'Sint Maarten', currency: 'ANG' },
-    XN: { name: 'Saint Kitts and Nevis', currency: 'XCD' },
-    XS: { name: 'Somaliland', currency: 'SOS' },
-    XT: { name: 'Mayotte', currency: 'EUR' },
-    XU: { name: 'Saint Helena', currency: 'SHP' },
-    XV: { name: 'Saint Vincent and the Grenadines', currency: 'XCD' },
-    XW: { name: 'Wallis and Futuna', currency: 'XPF' },
-    XY: { name: 'Saint Pierre and Miquelon', currency: 'EUR' },
-    XZ: { name: 'Saint Lucia', currency: 'XCD' },
-    ZW: { name: 'Zimbabwe', currency: 'ZWL' },
-  };
+  NG: { name: 'Nigeria', currency: 'NGN' },
+  GH: { name: 'Ghana', currency: 'GHS' },
+  KE: { name: 'Kenya', currency: 'KES' },
+  UG: { name: 'Uganda', currency: 'UGX' },
+  TZ: { name: 'Tanzania', currency: 'TZS' },
+  ZA: { name: 'South Africa', currency: 'ZAR' },
+  ZM: { name: 'Zambia', currency: 'ZMW' },
+  CM: { name: 'Cameroon', currency: 'XAF' },
+  CI: { name: 'Côte d\'Ivoire', currency: 'XOF' },
+  EG: { name: 'Egypt', currency: 'EGP' },
+  MA: { name: 'Morocco', currency: 'MAD' },
+  SN: { name: 'Senegal', currency: 'XOF' },
+  BF: { name: 'Burkina Faso', currency: 'XOF' },
+  ML: { name: 'Mali', currency: 'XOF' },
+  NE: { name: 'Niger', currency: 'XOF' },
+  TG: { name: 'Togo', currency: 'XOF' },
+  BJ: { name: 'Benin', currency: 'XOF' },
+  GA: { name: 'Gabon', currency: 'XAF' },
+  CF: { name: 'Central African Republic', currency: 'XAF' },
+  GQ: { name: 'Equatorial Guinea', currency: 'XAF' },
+  TD: { name: 'Chad', currency: 'XAF' },
+  CG: { name: 'Republic of Congo', currency: 'XAF' },
+  AO: { name: 'Angola', currency: 'AOA' },
+  MZ: { name: 'Mozambique', currency: 'MZN' },
+  BW: { name: 'Botswana', currency: 'BWP' },
+  NA: { name: 'Namibia', currency: 'NAD' },
+  LS: { name: 'Lesotho', currency: 'LSL' },
+  SZ: { name: 'Eswatini', currency: 'SZL' },
+  MG: { name: 'Madagascar', currency: 'MGA' },
+  RW: { name: 'Rwanda', currency: 'RWF' },
+  BI: { name: 'Burundi', currency: 'BIF' },
+  ET: { name: 'Ethiopia', currency: 'ETB' },
+  SD: { name: 'Sudan', currency: 'SDG' },
+  SS: { name: 'South Sudan', currency: 'SSP' },
+  SO: { name: 'Somalia', currency: 'SOS' },
+  DJ: { name: 'Djibouti', currency: 'DJF' },
+  ER: { name: 'Eritrea', currency: 'ERN' },
+  LY: { name: 'Libya', currency: 'LYD' },
+  TN: { name: 'Tunisia', currency: 'TND' },
+  DZ: { name: 'Algeria', currency: 'DZD' },
+  MR: { name: 'Mauritania', currency: 'MRU' },
+  GM: { name: 'Gambia', currency: 'GMD' },
+  GN: { name: 'Guinea', currency: 'GNF' },
+  GW: { name: 'Guinea-Bissau', currency: 'XOF' },
+  SL: { name: 'Sierra Leone', currency: 'SLL' },
+  LR: { name: 'Liberia', currency: 'LRD' },
+  ST: { name: 'São Tomé and Príncipe', currency: 'STN' },
+  CV: { name: 'Cape Verde', currency: 'CVE' },
+  KM: { name: 'Comoros', currency: 'KMF' },
+  SC: { name: 'Seychelles', currency: 'SCR' },
+  MU: { name: 'Mauritius', currency: 'MUR' },
+  RE: { name: 'Réunion', currency: 'EUR' },
+  YT: { name: 'Mayotte', currency: 'EUR' },
+  SH: { name: 'Saint Helena', currency: 'SHP' },
+  IO: { name: 'British Indian Ocean Territory', currency: 'USD' },
+  TF: { name: 'French Southern Territories', currency: 'EUR' },
+  EH: { name: 'Western Sahara', currency: 'MAD' },
+  AC: { name: 'Ascension Island', currency: 'SHP' },
+  CP: { name: 'Clipperton Island', currency: 'EUR' },
+  DG: { name: 'Diego Garcia', currency: 'USD' },
+  EA: { name: 'Ceuta', currency: 'EUR' },
+  IC: { name: 'Canary Islands', currency: 'EUR' },
+  TA: { name: 'Tristan da Cunha', currency: 'SHP' },
+  XA: { name: 'Saint-Martin', currency: 'EUR' },
+  XB: { name: 'Saint-Barthélemy', currency: 'EUR' },
+  XC: { name: 'Curaçao', currency: 'ANG' },
+  XE: { name: 'Sint Eustatius', currency: 'ANG' },
+  XM: { name: 'Sint Maarten', currency: 'ANG' },
+  XN: { name: 'Saint Kitts and Nevis', currency: 'XCD' },
+  XS: { name: 'Somaliland', currency: 'SOS' },
+  XT: { name: 'Mayotte', currency: 'EUR' },
+  XU: { name: 'Saint Helena', currency: 'SHP' },
+  XV: { name: 'Saint Vincent and the Grenadines', currency: 'XCD' },
+  XW: { name: 'Wallis and Futuna', currency: 'XPF' },
+  XY: { name: 'Saint Pierre and Miquelon', currency: 'EUR' },
+  XZ: { name: 'Saint Lucia', currency: 'XCD' },
+  ZW: { name: 'Zimbabwe', currency: 'ZWL' },
+};
 
 export default function SendModal({
   search,
@@ -164,7 +163,7 @@ export default function SendModal({
   const [isTransferring, setIsTransferring] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<string>('NG');
 
-  const { data, setData, post, processing, errors } = useForm<SendFormData>({
+  const { data, setData, post, processing, errors } = useForm<FormData>({
     bank_code: '',
     account_number: '',
     amount: '',
@@ -174,44 +173,6 @@ export default function SendModal({
     transfer_type: 'crypto',
     wallet_address: ''
   });
-
-  // Update form data when local state changes
-  useEffect(() => {
-    if (transferType === 'crypto') {
-      setData({
-        ...data,
-        amount,
-        wallet_address: walletAddress,
-        currency: selectedCurrency?.code || 'NGN',
-        transfer_type: 'crypto',
-        // Reset cash fields
-        bank_code: '',
-        account_number: '',
-        recipient_id: '',
-      });
-    } else {
-      setData({
-        ...data,
-        amount,
-        bank_code: selectedBank,
-        account_number: accountNumber,
-        currency: SUPPORTED_COUNTRIES[selectedCountry as keyof typeof SUPPORTED_COUNTRIES]?.currency || 'NGN',
-        recipient_id: selectedRecipient?.id?.toString() || '',
-        transfer_type: 'cash',
-        // Reset crypto fields
-        wallet_address: '',
-      });
-    }
-  }, [
-    transferType,
-    amount,
-    walletAddress,
-    selectedCurrency,
-    selectedBank,
-    accountNumber,
-    selectedCountry,
-    selectedRecipient
-  ]);
 
   useEffect(() => {
     // Fetch banks and recipients when component mounts
@@ -286,23 +247,42 @@ export default function SendModal({
     setIsTransferring(true);
 
     try {
-      // Ensure form data is up to date before submission
       if (transferType === 'crypto') {
         if (!selectedCurrency || !amount || !walletAddress) {
           setTransferError('Please fill in all required fields');
-          setIsTransferring(false);
           return;
         }
 
-        post(route('remittance.transfer'));
+        const formData = {
+          amount,
+          currency: selectedCurrency.code,
+          wallet_address: walletAddress,
+          transfer_type: 'crypto',
+          bank_code: '',
+          account_number: '',
+          narration: '',
+          recipient_id: ''
+        } as const;
+
+        await post(route('remittance.transfer'), formData as Record<string, string>);
       } else {
         if (!selectedRecipient || !amount || !selectedBank || !accountNumber) {
           setTransferError('Please fill in all required fields');
-          setIsTransferring(false);
           return;
         }
 
-        post(route('remittance.transfer'));
+        const formData = {
+          recipient_id: selectedRecipient.id.toString(),
+          amount,
+          currency: SUPPORTED_COUNTRIES[selectedCountry as keyof typeof SUPPORTED_COUNTRIES].currency,
+          bank_code: selectedBank,
+          account_number: accountNumber,
+          narration: data.narration,
+          transfer_type: 'cash',
+          wallet_address: ''
+        } as const;
+
+        await post(route('remittance.transfer'), formData as Record<string, string>);
       }
 
       CloseModal();
@@ -340,7 +320,6 @@ export default function SendModal({
                   ? 'bg-primary-600 text-white'
                   : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
               }`}
-              type="button"
             >
               Crypto
             </button>
@@ -351,7 +330,6 @@ export default function SendModal({
                   ? 'bg-primary-600 text-white'
                   : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
               }`}
-              type="button"
             >
               Cash
             </button>
@@ -374,7 +352,7 @@ export default function SendModal({
                 >
                   <option value="">Select Currency</option>
                   {currencies.map((currency) => (
-                    <option key={`currency-${currency.code}`} value={currency.code}>
+                    <option key={currency.code} value={currency.code}>
                       {currency.name} ({currency.code})
                     </option>
                   ))}
@@ -414,7 +392,7 @@ export default function SendModal({
                   className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
                 >
                   {Object.entries(SUPPORTED_COUNTRIES).map(([code, { name, currency }]) => (
-                    <option key={`country-${code}`} value={code}>
+                    <option key={code} value={code}>
                       {name} ({currency})
                     </option>
                   ))}
@@ -424,7 +402,7 @@ export default function SendModal({
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Recipient</label>
                 <select
-                  value={selectedRecipient?.id.toString() || ''}
+                  value={selectedRecipient?.id || ''}
                   onChange={(e) => {
                     const recipient = recipients.find(r => r.id === parseInt(e.target.value));
                     setSelectedRecipient(recipient || null);
@@ -438,7 +416,7 @@ export default function SendModal({
                 >
                   <option value="">Select Recipient</option>
                   {recipients.map((recipient) => (
-                    <option key={`recipient-${recipient.id}`} value={recipient.id}>
+                    <option key={recipient.id} value={recipient.id}>
                       {recipient.name} - {recipient.account_number}
                     </option>
                   ))}
@@ -455,7 +433,7 @@ export default function SendModal({
                 >
                   <option value="">Select Bank</option>
                   {banks.map((bank) => (
-                    <option key={`bank-${bank.code}`} value={bank.code}>
+                    <option key={bank.code} value={bank.code}>
                       {bank.name}
                     </option>
                   ))}
@@ -487,9 +465,7 @@ export default function SendModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Amount ({SUPPORTED_COUNTRIES[selectedCountry as keyof typeof SUPPORTED_COUNTRIES]?.currency || 'NGN'})
-                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount ({SUPPORTED_COUNTRIES[selectedCountry as keyof typeof SUPPORTED_COUNTRIES].currency})</label>
                 <input
                   type="number"
                   value={amount}

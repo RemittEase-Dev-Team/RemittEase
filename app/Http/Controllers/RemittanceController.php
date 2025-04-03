@@ -155,56 +155,208 @@ class RemittanceController extends Controller
         return response()->json($result);
     }
 
+    // public function initiateTransfer(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'recipient_id' => 'required|exists:recipients,id',
+    //         'amount' => 'required|numeric|min:1',
+    //         'currency' => 'required|string|in:NGN,GHS,KES,UGX,TZS,ZAR',
+    //         'narration' => 'nullable|string|max:100'
+    //     ]);
+
+    //     $recipient = \App\Models\Recipient::find($validated['recipient_id']);
+    //     $user = auth()->user();
+    //     $wallet = $user->wallet;
+
+    //     // Check if user has sufficient balance
+    //     $xlmBalance = $this->stellarWalletService->getBalance($wallet);
+    //     if ($xlmBalance < $validated['amount']) {
+    //         return back()->withErrors(['amount' => 'Insufficient balance']);
+    //     }
+
+    //     // Create transfer reference
+    //     $reference = 'RMTEASE_' . Str::random(10);
+
+    //     // Prepare transfer data
+    //     $transferData = [
+    //         'bank_code' => $recipient->bank_code,
+    //         'account_number' => $recipient->account_number,
+    //         'amount' => $validated['amount'],
+    //         'currency' => $validated['currency'],
+    //         'narration' => $validated['narration'] ?? 'RemittEase Transfer',
+    //         'reference' => $reference
+    //     ];
+
+    //     // Initiate transfer
+    //     $result = $this->flutterwaveService->createTransfer($transferData);
+
+    //     if ($result['success']) {
+    //         // Record the remittance
+    //         $remittance = new \App\Models\Remittance([
+    //             'user_id' => $user->id,
+    //             'recipient_id' => $recipient->id,
+    //             'amount' => $validated['amount'],
+    //             'currency' => $validated['currency'],
+    //             'status' => 'pending',
+    //             'reference' => $reference
+    //         ]);
+    //         $remittance->save();
+
+    //         return back()->with('success', 'Transfer initiated successfully');
+    //     }
+
+    //     return back()->withErrors(['transfer' => $result['message']]);
+    // }
+
     public function initiateTransfer(Request $request)
     {
-        $validated = $request->validate([
-            'recipient_id' => 'required|exists:recipients,id',
+        // Validate the request based on transfer type
+        $rules = [
             'amount' => 'required|numeric|min:1',
-            'currency' => 'required|string|in:NGN,GHS,KES,UGX,TZS,ZAR',
-            'narration' => 'nullable|string|max:100'
-        ]);
+            'transfer_type' => 'required|in:crypto,cash',
+        ];
 
-        $recipient = \App\Models\Recipient::find($validated['recipient_id']);
+        if ($request->transfer_type === 'crypto') {
+            $rules = array_merge($rules, [
+                'currency' => 'required|string',
+                'wallet_address' => 'required|string'
+            ]);
+        } else { // cash transfer
+            $rules = array_merge($rules, [
+                'bank_code' => 'required|string',
+                'account_number' => 'required|string',
+                'currency' => 'required|string',
+                'narration' => 'nullable|string|max:100'
+            ]);
+
+            // If recipient_id is provided, validate it
+            if ($request->filled('recipient_id')) {
+                $rules['recipient_id'] = 'exists:recipients,id';
+            }
+        }
+
+        $validated = $request->validate($rules);
         $user = auth()->user();
         $wallet = $user->wallet;
 
         // Check if user has sufficient balance
-        $xlmBalance = $this->stellarWalletService->getBalance($wallet);
+        $xlmBalance = $this->stellarWalletService->getWalletBalance($wallet->public_key);
         if ($xlmBalance < $validated['amount']) {
-            return back()->withErrors(['amount' => 'Insufficient balance']);
+            return $request->wantsJson()
+                ? response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient balance'
+                ], 400)
+                : Inertia::render('Wallet/Show', [
+                    'success' => false,
+                    'message' => 'Insufficient balance'
+                ]);
         }
 
         // Create transfer reference
         $reference = 'RMTEASE_' . Str::random(10);
 
-        // Prepare transfer data
-        $transferData = [
-            'bank_code' => $recipient->bank_code,
-            'account_number' => $recipient->account_number,
-            'amount' => $validated['amount'],
-            'currency' => $validated['currency'],
-            'narration' => $validated['narration'] ?? 'RemittEase Transfer',
-            'reference' => $reference
-        ];
+        try {
+            if ($request->transfer_type === 'crypto') {
+                // Handle crypto transfer
+                $result = $this->stellarWalletService->transferFunds(
+                    $wallet->public_key,
+                    $validated['wallet_address'],
+                    $validated['amount'],
+                    $validated['currency']
+                );
 
-        // Initiate transfer
-        $result = $this->flutterwaveService->createTransfer($transferData);
+                if ($result['success']) {
+                    // Record the transaction
+                    $transaction = new \App\Models\Transaction([
+                        'user_id' => $user->id,
+                        'type' => 'crypto_transfer',
+                        'amount' => $validated['amount'],
+                        'asset_code' => $validated['currency'],
+                        'recipient_address' => $validated['wallet_address'],
+                        'status' => 'completed',
+                        'transaction_hash' => $result['transaction_hash'] ?? null
+                    ]);
+                    $transaction->save();
 
-        if ($result['success']) {
-            // Record the remittance
-            $remittance = new \App\Models\Remittance([
-                'user_id' => $user->id,
-                'recipient_id' => $recipient->id,
-                'amount' => $validated['amount'],
-                'currency' => $validated['currency'],
-                'status' => 'pending',
-                'reference' => $reference
-            ]);
-            $remittance->save();
+                    return $request->wantsJson()
+                        ? response()->json([
+                            'success' => true,
+                            'message' => 'Crypto transfer completed successfully'
+                        ])
+                        : Inertia::render('Wallet/Show', [
+                            'success' => true,
+                            'message' => 'Crypto transfer completed successfully'
+                        ]);
+                } else {
+                    return $request->wantsJson()
+                        ? response()->json([
+                            'success' => false,
+                            'message' => $result['message'] ?? 'Transfer failed'
+                        ], 500)
+                        : Inertia::render('Wallet/Show', [
+                            'success' => false,
+                            'message' => $result['message'] ?? 'Transfer failed'
+                        ]);
+                }
+            } else {
+                // Handle cash transfer
+                // Prepare transfer data for Flutterwave
+                $transferData = [
+                    'bank_code' => $validated['bank_code'],
+                    'account_number' => $validated['account_number'],
+                    'amount' => $validated['amount'],
+                    'currency' => $validated['currency'],
+                    'narration' => $validated['narration'] ?? 'RemittEase Transfer',
+                    'reference' => $reference
+                ];
 
-            return back()->with('success', 'Transfer initiated successfully');
+                // Initiate transfer through Flutterwave
+                $result = $this->flutterwaveService->createTransfer($transferData);
+
+                if ($result['success']) {
+                    // Record the remittance
+                    $remittance = new \App\Models\Remittance([
+                        'user_id' => $user->id,
+                        'recipient_id' => $request->recipient_id ?? null,
+                        'amount' => $validated['amount'],
+                        'currency' => $validated['currency'],
+                        'status' => 'pending',
+                        'reference' => $reference
+                    ]);
+                    $remittance->save();
+
+                    return $request->wantsJson()
+                        ? response()->json([
+                            'success' => true,
+                            'message' => 'Cash transfer initiated successfully'
+                        ])
+                        : Inertia::render('Wallet/Show', [
+                            'success' => true,
+                            'message' => 'Cash transfer initiated successfully'
+                        ]);
+                } else {
+                    return $request->wantsJson()
+                        ? response()->json([
+                            'success' => false,
+                            'message' => $result['message'] ?? 'Transfer failed'
+                        ], 500)
+                        : Inertia::render('Wallet/Show', [
+                            'success' => false,
+                            'message' => $result['message'] ?? 'Transfer failed'
+                        ]);
+                }
+            }
+        } catch (\Exception $e) {
+            return $request->wantsJson()
+                ? response()->json([
+                    'success' => false,
+                    'message' => 'Transfer failed: ' . $e->getMessage()
+                ], 500)
+                : Inertia::render('Wallet/Show', [
+                    'success' => false,
+                    'message' => 'An error occurred while processing the transfer'
+                ]);
         }
-
-        return back()->withErrors(['transfer' => $result['message']]);
     }
 }
