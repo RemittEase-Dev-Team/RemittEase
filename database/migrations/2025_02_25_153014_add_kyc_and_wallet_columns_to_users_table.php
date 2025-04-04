@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('kyc_status')->default('unverified');
+            // $table->string('kyc_status')->default('unverified');
             $table->string('stellar_public_key')->nullable();
             $table->string('stellar_secret_seed')->nullable();
         });

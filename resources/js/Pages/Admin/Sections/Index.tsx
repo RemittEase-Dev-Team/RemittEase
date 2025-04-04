@@ -77,7 +77,7 @@ const Sections: React.FC<SectionsProps> = ({ heroes, features, abouts, questRewa
                         </div>
                     </SectionCard>
 
-                    <SectionCard title="About Section" onEdit={() => handleEdit('Abouts', abouts)} onEdit2={''}>
+                    <SectionCard title="About Section" onEdit={() => {}} onEdit2={'/admin/section/edit_about'}>
                         <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
                             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Abouts</h3>
                             {abouts.map((about, index) => {
@@ -115,7 +115,7 @@ const Sections: React.FC<SectionsProps> = ({ heroes, features, abouts, questRewa
                         </div>
                     </SectionCard>
 
-                    <SectionCard title="Quest Rewards" onEdit={() => handleEdit('Quest Rewards', questRewards)} onEdit2={''}>
+                    <SectionCard title="Quest Rewards" onEdit={() => {}} onEdit2={'/admin/section/edit_quest'}>
                         <div className="grid grid-cols-1 gap-4">
                             {questRewards.map((questReward, index) => (
                                 <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">

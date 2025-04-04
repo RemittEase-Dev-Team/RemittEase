@@ -43,7 +43,7 @@ const FeaturePage: React.FC<PageProps> = ({ features }) => {
     }
   };
 
-  console.log(features)
+  // console.log(features)
 
   return (
     <AdminLayout>

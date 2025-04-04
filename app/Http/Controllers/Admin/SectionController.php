@@ -46,6 +46,11 @@ class SectionController extends Controller
         ]);
     }
 
+    public function quest(){
+        return Inertia::render('Admin/Sections/Quest', [
+            'quest' => QuestReward::all(),
+        ]);
+    }
     public function updateHeroes(Request $request)
     {
         $request->validate([
@@ -110,7 +115,7 @@ class SectionController extends Controller
             About::where('id', $about['id'])->update($about);
         }
 
-        return redirect()->back()->with('success', 'About sections updated successfully.');
+        return redirect()->route('admin.sections')->with('success', 'About sections updated successfully.');
     }
 
     public function updateQuestRewards(Request $request)
@@ -151,7 +156,7 @@ class SectionController extends Controller
             }
         }
     
-        return redirect()->back()->with('success', 'Quest rewards updated successfully.');
+        return redirect()->route('admin.sections')->with('success', 'Quest rewards updated successfully.');
     }
     
 
