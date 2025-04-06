@@ -20,13 +20,17 @@ class Transaction extends Model
         'status',
         'transaction_type',
         'external_id',
-        'memo'
+        'memo',
+        'provider',
+        'metadata',
+        'error_message'
     ];
 
     protected $casts = [
         'amount' => 'float',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
+        'metadata' => 'array'
     ];
 
     /**

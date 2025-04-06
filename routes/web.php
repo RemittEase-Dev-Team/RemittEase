@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DepositController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MoonPayController;
 use App\Http\Controllers\ProfileController;
@@ -86,6 +87,11 @@ Route::middleware([
 //     Route::get('/stellar/address', [App\Http\Controllers\StellarController::class, 'generateAddress'])->name('stellar.address');
 //     Route::post('/stellar/withdraw', [App\Http\Controllers\StellarController::class, 'withdraw'])->name('stellar.withdraw');
 //     Route::post('/stellar/send', [App\Http\Controllers\StellarController::class, 'send'])->name('stellar.send');
+
+    // Deposit routes
+    Route::get('/deposit/status/{id}', [DepositController::class, 'checkStatus'])->name('deposit.check-status');
+    Route::get('/deposit/history', [DepositController::class, 'getTransactionHistory'])->name('deposit.history');
+    Route::post('/deposit/initiate-fiat-deposit', [DepositController::class, 'initiateFiatDeposit'])->name('deposit.initiate-fiat-deposit');
 });
 
 

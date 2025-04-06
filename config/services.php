@@ -19,9 +19,9 @@ return [
     ],
 
     'ses' => [
-        'key' => env('AWS_ACCESS_KEY_ID'),
-        'secret' => env('AWS_SECRET_ACCESS_KEY'),
-        'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+        'key' => env('SES_ACCESS_KEY_ID'),
+        'secret' => env('SES_SECRET_ACCESS_KEY'),
+        'region' => env('SES_DEFAULT_REGION', 'us-east-1'),
     ],
 
     'resend' => [
@@ -40,14 +40,15 @@ return [
     ],
 
     'moonpay' => [
-        'public_key' => env('MOONPAY_PUBLIC_KEY'),
+        'api_key' => env('MOONPAY_API_KEY'),
         'secret_key' => env('MOONPAY_SECRET_KEY'),
-        'base_url' => env('MOONPAY_BASE_URL', 'https://api.moonpay.com'),
+        'sandbox' => env('MOONPAY_SANDBOX', true),
     ],
 
     'yellowcard' => [
         'api_key' => env('YELLOWCARD_API_KEY'),
-        'widget_key' => env('YELLOWCARD_WIDGET_KEY', 'e7d65154c62410ccf970443269ecb1'),
+        'widget_key' => env('YELLOWCARD_WIDGET_KEY'),
+        'webhook_secret' => env('YELLOWCARD_WEBHOOK_SECRET'),
         'sandbox' => env('YELLOWCARD_SANDBOX', true),
     ],
 
@@ -63,6 +64,30 @@ return [
         'encryption_key' => env('FLUTTERWAVE_ENCRYPTION_KEY'),
         'webhook_secret' => env('FLUTTERWAVE_WEBHOOK_SECRET'),
         'sandbox' => env('FLUTTERWAVE_SANDBOX', true),
+    ],
+
+    'mailgun' => [
+        'domain' => env('MAILGUN_DOMAIN'),
+        'secret' => env('MAILGUN_SECRET'),
+    ],
+
+    'sparkpost' => [
+        'secret' => env('SPARKPOST_SECRET'),
+    ],
+
+    'stripe' => [
+        'model' => App\Models\User::class,
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook' => [
+            'secret' => env('STRIPE_WEBHOOK_SECRET'),
+            'tolerance' => env('STRIPE_WEBHOOK_TOLERANCE', 300),
+        ],
+    ],
+
+    'linkio' => [
+        'api_key' => env('LINKIO_API_KEY'),
+        'sandbox' => env('LINKIO_SANDBOX', true),
     ],
 
 ];
