@@ -6,6 +6,7 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 
 use App\Models\Settings;
+use App\Models\Transaction;
 
 class MoonPayService
 {
@@ -47,30 +48,77 @@ class MoonPayService
         }
     }
 
-    public function createTransaction($userId, $amount, $currencyCode = 'xlm')
+    public function createTransaction(array $data)
     {
-        // Generate a signature for the request
-        $signature = $this->generateSignature([
-            'userId' => $userId,
-            'amount' => $amount,
-            'currencyCode' => $currencyCode
-        ]);
+        try {
+            // Validate required fields
+            if (empty($data['amount']) || empty($data['wallet_address'])) {
+                return [
+                    'success' => false,
+                    'message' => 'Missing required fields',
+                    'data' => ['error' => 'amount and wallet_address are required']
+                ];
+            }
 
-        $response = $this->client->post($this->baseUrl . '/transactions', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'X-Signature' => $signature
-            ],
-            'json' => [
-                'userId' => $userId,
-                'amount' => $amount,
-                'currencyCode' => $currencyCode,
-                'walletAddress' => $this->getUserStellarAddress($userId),
-                'returnUrl' => route('moonpay.callback')
-            ]
-        ]);
+            // Prepare transaction data
+            $transactionData = [
+                'amount' => $data['amount'],
+                'currency' => $data['currency'] ?? 'XLM',
+                'wallet_address' => $data['wallet_address'],
+                'network' => 'stellar',
+                'customer_email' => auth()->user()->email,
+                'customer_name' => auth()->user()->name,
+                'customer_id' => auth()->id(),
+                'external_transaction_id' => $data['transaction_id'],
+                'metadata' => $data['metadata'] ?? []
+            ];
 
-        return json_decode($response->getBody()->getContents(), true);
+            // Log the request
+            Log::info('MoonPay Transaction Request', [
+                'data' => $transactionData,
+                'user_id' => auth()->id()
+            ]);
+
+            // Create transaction record first
+            $transaction = Transaction::create([
+                'user_id' => auth()->id(),
+                'provider' => 'moonpay',
+                'external_id' => $data['transaction_id'],
+                'amount' => $data['amount'],
+                'currency' => $data['currency'] ?? 'XLM',
+                'recipient_address' => $data['wallet_address'],
+                'type' => 'deposit',
+                'status' => 'pending',
+                'metadata' => $data['metadata'] ?? [],
+                'error_message' => null
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Transaction created successfully',
+                'data' => [
+                    'transaction_id' => $transaction->id,
+                    'external_id' => $transaction->external_id,
+                    'status' => $transaction->status,
+                    'amount' => $transaction->amount,
+                    'currency' => $transaction->currency,
+                    'created_at' => $transaction->created_at->toISOString()
+                ]
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('MoonPay Transaction Creation Error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $data
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Failed to create transaction: ' . $e->getMessage(),
+                'data' => ['error' => $e->getMessage()]
+            ];
+        }
     }
 
     public function getCheckoutURL(array $queryParams)

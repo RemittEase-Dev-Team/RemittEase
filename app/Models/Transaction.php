@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Transaction extends Model
 {
@@ -11,27 +12,45 @@ class Transaction extends Model
 
     protected $fillable = [
         'user_id',
+        'provider',
+        'external_id',
         'amount',
         'currency',
+        'asset_code',
+        'recipient_address',
         'sender_wallet_id',
         'recipient_wallet_id',
-        'recipient_address',
         'transaction_hash',
+        'type',
         'status',
-        'transaction_type',
-        'external_id',
+        'reference',
         'memo',
-        'provider',
         'metadata',
         'error_message'
     ];
 
     protected $casts = [
-        'amount' => 'float',
+        'amount' => 'decimal:8',
+        'metadata' => 'array',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'metadata' => 'array'
+        'updated_at' => 'datetime'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Auto-generate reference if not provided
+        static::creating(function ($transaction) {
+            if (!$transaction->reference) {
+                $transaction->reference = strtoupper(
+                    ($transaction->provider ?? 'TX') . '_' .
+                    Str::random(12) . '_' .
+                    time()
+                );
+            }
+        });
+    }
 
     /**
      * Get the user that owns the transaction.
@@ -62,7 +81,7 @@ class Transaction extends Model
      */
     public function scopeOfType($query, $type)
     {
-        return $query->where('transaction_type', $type);
+        return $query->where('type', $type);
     }
 
     /**

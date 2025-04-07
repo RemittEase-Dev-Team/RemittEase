@@ -41,21 +41,8 @@ class DepositController extends Controller
                 'metadata' => 'nullable|array'
             ]);
 
-            // Create transaction record
-            $transaction = Transaction::create([
-                'user_id' => auth()->id(),
-                'provider' => $validated['provider'],
-                'external_id' => $validated['transaction_id'],
-                'amount' => $validated['amount'],
-                'currency' => $validated['currency'],
-                'recipient_address' => $validated['wallet_address'],
-                'type' => 'deposit',
-                'status' => 'pending',
-                'metadata' => $validated['metadata'] ?? [],
-                'error_message' => null
-            ]);
-
-            // Handle provider-specific logic
+            // Handle provider-specific logic first
+            $response = null;
             switch($validated['provider']) {
                 case 'moonpay':
                     $response = $this->moonpayService->createTransaction($validated);
@@ -68,37 +55,41 @@ class DepositController extends Controller
                     break;
             }
 
-            if ($response['success']) {
-                // Update transaction with provider response
-                $transaction->update([
-                    'metadata' => array_merge($transaction->metadata ?? [], [
-                        'provider_response' => $response['data']
-                    ])
-                ]);
-
+            if (!$response || !$response['success']) {
                 return response()->json([
-                    'success' => true,
-                    'message' => 'Transaction initiated successfully',
-                    'transaction' => [
-                        'id' => $transaction->external_id,
-                        'status' => $transaction->status,
-                        'amount' => $transaction->amount,
-                        'currency' => $transaction->currency,
-                        'timestamp' => $transaction->created_at->toISOString()
-                    ]
-                ]);
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Failed to initiate transaction'
+                ], 400);
             }
 
-            // If provider request failed, update transaction status
-            $transaction->update([
-                'status' => 'failed',
-                'error_message' => $response['message'] ?? 'Failed to initiate transaction'
+            // Create transaction record only after successful provider response
+            $transaction = Transaction::create([
+                'user_id' => auth()->id(),
+                'provider' => $validated['provider'],
+                'external_id' => $validated['transaction_id'],
+                'amount' => $validated['amount'],
+                'currency' => $validated['currency'],
+                'recipient_address' => $validated['wallet_address'],
+                'type' => 'deposit',
+                'status' => 'pending',
+                'reference' => uniqid('TXN_' . strtoupper($validated['provider']) . '_', true),
+                'metadata' => array_merge($validated['metadata'] ?? [], [
+                    'provider_response' => $response['data']
+                ]),
+                'error_message' => null
             ]);
 
             return response()->json([
-                'success' => false,
-                'message' => $response['message'] ?? 'Failed to initiate transaction'
-            ], 400);
+                'success' => true,
+                'message' => 'Transaction initiated successfully',
+                'transaction' => [
+                    'id' => $transaction->external_id,
+                    'status' => $transaction->status,
+                    'amount' => $transaction->amount,
+                    'currency' => $transaction->currency,
+                    'timestamp' => $transaction->created_at->toISOString()
+                ]
+            ]);
 
         } catch (\Exception $e) {
             Log::error('Fiat Deposit Initiation Error', [

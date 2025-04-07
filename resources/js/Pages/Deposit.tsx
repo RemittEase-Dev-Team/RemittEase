@@ -132,21 +132,36 @@ const Deposit: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   const handleMoonPayTransaction = async (data: any) => {
     try {
-      // First, record the transaction
+      // Set initial transaction status
+      setTransactionStatus({
+        id: data.id,
+        status: 'pending',
+        amount: data.baseCurrencyAmount,
+        currency: data.baseCurrencyCode,
+        timestamp: new Date().toISOString()
+      });
+
+      // Record the transaction
       const response = await axios.post(route('deposit.initiate-fiat-deposit'), {
         provider: 'moonpay',
-        currency: 'XLM',
-        amount: data.amount,
+        currency: data.baseCurrencyCode,
+        amount: data.baseCurrencyAmount,
         wallet_address: wallet.public_key,
         transaction_id: data.id,
         metadata: {
           moonpay_data: data,
-          network: 'stellar'
+          network: 'stellar',
+          base_currency: data.baseCurrencyCode,
+          base_amount: data.baseCurrencyAmount,
+          payment_method: data.paymentMethod,
+          payment_method_id: data.paymentMethodId,
+          status: data.status,
+          created_at: data.createdAt
         }
       });
 
       if (response.data.success) {
-        // Set initial transaction status
+        // Update transaction status with the recorded transaction
         setTransactionStatus({
           id: response.data.transaction.id,
           status: response.data.transaction.status,
@@ -160,27 +175,21 @@ const Deposit: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       } else {
         const errorMessage = response.data.message || 'Failed to record transaction';
         setMoonpayError(errorMessage);
-        setTransactionStatus({
-          id: data.id,
+        setTransactionStatus(prev => prev ? {
+          ...prev,
           status: 'failed',
-          amount: data.amount,
-          currency: 'XLM',
-          timestamp: new Date().toISOString(),
           error: errorMessage
-        });
+        } : null);
       }
     } catch (error: any) {
       console.error('Failed to record MoonPay transaction:', error);
       const errorMessage = error.response?.data?.message || 'Failed to record transaction';
       setMoonpayError(errorMessage);
-      setTransactionStatus({
-        id: data.id,
+      setTransactionStatus(prev => prev ? {
+        ...prev,
         status: 'failed',
-        amount: data.amount,
-        currency: 'XLM',
-        timestamp: new Date().toISOString(),
         error: errorMessage
-      });
+      } : null);
     }
   };
 

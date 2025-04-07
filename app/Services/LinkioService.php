@@ -41,31 +41,37 @@ class LinkioService
             ]);
 
             if ($response->successful()) {
+                $responseData = $response->json();
                 return [
                     'success' => true,
-                    'data' => $response->json()
+                    'data' => $responseData,
+                    'message' => 'Transaction created successfully'
                 ];
             }
 
+            $errorData = $response->json();
             Log::error('Linkio API Error', [
                 'status' => $response->status(),
-                'response' => $response->json()
+                'response' => $errorData
             ]);
 
             return [
                 'success' => false,
-                'message' => 'Failed to create transaction'
+                'message' => $errorData['message'] ?? 'Failed to create transaction',
+                'data' => $errorData
             ];
 
         } catch (\Exception $e) {
             Log::error('Linkio Service Error', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $data
             ]);
 
             return [
                 'success' => false,
-                'message' => 'An error occurred while processing your request'
+                'message' => 'An error occurred while processing your request',
+                'data' => ['error' => $e->getMessage()]
             ];
         }
     }
@@ -82,28 +88,38 @@ class LinkioService
                 $data = $response->json();
                 return [
                     'success' => true,
-                    'status' => $data['status'],
+                    'status' => $data['status'] ?? 'pending',
                     'crypto_amount' => $data['crypto_amount'] ?? null,
-                    'error_message' => $data['error_message'] ?? null
+                    'error_message' => $data['error_message'] ?? null,
+                    'data' => $data
                 ];
             }
 
-            return [
-                'success' => false,
-                'status' => 'failed',
-                'error_message' => 'Failed to verify transaction'
-            ];
-
-        } catch (\Exception $e) {
+            $errorData = $response->json();
             Log::error('Linkio Status Check Error', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'status' => $response->status(),
+                'response' => $errorData
             ]);
 
             return [
                 'success' => false,
                 'status' => 'failed',
-                'error_message' => 'An error occurred while checking transaction status'
+                'error_message' => $errorData['message'] ?? 'Failed to verify transaction',
+                'data' => $errorData
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Linkio Status Check Error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'transaction_id' => $transactionId
+            ]);
+
+            return [
+                'success' => false,
+                'status' => 'failed',
+                'error_message' => 'An error occurred while checking transaction status',
+                'data' => ['error' => $e->getMessage()]
             ];
         }
     }
