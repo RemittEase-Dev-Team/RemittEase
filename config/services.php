@@ -47,8 +47,7 @@ return [
 
     'yellowcard' => [
         'api_key' => env('YELLOWCARD_API_KEY'),
-        'widget_key' => env('YELLOWCARD_WIDGET_KEY'),
-        'webhook_secret' => env('YELLOWCARD_WEBHOOK_SECRET'),
+        'url' => env('YELLOWCARD_API_URL', 'https://api.yellowcard.com'),
         'sandbox' => env('YELLOWCARD_SANDBOX', true),
     ],
 
@@ -63,6 +62,7 @@ return [
         'base_url' => env('FLUTTERWAVE_BASE_URL', 'https://api.flutterwave.com'),
         'encryption_key' => env('FLUTTERWAVE_ENCRYPTION_KEY'),
         'webhook_secret' => env('FLUTTERWAVE_WEBHOOK_SECRET'),
+        'is_live' => env('FLUTTERWAVE_IS_LIVE', false),
         'sandbox' => env('FLUTTERWAVE_SANDBOX', true),
     ],
 

@@ -4,74 +4,175 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\Transaction;
+use App\Events\TransferCompleted;
 
 class FlutterwaveService
 {
-    protected $baseUrl;
-    protected $secretKey;
     protected $publicKey;
+    protected $secretKey;
+    protected $baseUrl;
+    protected $encryptionKey;
+    protected $webhookSecret;
+    protected $sandbox;
 
     public function __construct()
     {
-        $this->baseUrl = config('services.flutterwave.base_url');
-        $this->secretKey = config('services.flutterwave.secret_key');
         $this->publicKey = config('services.flutterwave.public_key');
+        $this->secretKey = config('services.flutterwave.secret_key');
+        $this->baseUrl = config('services.flutterwave.base_url');
+        $this->encryptionKey = config('services.flutterwave.encryption_key');
+        $this->webhookSecret = config('services.flutterwave.webhook_secret');
+        $this->sandbox = config('services.flutterwave.sandbox', true);
     }
 
-    public function createTransfer(array $data): array
+    /**
+     * Initiate a transfer
+     */
+    public function initiateTransfer(Transaction $transaction, array $config = [])
+    {
+        try {
+            // Use provided config or fallback to environment variables
+            $publicKey = $config['public_key'] ?? config('services.flutterwave.public_key');
+            $secretKey = $config['secret_key'] ?? config('services.flutterwave.secret_key');
+            $encryptionKey = $config['encryption_key'] ?? config('services.flutterwave.encryption_key');
+            $isLive = $config['is_live'] ?? config('services.flutterwave.is_live', false);
+
+            if (!$publicKey || !$secretKey || !$encryptionKey) {
+                throw new \Exception('Flutterwave configuration is incomplete');
+            }
+
+            $baseUrl = $isLive ? 'https://api.flutterwave.com/v3' : 'https://sandbox.flutterwave.com/v3';
+
+            $headers = [
+                'Authorization' => 'Bearer ' . $secretKey,
+                'Content-Type' => 'application/json'
+            ];
+
+            $payload = [
+                'account_bank' => $transaction->bank_code,
+                'account_number' => $transaction->recipient_address,
+                'amount' => $transaction->amount,
+                'narration' => $transaction->memo,
+                'currency' => $transaction->currency,
+                'reference' => $transaction->reference,
+                'callback_url' => route('webhooks.flutterwave'),
+                'metadata' => [
+                    'transaction_id' => $transaction->id,
+                    'user_id' => $transaction->user_id
+                ]
+            ];
+
+            $response = Http::withHeaders($headers)
+                ->post($baseUrl . '/transfers', $payload);
+
+            if (!$response->successful()) {
+                throw new \Exception('Flutterwave API error: ' . $response->body());
+            }
+
+            $data = $response->json();
+
+            return [
+                'success' => true,
+                'reference' => $data['data']['reference'],
+                'message' => 'Transfer initiated successfully'
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    public function verifyTransfer(string $reference): array
     {
         try {
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->secretKey,
                 'Content-Type' => 'application/json',
-            ])->post($this->baseUrl . '/transfers', [
-                'account_bank' => $data['bank_code'],
-                'account_number' => $data['account_number'],
-                'amount' => $data['amount'],
-                'currency' => $data['currency'],
-                'narration' => $data['narration'] ?? 'RemittEase Transfer',
-                'reference' => $data['reference'],
-                'callback_url' => route('api.flutterwave.webhook'),
-                'debit_currency' => 'USD'
-            ]);
+            ])->get($this->baseUrl . '/v3/transfers/' . $reference);
 
-            $result = $response->json();
-
-            if ($response->successful()) {
-                Log::info('Flutterwave transfer initiated', [
-                    'reference' => $data['reference'],
-                    'response' => $result
-                ]);
-
+            if (!$response->successful()) {
                 return [
-                    'success' => true,
-                    'data' => $result['data'],
-                    'message' => $result['message']
+                    'success' => false,
+                    'message' => 'Failed to verify transfer'
                 ];
             }
 
-            Log::error('Flutterwave transfer failed', [
-                'reference' => $data['reference'],
-                'response' => $result
-            ]);
+            $data = $response->json();
+            $status = $data['data']['status'] ?? 'pending';
 
             return [
-                'success' => false,
-                'message' => $result['message'] ?? 'Transfer failed',
-                'errors' => $result['errors'] ?? []
+                'success' => true,
+                'status' => $status,
+                'message' => $this->getStatusMessage($status)
             ];
 
         } catch (\Exception $e) {
-            Log::error('Flutterwave transfer exception', [
-                'error' => $e->getMessage()
-            ]);
+            Log::error('Flutterwave verification error: ' . $e->getMessage());
 
             return [
                 'success' => false,
-                'message' => 'An error occurred while processing the transfer',
-                'errors' => [$e->getMessage()]
+                'message' => 'Verification failed: ' . $e->getMessage()
             ];
         }
+    }
+
+    public function handleWebhook(array $payload, string $signature): bool
+    {
+        // Verify webhook signature
+        if (!$this->verifyWebhookSignature($payload, $signature)) {
+            Log::error('Invalid Flutterwave webhook signature');
+            return false;
+        }
+
+        try {
+            $event = $payload['event'] ?? '';
+            $data = $payload['data'] ?? [];
+
+            if ($event === 'transfer.completed') {
+                $transaction = Transaction::where('flutterwave_reference', $data['reference'])->first();
+
+                if ($transaction) {
+                    $transaction->update([
+                        'flutterwave_status' => 'completed',
+                        'status' => 'completed'
+                    ]);
+
+                    // Dispatch completion event
+                    event(new TransferCompleted($transaction));
+                }
+            }
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Webhook processing error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    protected function verifyWebhookSignature(array $payload, string $signature): bool
+    {
+        $computedSignature = hash_hmac(
+            'sha512',
+            json_encode($payload),
+            $this->webhookSecret
+        );
+
+        return hash_equals($computedSignature, $signature);
+    }
+
+    protected function getStatusMessage(string $status): string
+    {
+        return match ($status) {
+            'successful' => 'Transfer completed successfully',
+            'failed' => 'Transfer failed',
+            'pending' => 'Transfer is processing',
+            default => 'Unknown transfer status'
+        };
     }
 
     public function getBanks(string $country): array
@@ -169,10 +270,13 @@ class FlutterwaveService
                 'bank_code' => $bankCode
             ]);
 
+            // Use the correct base URL based on sandbox mode
+            $baseUrl = $this->sandbox ? 'https://sandbox.flutterwave.com/v3' : 'https://api.flutterwave.com/v3';
+
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->secretKey,
                 'Content-Type' => 'application/json',
-            ])->post($this->baseUrl . '/accounts/resolve', [
+            ])->post($baseUrl . '/accounts/resolve', [
                 'account_number' => $accountNumber,
                 'account_bank' => $bankCode
             ]);
@@ -198,7 +302,11 @@ class FlutterwaveService
 
                 return [
                     'success' => true,
-                    'data' => $result['data'],
+                    'data' => [
+                        'account_name' => $result['data']['account_name'] ?? '',
+                        'account_number' => $result['data']['account_number'] ?? '',
+                        'bank_code' => $result['data']['bank_code'] ?? ''
+                    ],
                     'message' => 'Account verified successfully'
                 ];
             }

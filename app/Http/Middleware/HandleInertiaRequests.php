@@ -31,14 +31,25 @@ class HandleInertiaRequests extends Middleware
     {
         return array_merge(parent::share($request), [
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user() ? [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    'role' => $request->user()->role,
+                ] : null,
             ],
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
+                'message' => fn () => $request->session()->get('message'),
                 'error' => fn () => $request->session()->get('error'),
-                'warning' => fn () => $request->session()->get('warning'),
-                'info' => fn () => $request->session()->get('info'),
+            ],
+            'errors' => fn () => $this->resolveValidationErrors($request),
+            'config' => [
+                'yellowCard' => [
+                    'apiKey' => config('services.yellowcard.api_key'),
+                    'apiUrl' => config('services.yellowcard.url'),
+                    'sandbox' => config('services.yellowcard.sandbox'),
+                ],
             ],
         ]);
     }
-}
+} 

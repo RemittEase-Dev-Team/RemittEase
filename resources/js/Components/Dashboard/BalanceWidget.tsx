@@ -16,9 +16,24 @@ interface BalanceData {
   token: string;   // Your token balance
 }
 
+interface ExchangeRates {
+  [key: string]: number;
+  XLM: number;
+  USD: number;
+  EUR: number;
+  GBP: number;
+  NGN: number;
+}
+
 interface BalanceWidgetProps {
   wallet: Wallet | null;
-  balance: any;
+  balance: {
+    [key: string]: {
+      amount: number;
+      change: number;
+      percentage: number;
+    };
+  };
   currencyMain: CurrencyCode;
   setCurrencyMain: (currency: CurrencyCode) => void;
   onDeposit: () => void;
@@ -27,12 +42,21 @@ interface BalanceWidgetProps {
   moonpayEnabled: boolean;
   balances?: BalanceData;
   isLoading?: boolean;
+  exchangeRates?: ExchangeRates;
 }
 
 const defaultBalances: BalanceData = {
   amount: '0',
   native: '0',
   token: '0'
+};
+
+const defaultExchangeRates: ExchangeRates = {
+  XLM: 1,
+  USD: 1,
+  EUR: 1,
+  GBP: 1,
+  NGN: 1
 };
 
 const BalanceWidget: React.FC<BalanceWidgetProps> = ({
@@ -45,10 +69,43 @@ const BalanceWidget: React.FC<BalanceWidgetProps> = ({
   onSend,
   moonpayEnabled,
   balances = defaultBalances,
-  isLoading = false
+  isLoading = false,
+  exchangeRates = defaultExchangeRates
 }) => {
   // Use the provided balances or default to 0s if undefined
   const currentBalances = balances || defaultBalances;
+
+  // Convert balance based on selected currency
+  const convertBalance = (amount: number, fromCurrency: string, toCurrency: string) => {
+    try {
+      const rate = exchangeRates[toCurrency] / exchangeRates[fromCurrency];
+      return amount * rate;
+    } catch (error) {
+      console.error('Error converting balance:', error);
+      return amount;
+    }
+  };
+
+  // Format currency value
+  const formatCurrencyValue = (value: number, currency: string) => {
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(value);
+    } catch (error) {
+      console.error('Error formatting currency:', error);
+      return value.toString();
+    }
+  };
+
+  // Get converted balance
+  const convertedBalance = wallet ? convertBalance(wallet.balance, 'XLM', currencyMain) : 0;
+
+  // Get current balance data safely
+  const currentBalanceData = balance[currencyMain] || { amount: 0, change: 0, percentage: 0 };
 
   return (
     <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl p-5 shadow-sm md:col-span-1 lg:col-span-1">
@@ -68,19 +125,17 @@ const BalanceWidget: React.FC<BalanceWidgetProps> = ({
           </select>
         </div>
         <div className="text-3xl font-bold mb-1 flex items-center dark:text-gray-100">
-          {typeof wallet === 'object' && wallet !== null && 'balance' in wallet
-            ? Number(wallet.balance).toLocaleString()
-            : '0'}
+          {formatCurrencyValue(convertedBalance, currencyMain)}
         </div>
         <div
           className={`text-sm flex items-center gap-1 ${
-            balance[currencyMain]?.change >= 0 ? 'text-green-600' : 'text-red-600'
+            currentBalanceData.change >= 0 ? 'text-green-600' : 'text-red-600'
           }`}
         >
-          {balance[currencyMain]?.change >= 0
-            ? `+${balance[currencyMain]?.change?.toLocaleString() || '0'}`
-            : `-${Math.abs(balance[currencyMain]?.change || 0).toLocaleString()}`}
-          <span className="ml-2">{(balance[currencyMain]?.percentage || 0).toFixed(2)}%</span>
+          {currentBalanceData.change >= 0
+            ? `+${formatCurrencyValue(currentBalanceData.change, currencyMain)}`
+            : `-${formatCurrencyValue(Math.abs(currentBalanceData.change), currencyMain)}`}
+          <span className="ml-2">{currentBalanceData.percentage.toFixed(2)}%</span>
         </div>
       </div>
 
@@ -93,12 +148,6 @@ const BalanceWidget: React.FC<BalanceWidgetProps> = ({
             Deposit
           </button>
         )}
-        {/* <button
-          onClick={onWithdraw}
-          className="bg-blue-700 hover:bg-blue-600 text-white py-2 px-4 rounded-lg flex-1 font-medium"
-        >
-          Withdraw
-        </button> */}
         <button
           onClick={onSend}
           className="bg-green-700 hover:bg-green-600 text-white py-2 px-4 rounded-lg flex-1 font-medium"
@@ -116,9 +165,12 @@ const BalanceWidget: React.FC<BalanceWidgetProps> = ({
               <span>{cur}</span>
             </div>
             <div className="font-medium">
-              {typeof data === 'object' && data !== null && 'amount' in data
-                ? Number(data.amount).toLocaleString()
-                : '0'}
+              {formatCurrencyValue(
+                typeof data === 'object' && data !== null && 'amount' in data
+                  ? Number(data.amount)
+                  : 0,
+                cur
+              )}
             </div>
           </div>
         ))}
