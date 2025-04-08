@@ -221,6 +221,7 @@ export default function SendModal({
       try {
         // Fetch banks for selected country
         const banksResponse = await axios.get(route('remittance.banks'), {
+
           params: { country: selectedCountry }
         });
         if (banksResponse.data.success) {
@@ -250,7 +251,7 @@ export default function SendModal({
 
     fetchData();
   }, [selectedCountry]);
-
+  
   const verifyAccount = async () => {
     if (!selectedBank || !accountNumber) return;
 
@@ -324,7 +325,7 @@ export default function SendModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Send Money</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Send Mone</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
             <X className="h-6 w-6" />
           </button>
@@ -337,7 +338,7 @@ export default function SendModal({
               onClick={() => setTransferType('crypto')}
               className={`flex-1 py-2 px-4 rounded ${
                 transferType === 'crypto'
-                  ? 'bg-primary-600 text-white'
+                  ? 'bg-green-500 text-white'
                   : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
               }`}
               type="button"
@@ -348,7 +349,7 @@ export default function SendModal({
               onClick={() => setTransferType('cash')}
               className={`flex-1 py-2 px-4 rounded ${
                 transferType === 'cash'
-                  ? 'bg-primary-600 text-white'
+                  ? 'bg-green-500 text-white'
                   : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
               }`}
               type="button"
@@ -527,7 +528,7 @@ export default function SendModal({
             <button
               type="submit"
               disabled={isTransferring || processing}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
             >
               {isTransferring ? 'Processing...' : 'Send'}
             </button>
