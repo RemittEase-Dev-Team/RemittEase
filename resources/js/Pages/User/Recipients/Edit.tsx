@@ -8,7 +8,6 @@ import PrimaryButton from '@/Components/PrimaryButton';
 
 interface RecipientForm {
     id: number;
-    [key: string]: string | number | undefined;
     name: string;
     email: string;
     phone: string;
@@ -21,6 +20,7 @@ interface RecipientForm {
     city?: string;
     state?: string;
     postal_code?: string;
+    [key: string]: string | number | undefined;
 }
 
 interface Props {

@@ -7,7 +7,6 @@ import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 
 interface RecipientForm {
-    [key: string]: string | undefined;
     name: string;
     email: string;
     phone: string;
@@ -20,6 +19,7 @@ interface RecipientForm {
     city?: string;
     state?: string;
     postal_code?: string;
+    [key: string]: string | undefined;
 }
 
 export default function Create() {
