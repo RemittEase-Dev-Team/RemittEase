@@ -18,7 +18,7 @@
         "laravel/tinker": "^2.9",
         "lumisys/bcmath_compat": "^1.0",
         "onfido/onfido-php": "^9.0",
-        "soneso/stellar-php-sdk": "^1.6",
+        "soneso/stellar-php-sdk": "^1.7",
         "spatie/laravel-permission": "^6.15",
         "tightenco/ziggy": "^2.0"
     },

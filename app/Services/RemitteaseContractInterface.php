@@ -3,15 +3,24 @@
 namespace App\Services;
 
 use Soneso\StellarSDK\Soroban\SorobanAuthorizationEntry;
-use Soneso\StellarSDK\Soroban\Arguments\ScAddressObject;
-use Soneso\StellarSDK\Soroban\Arguments\ScUint32Object;
-use Soneso\StellarSDK\Soroban\Arguments\ScInt128Object;
-use Soneso\StellarSDK\Soroban\Arguments\ScSymbolObject;
+use Soneso\StellarSDK\Xdr\XdrSCAddress;
+use Soneso\StellarSDK\Xdr\XdrSCAddressType;
+use Soneso\StellarSDK\Xdr\XdrAccountID;
+use Soneso\StellarSDK\Xdr\XdrSCVal;
+use Soneso\StellarSDK\Xdr\XdrUInt32;
+use Soneso\StellarSDK\Xdr\XdrInt128Parts;
+use Soneso\StellarSDK\Xdr\XdrSCSpecType;
 use Soneso\StellarSDK\StellarSDK;
 use Soneso\StellarSDK\Soroban\SorobanServer;
+use Soneso\StellarSDK\Soroban\Responses\GetTransactionResponse;
 use Soneso\StellarSDK\Crypto\KeyPair;
+use Soneso\StellarSDK\TransactionBuilder;
+use Soneso\StellarSDK\InvokeHostFunctionOperation;
+use Soneso\StellarSDK\Soroban\InvokeContractHostFunction;
 use Illuminate\Support\Facades\Log;
 use Soneso\StellarSDK\Network;
+use GuzzleHttp\Client;
+use Soneso\StellarSDK\Xdr\XdrU32;
 
 class RemitteaseContractInterface
 {
@@ -70,11 +79,42 @@ class RemitteaseContractInterface
     }
 
     /**
+     * Fund a test account using Friendbot
+     */
+    public function fundTestAccount($publicKey)
+    {
+        try {
+            if (config('stellar.network', 'testnet') !== 'testnet') {
+                throw new \Exception("Friendbot funding only available on testnet");
+            }
+
+            $client = new Client();
+            $response = $client->get("https://friendbot.stellar.org?addr=" . $publicKey);
+
+            if ($response->getStatusCode() === 200) {
+                Log::info("Successfully funded test account: " . $publicKey);
+                return true;
+            }
+
+            Log::error("Failed to fund test account: " . $publicKey);
+            return false;
+        } catch (\Exception $e) {
+            Log::error('Failed to fund test account: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Register a wallet with the Remittease contract
      */
     public function registerWallet($publicKey, $userId)
     {
         try {
+            // Fund the account if on testnet
+            if (config('stellar.network', 'testnet') === 'testnet') {
+                $this->fundTestAccount($publicKey);
+            }
+
             // Get admin account
             $adminPublicKey = $this->adminKeypair->getAccountId();
             $account = $this->sdk->accounts()->account($adminPublicKey);
@@ -83,15 +123,25 @@ class RemitteaseContractInterface
             $transactionBuilder = new \Soneso\StellarSDK\TransactionBuilder($account);
 
             // Create Soroban parameters
-            $walletAddress = ScAddressObject::fromAccountId($publicKey);
-            $userIdParam = ScUint32Object::from($userId);
+            $addressType = new XdrSCAddressType(0); // 0 = SC_ADDRESS_TYPE_ACCOUNT
+            $walletAddress = new XdrSCAddress($addressType);
 
-            // Create invoke contract operation
-            $operation = \Soneso\StellarSDK\Soroban\SorobanInvokeHostFunctionOperation::forContractFn(
+            // Create XdrAccountID with the public key
+            $accountId = new XdrAccountID($publicKey);
+            $walletAddress->setAccountId($accountId);
+
+            // Create user ID parameter using XdrU32
+            $userIdParam = new XdrU32($userId);
+
+            // Create host function for contract invocation
+            $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(
                 $this->contractId,
                 "register_wallet",
                 [$walletAddress, $userIdParam]
             );
+
+            // Create operation with the host function
+            $operation = new InvokeHostFunctionOperation($hostFunction);
 
             // Add the operation to the transaction
             $transaction = $transactionBuilder
@@ -99,7 +149,11 @@ class RemitteaseContractInterface
                 ->build();
 
             // Add transaction signature
-            $transaction->sign($this->adminKeypair, $this->sdk->getNetwork());
+            if (config('stellar.network', 'testnet') === 'testnet') {
+                $transaction->sign($this->adminKeypair, Network::testnet());
+            } else {
+                $transaction->sign($this->adminKeypair, Network::public());
+            }
 
             // Submit the transaction
             $response = $this->sdk->submitTransaction($transaction);
@@ -136,14 +190,19 @@ class RemitteaseContractInterface
             $transactionBuilder = new \Soneso\StellarSDK\TransactionBuilder($account);
 
             // Create Soroban parameters
-            $walletAddress = ScAddressObject::fromAccountId($publicKey);
+            $addressType = new XdrSCAddressType(0); // 0 = SC_ADDRESS_TYPE_ACCOUNT
+            $walletAddress = new XdrSCAddress($addressType);
+            $walletAddress->setAccountId($publicKey);
 
-            // Create invoke contract operation
-            $operation = \Soneso\StellarSDK\Soroban\SorobanInvokeHostFunctionOperation::forContractFn(
+            // Create host function for contract invocation
+            $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(
                 $this->contractId,
                 "get_wallet",
                 [$walletAddress]
             );
+
+            // Create operation with the host function
+            $operation = new InvokeHostFunctionOperation($hostFunction);
 
             // Add the operation to the transaction
             $transaction = $transactionBuilder
@@ -151,7 +210,11 @@ class RemitteaseContractInterface
                 ->build();
 
             // Add transaction signature
-            $transaction->sign($this->adminKeypair, $this->sdk->getNetwork());
+            if (config('stellar.network', 'testnet') === 'testnet') {
+                $transaction->sign($this->adminKeypair, Network::testnet());
+            } else {
+                $transaction->sign($this->adminKeypair, Network::public());
+            }
 
             // Submit the transaction
             $response = $this->sdk->submitTransaction($transaction);
@@ -198,14 +261,19 @@ class RemitteaseContractInterface
             $transactionBuilder = new \Soneso\StellarSDK\TransactionBuilder($account);
 
             // Create Soroban parameters
-            $walletAddress = ScAddressObject::fromAccountId($publicKey);
+            $addressType = new XdrSCAddressType(0); // 0 = SC_ADDRESS_TYPE_ACCOUNT
+            $walletAddress = new XdrSCAddress($addressType);
+            $walletAddress->setAccountId($publicKey);
 
-            // Create invoke contract operation
-            $operation = \Soneso\StellarSDK\Soroban\SorobanInvokeHostFunctionOperation::forContractFn(
+            // Create host function for contract invocation
+            $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(
                 $this->contractId,
                 "verify_wallet",
                 [$walletAddress]
             );
+
+            // Create operation with the host function
+            $operation = new InvokeHostFunctionOperation($hostFunction);
 
             // Add the operation to the transaction
             $transaction = $transactionBuilder
@@ -213,7 +281,11 @@ class RemitteaseContractInterface
                 ->build();
 
             // Add transaction signature
-            $transaction->sign($this->adminKeypair, $this->sdk->getNetwork());
+            if (config('stellar.network', 'testnet') === 'testnet') {
+                $transaction->sign($this->adminKeypair, Network::testnet());
+            } else {
+                $transaction->sign($this->adminKeypair, Network::public());
+            }
 
             // Submit the transaction
             $response = $this->sdk->submitTransaction($transaction);
@@ -250,17 +322,23 @@ class RemitteaseContractInterface
             $transactionBuilder = new \Soneso\StellarSDK\TransactionBuilder($account);
 
             // Create Soroban parameters
-            $fromAddress = ScAddressObject::fromAccountId($fromWallet);
-            $toAddress = ScAddressObject::fromAccountId($toWallet);
-            $amountParam = ScInt128Object::fromNativeAssetAmount($amount);
-            $memoParam = ScSymbolObject::of($memo);
+            $addressType = new XdrSCAddressType(0); // 0 = SC_ADDRESS_TYPE_ACCOUNT
+            $fromAddress = new XdrSCAddress($addressType);
+            $fromAddress->setAccountId($fromWallet);
+            $toAddress = new XdrSCAddress($addressType);
+            $toAddress->setAccountId($toWallet);
+            $amountParam = new XdrInt128Parts($amount);
+            $memoParam = new XdrSCSpecType($memo);
 
-            // Create invoke contract operation
-            $operation = \Soneso\StellarSDK\Soroban\SorobanInvokeHostFunctionOperation::forContractFn(
+            // Create host function for contract invocation
+            $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(
                 $this->contractId,
                 "record_transaction",
                 [$fromAddress, $toAddress, $amountParam, $memoParam]
             );
+
+            // Create operation with the host function
+            $operation = new InvokeHostFunctionOperation($hostFunction);
 
             // Add the operation to the transaction
             $transaction = $transactionBuilder
@@ -268,7 +346,11 @@ class RemitteaseContractInterface
                 ->build();
 
             // Add transaction signature
-            $transaction->sign($this->adminKeypair, $this->sdk->getNetwork());
+            if (config('stellar.network', 'testnet') === 'testnet') {
+                $transaction->sign($this->adminKeypair, Network::testnet());
+            } else {
+                $transaction->sign($this->adminKeypair, Network::public());
+            }
 
             // Submit the transaction
             $response = $this->sdk->submitTransaction($transaction);
@@ -303,17 +385,20 @@ class RemitteaseContractInterface
             $account = $this->sdk->accounts()->account($adminPublicKey);
 
             // Create a transaction builder
-            $transactionBuilder = new \Soneso\StellarSDK\TransactionBuilder($account);
+            $transactionBuilder = new TransactionBuilder($account);
 
             // Create Soroban parameters
-            $userIdParam = ScUint32Object::from($userId);
+            $userIdParam = new XdrU32($userId);
 
-            // Create invoke contract operation
-            $operation = \Soneso\StellarSDK\Soroban\SorobanInvokeHostFunctionOperation::forContractFn(
+            // Create host function for contract invocation
+            $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(
                 $this->contractId,
                 "get_user_wallets",
                 [$userIdParam]
             );
+
+            // Create operation with the host function
+            $operation = new InvokeHostFunctionOperation($hostFunction);
 
             // Add the operation to the transaction
             $transaction = $transactionBuilder
@@ -321,7 +406,11 @@ class RemitteaseContractInterface
                 ->build();
 
             // Add transaction signature
-            $transaction->sign($this->adminKeypair, $this->sdk->getNetwork());
+            if (config('stellar.network', 'testnet') === 'testnet') {
+                $transaction->sign($this->adminKeypair, Network::testnet());
+            } else {
+                $transaction->sign($this->adminKeypair, Network::public());
+            }
 
             // Submit the transaction
             $response = $this->sdk->submitTransaction($transaction);
@@ -360,12 +449,15 @@ class RemitteaseContractInterface
             // Create a transaction builder
             $transactionBuilder = new \Soneso\StellarSDK\TransactionBuilder($account);
 
-            // Create invoke contract operation
-            $operation = \Soneso\StellarSDK\Soroban\SorobanInvokeHostFunctionOperation::forContractFn(
+            // Create host function for contract invocation
+            $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(
                 $this->contractId,
                 "wallet_count",
                 []
             );
+
+            // Create operation with the host function
+            $operation = new InvokeHostFunctionOperation($hostFunction);
 
             // Add the operation to the transaction
             $transaction = $transactionBuilder
@@ -373,7 +465,11 @@ class RemitteaseContractInterface
                 ->build();
 
             // Add transaction signature
-            $transaction->sign($this->adminKeypair, $this->sdk->getNetwork());
+            if (config('stellar.network', 'testnet') === 'testnet') {
+                $transaction->sign($this->adminKeypair, Network::testnet());
+            } else {
+                $transaction->sign($this->adminKeypair, Network::public());
+            }
 
             // Submit the transaction
             $response = $this->sdk->submitTransaction($transaction);
@@ -409,12 +505,15 @@ class RemitteaseContractInterface
             // Create a transaction builder
             $transactionBuilder = new \Soneso\StellarSDK\TransactionBuilder($account);
 
-            // Create invoke contract operation
-            $operation = \Soneso\StellarSDK\Soroban\SorobanInvokeHostFunctionOperation::forContractFn(
+            // Create host function for contract invocation
+            $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(
                 $this->contractId,
                 "version",
                 []
             );
+
+            // Create operation with the host function
+            $operation = new InvokeHostFunctionOperation($hostFunction);
 
             // Add the operation to the transaction
             $transaction = $transactionBuilder
@@ -422,7 +521,11 @@ class RemitteaseContractInterface
                 ->build();
 
             // Add transaction signature
-            $transaction->sign($this->adminKeypair, $this->sdk->getNetwork());
+            if (config('stellar.network', 'testnet') === 'testnet') {
+                $transaction->sign($this->adminKeypair, Network::testnet());
+            } else {
+                $transaction->sign($this->adminKeypair, Network::public());
+            }
 
             // Submit the transaction
             $response = $this->sdk->submitTransaction($transaction);
@@ -458,14 +561,19 @@ class RemitteaseContractInterface
             $transactionBuilder = new \Soneso\StellarSDK\TransactionBuilder($account);
 
             // Create Soroban parameters
-            $newAdminAddress = ScAddressObject::fromAccountId($newAdminPublicKey);
+            $addressType = new XdrSCAddressType(0); // 0 = SC_ADDRESS_TYPE_ACCOUNT
+            $newAdminAddress = new XdrSCAddress($addressType);
+            $newAdminAddress->setAccountId($newAdminPublicKey);
 
-            // Create invoke contract operation
-            $operation = \Soneso\StellarSDK\Soroban\SorobanInvokeHostFunctionOperation::forContractFn(
+            // Create host function for contract invocation
+            $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(
                 $this->contractId,
                 "update_admin",
                 [$newAdminAddress]
             );
+
+            // Create operation with the host function
+            $operation = new InvokeHostFunctionOperation($hostFunction);
 
             // Add the operation to the transaction
             $transaction = $transactionBuilder
@@ -473,7 +581,11 @@ class RemitteaseContractInterface
                 ->build();
 
             // Add transaction signature
-            $transaction->sign($this->adminKeypair, $this->sdk->getNetwork());
+            if (config('stellar.network', 'testnet') === 'testnet') {
+                $transaction->sign($this->adminKeypair, Network::testnet());
+            } else {
+                $transaction->sign($this->adminKeypair, Network::public());
+            }
 
             // Submit the transaction
             $response = $this->sdk->submitTransaction($transaction);
@@ -504,22 +616,34 @@ class RemitteaseContractInterface
             $account = $this->sdk->accounts()->account($adminPublicKey);
 
             // Create Soroban parameters
-            $walletAddress = ScAddressObject::fromAccountId($publicKey);
+            $addressType = new XdrSCAddressType(0); // 0 = SC_ADDRESS_TYPE_ACCOUNT
+            $walletAddress = new XdrSCAddress($addressType);
 
-            // Create invoke contract operation
-            $operation = \Soneso\StellarSDK\Soroban\SorobanInvokeHostFunctionOperation::forContractFn(
+            // Create XdrAccountID with the public key
+            $accountId = new XdrAccountID($publicKey);
+            $walletAddress->setAccountId($accountId);
+
+            // Create host function for contract invocation
+            $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(
                 $this->contractId,
                 "get_balance",
                 [$walletAddress]
             );
 
+            // Create operation with the host function
+            $operation = new InvokeHostFunctionOperation($hostFunction);
+
             // Add the operation to the transaction
-            $transaction = (new \Soneso\StellarSDK\TransactionBuilder($account))
+            $transaction = (new TransactionBuilder($account))
                 ->addOperation($operation)
                 ->build();
 
             // Add transaction signature
-            $transaction->sign($this->adminKeypair, $this->sdk->getNetwork());
+            if (config('stellar.network', 'testnet') === 'testnet') {
+                $transaction->sign($this->adminKeypair, Network::testnet());
+            } else {
+                $transaction->sign($this->adminKeypair, Network::public());
+            }
 
             // Submit the transaction
             $response = $this->sdk->submitTransaction($transaction);
@@ -540,83 +664,93 @@ class RemitteaseContractInterface
     }
 
     /**
- * Get all available tokens for a wallet from the Soroban contract
- */
-public function getAvailableTokens($publicKey)
-{
-    try {
-        // Get admin account
-        $adminPublicKey = $this->adminKeypair->getAccountId();
-        $account = $this->sdk->accounts()->account($adminPublicKey);
+     * Get all available tokens for a wallet from the Soroban contract
+     */
+    public function getAvailableTokens($publicKey)
+    {
+        try {
+            // Get admin account
+            $adminPublicKey = $this->adminKeypair->getAccountId();
+            $account = $this->sdk->accounts()->account($adminPublicKey);
 
-        // Create a transaction builder
-        $transactionBuilder = new \Soneso\StellarSDK\TransactionBuilder($account);
+            // Create a transaction builder
+            $transactionBuilder = new \Soneso\StellarSDK\TransactionBuilder($account);
 
-        // Create Soroban parameters
-        $walletAddress = ScAddressObject::fromAccountId($publicKey);
+            // Create Soroban parameters
+            $addressType = new XdrSCAddressType(0); // 0 = SC_ADDRESS_TYPE_ACCOUNT
+            $walletAddress = new XdrSCAddress($addressType);
 
-        // Create invoke contract operation
-        $operation = \Soneso\StellarSDK\Soroban\SorobanInvokeHostFunctionOperation::forContractFn(
-            $this->contractId,
-            "get_available_tokens",
-            [$walletAddress]
-        );
+            // Create XdrAccountID with the public key
+            $accountId = new XdrAccountID($publicKey);
+            $walletAddress->setAccountId($accountId);
 
-        // Add the operation to the transaction
-        $transaction = $transactionBuilder
-            ->addOperation($operation)
-            ->build();
+            // Create host function for contract invocation
+            $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(
+                $this->contractId,
+                "get_available_tokens",
+                [$walletAddress]
+            );
 
-        // Add transaction signature
-        $transaction->sign($this->adminKeypair, $this->sdk->getNetwork());
+            // Create operation with the host function
+            $operation = new InvokeHostFunctionOperation($hostFunction);
 
-        // Submit the transaction
-        $response = $this->sdk->submitTransaction($transaction);
+            // Add the operation to the transaction
+            $transaction = $transactionBuilder
+                ->addOperation($operation)
+                ->build();
 
-        if ($response->isSuccessful()) {
-            // Get the Soroban transaction data
-            $txHash = $response->getHash();
-            $sorobanTxData = $this->sorobanServer->getTransaction($txHash);
+            // Add transaction signature
+            if (config('stellar.network', 'testnet') === 'testnet') {
+                $transaction->sign($this->adminKeypair, Network::testnet());
+            } else {
+                $transaction->sign($this->adminKeypair, Network::public());
+            }
 
-            // In a real implementation, parse the XDR result to get the tokens
-            // This would depend on your contract's return format
-            // For now, returning an empty array as placeholder
+            // Submit the transaction
+            $response = $this->sdk->submitTransaction($transaction);
 
-            // You would need to implement a method to parse the result
-            return $this->parseTokensResult($sorobanTxData);
-        } else {
-            $resultCodes = $response->getExtras()->getResultCodes();
-            Log::warning("Failed to get available tokens: " . $resultCodes->getOperationResultCodes()[0]);
+            if ($response->isSuccessful()) {
+                // Get the Soroban transaction data
+                $txHash = $response->getHash();
+                $sorobanTxData = $this->sorobanServer->getTransaction($txHash);
+
+                // In a real implementation, parse the XDR result to get the tokens
+                // This would depend on your contract's return format
+                // For now, returning an empty array as placeholder
+
+                // You would need to implement a method to parse the result
+                return $this->parseTokensResult($sorobanTxData);
+            } else {
+                $resultCodes = $response->getExtras()->getResultCodes();
+                Log::warning("Failed to get available tokens: " . $resultCodes->getOperationResultCodes()[0]);
+                return [];
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get available tokens from contract: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Parse tokens result from Soroban transaction data
+     * You'll need to implement this based on your contract's return format
+     */
+    protected function parseTokensResult($sorobanTxData)
+    {
+        // Example implementation - replace with actual parsing logic
+        if ($sorobanTxData->getStatus() !== "SUCCESS") {
             return [];
         }
 
-    } catch (\Exception $e) {
-        Log::error('Failed to get available tokens from contract: ' . $e->getMessage());
-        return [];
+        // Here you would parse the result based on your contract's return format
+        // This is just a placeholder implementation
+        return [
+            [
+                'code' => 'XLM',
+                'balance' => '0',
+                'contract_id' => null
+            ]
+        ];
     }
-}
-
-/**
- * Parse tokens result from Soroban transaction data
- * You'll need to implement this based on your contract's return format
- */
-protected function parseTokensResult($sorobanTxData)
-{
-    // Example implementation - replace with actual parsing logic
-    if ($sorobanTxData->getStatus() !== "SUCCESS") {
-        return [];
-    }
-
-    // Here you would parse the result based on your contract's return format
-    // This is just a placeholder implementation
-    return [
-        [
-            'code' => 'XLM',
-            'balance' => '0',
-            'contract_id' => null
-        ]
-    ];
-}
-
-
 }

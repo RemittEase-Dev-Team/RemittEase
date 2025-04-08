@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cfa4c8b9fdf5c20a8dd73c506fff7de8",
+    "content-hash": "55319f355c964a673a17280588458209",
     "packages": [
         {
             "name": "brick/math",
@@ -3981,16 +3981,16 @@
         },
         {
             "name": "soneso/stellar-php-sdk",
-            "version": "1.6.2",
+            "version": "1.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Soneso/stellar-php-sdk.git",
-                "reference": "3a8626a47a23bffd55edc4baf2f965e4048c7786"
+                "reference": "2dc8bce8b9da4f4eedd9b9bdc97493aef021fd81"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Soneso/stellar-php-sdk/zipball/3a8626a47a23bffd55edc4baf2f965e4048c7786",
-                "reference": "3a8626a47a23bffd55edc4baf2f965e4048c7786",
+                "url": "https://api.github.com/repos/Soneso/stellar-php-sdk/zipball/2dc8bce8b9da4f4eedd9b9bdc97493aef021fd81",
+                "reference": "2dc8bce8b9da4f4eedd9b9bdc97493aef021fd81",
                 "shasum": ""
             },
             "require": {
@@ -4025,9 +4025,9 @@
             "description": "Stellar PHP SDK for the Stellar Network",
             "support": {
                 "issues": "https://github.com/Soneso/stellar-php-sdk/issues",
-                "source": "https://github.com/Soneso/stellar-php-sdk/tree/1.6.2"
+                "source": "https://github.com/Soneso/stellar-php-sdk/tree/1.7.0"
             },
-            "time": "2025-03-05T08:49:52+00:00"
+            "time": "2025-03-10T14:41:23+00:00"
         },
         {
             "name": "spatie/laravel-permission",

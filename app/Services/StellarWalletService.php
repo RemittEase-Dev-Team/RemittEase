@@ -161,28 +161,59 @@ class StellarWalletService
      */
     public function sendPayment(Wallet $senderWallet, $destinationAddress, $amount, $assetCode = 'XLM')
     {
-        // Decrypt the secret key
-        $secretKey = decrypt($senderWallet->secret_key);
-        $sourceKeypair = KeyPair::fromSecretSeed($secretKey);
-
         try {
-            // Get the account sequence number
+            // Decrypt the secret key
+            $secretKey = decrypt($senderWallet->secret_key);
+            $sourceKeypair = KeyPair::fromSeed($secretKey);
+
+            // Get the account
             $account = $this->sdk->accounts()->account($senderWallet->public_key);
 
-            // Create transaction
+            // Check if destination account exists
+            try {
+                $this->sdk->accounts()->account($destinationAddress);
+            } catch (\Exception $e) {
+                throw new \Exception('Destination account does not exist');
+            }
+
+            // Check if sender has sufficient balance
+            $senderBalance = 0;
+            foreach ($account->getBalances() as $balance) {
+                if ($balance->getAssetType() === 'native') {
+                    $senderBalance = floatval($balance->getBalance());
+                    break;
+                }
+            }
+
+            // Ensure minimum XLM reserve (2 XLM) plus transaction fee (0.00001 XLM)
+            $minimumBalance = 2.00001;
+            $totalRequired = $amount + $minimumBalance;
+
+            if ($senderBalance < $totalRequired) {
+                throw new \Exception(
+                    "Insufficient balance. Required: {$totalRequired} XLM (including 2 XLM reserve), Available: {$senderBalance} XLM"
+                );
+            }
+
+            // Create the transaction
             $transaction = (new \Soneso\StellarSDK\TransactionBuilder($account))
-                ->addOperation(
-                    \Soneso\StellarSDK\PaymentOperation::native(
-                        $destinationAddress,
-                        $amount
-                    )
+                ->addOperation((new \Soneso\StellarSDK\PaymentOperationBuilder(
+                    $destinationAddress,
+                    \Soneso\StellarSDK\Asset::native(),
+                    strval($amount) // Convert to string to avoid precision issues
+                ))->build()
                 )
+                ->addMemo(\Soneso\StellarSDK\Memo::text('RemittEase Transfer'))
+                ->setTimeBounds(new \Soneso\StellarSDK\TimeBounds(null, time() + 60)) // 60 seconds timeout
                 ->build();
 
-            // Sign the transaction
-            $transaction->sign($sourceKeypair, $this->sdk->getNetwork());
+            // Get the correct network
+            $network = $this->network === 'testnet'
+                ? \Soneso\StellarSDK\Network::testnet()
+                : \Soneso\StellarSDK\Network::public();
 
-            // Submit the transaction
+            // Sign and submit the transaction
+            $transaction->sign($sourceKeypair, $network);
             $response = $this->sdk->submitTransaction($transaction);
 
             if ($response->isSuccessful()) {
@@ -195,7 +226,6 @@ class StellarWalletService
                         'payment'
                     );
                 } catch (\Exception $e) {
-                    // Log the error but continue - the blockchain transaction was successful
                     Log::warning('Failed to record transaction in contract: ' . $e->getMessage());
                 }
 
@@ -204,13 +234,17 @@ class StellarWalletService
                     'hash' => $response->getHash(),
                     'message' => 'Payment sent successfully'
                 ];
-            } else {
-                $errorCodes = $response->getExtras()->getResultCodes();
-                throw new \Exception('Transaction failed: ' . json_encode($errorCodes));
             }
+
+            // If we get here, the transaction failed
+            $resultCodes = $response->getExtras()->getResultCodes();
+            $errorMessage = 'Transaction failed: ' . json_encode($resultCodes);
+            Log::error('Stellar transaction failed: ' . $errorMessage);
+            throw new \Exception($errorMessage);
+
         } catch (\Exception $e) {
-            Log::error('Failed to send payment: ' . $e->getMessage());
-            throw $e;
+            Log::error('Payment failed: ' . $e->getMessage());
+            throw new \Exception('Payment failed: ' . $e->getMessage());
         }
     }
 

@@ -417,7 +417,6 @@ class RemittanceController extends Controller
                 ]);
         }
     }
-<<<<<<< HEAD
 
     /**
      * Get current exchange rates
@@ -485,6 +484,3 @@ class RemittanceController extends Controller
         return $amountInUSD / $xlmRate;
     }
 }
-=======
-}
->>>>>>> parent of f601abb (fixed stellar transfer issues)
