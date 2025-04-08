@@ -168,6 +168,7 @@ class StellarWalletService
 
             // Get the account
             $account = $this->sdk->accounts()->account($senderWallet->public_key);
+            $sequence = $account->getSequenceNumber();
 
             // Check if destination account exists
             try {
@@ -187,7 +188,7 @@ class StellarWalletService
 
             // Ensure minimum XLM reserve (2 XLM) plus transaction fee (0.00001 XLM)
             $minimumBalance = 2.00001;
-            $totalRequired = $amount + $minimumBalance;
+            $totalRequired = floatval($amount) + $minimumBalance;
 
             if ($senderBalance < $totalRequired) {
                 throw new \Exception(
@@ -195,53 +196,70 @@ class StellarWalletService
                 );
             }
 
-            // Create the transaction
-            $transaction = (new \Soneso\StellarSDK\TransactionBuilder($account))
-                ->addOperation((new \Soneso\StellarSDK\PaymentOperationBuilder(
-                    $destinationAddress,
-                    \Soneso\StellarSDK\Asset::native(),
-                    strval($amount) // Convert to string to avoid precision issues
-                ))->build()
-                )
-                ->addMemo(\Soneso\StellarSDK\Memo::text('RemittEase Transfer'))
-                ->setTimeBounds(new \Soneso\StellarSDK\TimeBounds(null, time() + 60)) // 60 seconds timeout
-                ->build();
+            // Format amount to 7 decimal places (Stellar's precision)
+            $formattedAmount = number_format($amount, 7, '.', '');
 
             // Get the correct network
             $network = $this->network === 'testnet'
                 ? \Soneso\StellarSDK\Network::testnet()
                 : \Soneso\StellarSDK\Network::public();
 
+            // Set base fee (100 stroops = 0.00001 XLM)
+            $baseFee = 100;
+
+            // Create the transaction
+            $transaction = (new \Soneso\StellarSDK\TransactionBuilder($account))
+                ->setBaseFee($baseFee)
+                ->addOperation(
+                    (new \Soneso\StellarSDK\PaymentOperationBuilder(
+                        $destinationAddress,
+                        \Soneso\StellarSDK\Asset::native(),
+                        $formattedAmount
+                    ))->build()
+                )
+                ->addMemo(\Soneso\StellarSDK\Memo::text('RemittEase Transfer'))
+                ->setTimeout(180)
+                ->build();
+
             // Sign and submit the transaction
             $transaction->sign($sourceKeypair, $network);
-            $response = $this->sdk->submitTransaction($transaction);
 
-            if ($response->isSuccessful()) {
-                // Record the transaction in the contract
-                try {
-                    $this->contractInterface->recordTransaction(
-                        $senderWallet->public_key,
-                        $destinationAddress,
-                        $amount,
-                        'payment'
-                    );
-                } catch (\Exception $e) {
-                    Log::warning('Failed to record transaction in contract: ' . $e->getMessage());
+            // Submit with detailed response
+            try {
+                $response = $this->sdk->submitTransaction($transaction);
+
+                if ($response->isSuccessful()) {
+                    // Record the transaction in the contract
+                    try {
+                        $this->contractInterface->recordTransaction(
+                            $senderWallet->public_key,
+                            $destinationAddress,
+                            $amount,
+                            'payment'
+                        );
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to record transaction in contract: ' . $e->getMessage());
+                    }
+
+                    return [
+                        'success' => true,
+                        'hash' => $response->getHash(),
+                        'message' => 'Payment sent successfully'
+                    ];
                 }
 
-                return [
-                    'success' => true,
-                    'hash' => $response->getHash(),
-                    'message' => 'Payment sent successfully'
-                ];
+                // If we get here, the transaction failed
+                $resultCodes = $response->getExtras()->getResultCodes();
+                $errorMessage = 'Transaction failed with codes: ' . json_encode([
+                    'transaction' => $resultCodes->getTransactionResultCode(),
+                    'operations' => $resultCodes->getOperationResultCodes()
+                ]);
+                Log::error('Stellar transaction failed: ' . $errorMessage);
+                throw new \Exception($errorMessage);
+            } catch (\Exception $e) {
+                Log::error('Transaction submission failed: ' . $e->getMessage());
+                throw new \Exception('Transaction submission failed: ' . $e->getMessage());
             }
-
-            // If we get here, the transaction failed
-            $resultCodes = $response->getExtras()->getResultCodes();
-            $errorMessage = 'Transaction failed: ' . json_encode($resultCodes);
-            Log::error('Stellar transaction failed: ' . $errorMessage);
-            throw new \Exception($errorMessage);
-
         } catch (\Exception $e) {
             Log::error('Payment failed: ' . $e->getMessage());
             throw new \Exception('Payment failed: ' . $e->getMessage());

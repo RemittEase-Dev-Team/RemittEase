@@ -277,7 +277,6 @@ class RemittanceController extends Controller
             // Convert amount to float for proper comparison
             $amount = floatval($validated['amount']);
             $currency = $validated['currency'];
-            $transactionFee = floatval($settings->transaction_fee ?? 0.025); // Default 2.5%
             $minAmount = floatval($settings->min_transaction_limit ?? 10);
             $maxAmount = floatval($settings->max_transaction_limit ?? 10000);
 
@@ -292,8 +291,7 @@ class RemittanceController extends Controller
             \Log::info('Transaction limits:', [
                 'amount_in_usd' => $amountInUSD,
                 'min' => $minAmount,
-                'max' => $maxAmount,
-                'fee' => $transactionFee
+                'max' => $maxAmount
             ]);
 
             // Validate amount against limits (in USD)
@@ -321,23 +319,29 @@ class RemittanceController extends Controller
                 ]);
             }
 
-            // Calculate fees and total amount
-            $feeAmount = $amount * $transactionFee;
+            // Calculate fees (flat $2 USD fee)
+            $feeInUSD = 2.00; // Flat $2 USD fee
+            $feeAmount = $this->convertFromUSD($feeInUSD, $currency);
             $totalAmount = $amount + $feeAmount;
 
             \Log::info('Calculated amounts:', [
                 'amount' => $amount,
-                'fee' => $feeAmount,
+                'fee_usd' => $feeInUSD,
+                'fee_in_currency' => $feeAmount,
                 'total' => $totalAmount,
                 'currency' => $currency
             ]);
 
             // Convert total amount to XLM for admin wallet transfer
-            $totalAmountInXLM = $this->convertToXLM($totalAmount, $currency);
+            $amountInXLM = $this->convertToXLM($amount, $currency);
+            $feeInXLM = $this->convertToXLM($feeAmount, $currency);
+            $totalAmountInXLM = $amountInXLM + $feeInXLM;
+
             \Log::info('Amount in XLM:', [
-                'total_amount' => $totalAmount,
-                'currency' => $currency,
-                'amount_in_xlm' => $totalAmountInXLM
+                'amount_xlm' => $amountInXLM,
+                'fee_xlm' => $feeInXLM,
+                'total_xlm' => $totalAmountInXLM,
+                'currency' => $currency
             ]);
 
             // Check if user has sufficient balance in XLM
@@ -506,8 +510,7 @@ class RemittanceController extends Controller
      */
     private function getExchangeRates()
     {
-        // Current market rates as of April 2025
-        // TODO: Replace with real-time rates from an API
+        // Current market rates
         return [
             'NGN' => 1/1500.0,    // 1 USD = 1500 NGN
             'GHS' => 1/12.50,     // 1 USD = 12.50 GHS
@@ -515,7 +518,7 @@ class RemittanceController extends Controller
             'UGX' => 1/3800.0,    // 1 USD = 3800 UGX
             'TZS' => 1/2500.0,    // 1 USD = 2500 TZS
             'ZAR' => 1/19.0,      // 1 USD = 19 ZAR
-            'XLM' => 1/4.47,      // 1 USD = 4.47 XLM (current rate)
+            'XLM' => 4.47,        // 1 USD = 4.47 XLM (current rate)
             'USD' => 1.0
         ];
     }
@@ -562,8 +565,8 @@ class RemittanceController extends Controller
         // First convert to USD
         $amountInUSD = $this->convertToUSD($amount, $currency);
 
-        // Then convert USD to XLM using current rate
-        $xlmRate = $this->getExchangeRates()['XLM'];
-        return $amountInUSD / $xlmRate;
+        // Then convert USD to XLM using current rate (1 USD = 4.47 XLM)
+        $xlmRate = 4.47; // Current XLM/USD rate
+        return $amountInUSD * $xlmRate;
     }
 }
