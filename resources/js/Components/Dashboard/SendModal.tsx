@@ -480,14 +480,14 @@ export default function SendModal({
                     className="flex-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-primary-500 focus:ring-primary-500"
                     placeholder="Enter account number"
                   />
-                  <button
+                  {/* <button
                     type="button"
                     onClick={verifyAccount}
                     disabled={isVerifying || !selectedBank || !accountNumber}
                     className="ml-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
                   >
                     {isVerifying ? 'Verifying...' : 'Verify'}
-                  </button>
+                  </button> */}
                 </div>
                 {accountName && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Account Name: {accountName}</p>}
               </div>
