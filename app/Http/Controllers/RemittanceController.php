@@ -211,6 +211,8 @@ class RemittanceController extends Controller
 
     public function initiateTransfer(Request $request)
     {
+        \Log::info('Initiating transfer with data:', $request->all());
+
         // Validate the request based on transfer type
         $rules = [
             'amount' => 'required|numeric|min:1',
@@ -228,80 +230,149 @@ class RemittanceController extends Controller
                 'account_number' => 'required|string',
                 'currency' => 'required|string',
                 'narration' => 'nullable|string|max:100',
-                'phone' => 'required|string'
             ]);
 
-            // If recipient_id is provided, validate it
+            // If recipient_id is provided, validate it and get recipient data
             if ($request->filled('recipient_id')) {
                 $rules['recipient_id'] = 'exists:recipients,id';
+                // Get recipient data
+                $recipient = \App\Models\Recipient::find($request->recipient_id);
+                if ($recipient) {
+                    // Use recipient's phone if not provided
+                    $request->merge(['phone' => $recipient->phone]);
+                }
+            } else {
+                // If no recipient_id, phone is required
+                $rules['phone'] = 'required|string';
             }
         }
 
-        $validated = $request->validate($rules);
-        $user = auth()->user();
-        $wallet = $user->wallet;
-
-        // Get settings for fees and limits
-        $settings = \App\Models\Settings::first();
-        $transactionFee = $settings->transaction_fee ?? 0.025; // Default 2.5%
-        $minAmount = $settings->min_transaction_limit ?? 10;
-        $maxAmount = $settings->max_transaction_limit ?? 10000;
-
-        // Validate amount against limits
-        if ($validated['amount'] < $minAmount) {
-            return $request->wantsJson()
-                ? response()->json([
-                    'success' => false,
-                    'message' => "Minimum transfer amount is {$minAmount}"
-                ], 400)
-                : Inertia::render('Wallet/Show', [
-                    'success' => false,
-                    'message' => "Minimum transfer amount is {$minAmount}"
-                ]);
-        }
-
-        if ($validated['amount'] > $maxAmount) {
-            return $request->wantsJson()
-                ? response()->json([
-                    'success' => false,
-                    'message' => "Maximum transfer amount is {$maxAmount}"
-                ], 400)
-                : Inertia::render('Wallet/Show', [
-                    'success' => false,
-                    'message' => "Maximum transfer amount is {$maxAmount}"
-                ]);
-        }
-
-        // Calculate fees and total amount
-        $feeAmount = $validated['amount'] * $transactionFee;
-        $totalAmount = $validated['amount'] + $feeAmount;
-
-        // Check if user has sufficient balance
-        $xlmBalance = $this->stellarWalletService->getWalletBalance($wallet->public_key);
-        if ($xlmBalance < $totalAmount) {
-            return $request->wantsJson()
-                ? response()->json([
-                    'success' => false,
-                    'message' => 'Insufficient balance'
-                ], 400)
-                : Inertia::render('Wallet/Show', [
-                    'success' => false,
-                    'message' => 'Insufficient balance'
-                ]);
-        }
-
-        // Create transfer reference
-        $reference = 'RMTEASE_' . Str::random(10);
-
         try {
+            $validated = $request->validate($rules);
+            \Log::info('Validation passed with data:', $validated);
+
+            $user = auth()->user();
+            $wallet = $user->wallet;
+
+            if (!$wallet) {
+                \Log::error('User wallet not found for user:', ['user_id' => $user->id]);
+                return Inertia::render('Wallet/Show', [
+                    'success' => false,
+                    'message' => 'Wallet not found. Please contact support.',
+                    'error' => true
+                ]);
+            }
+
+            // Get settings for fees and limits
+            $settings = \App\Models\Settings::first();
+            if (!$settings) {
+                \Log::error('Settings not found');
+                return Inertia::render('Wallet/Show', [
+                    'success' => false,
+                    'message' => 'System settings not configured. Please contact support.',
+                    'error' => true
+                ]);
+            }
+
+            // Convert amount to float for proper comparison
+            $amount = floatval($validated['amount']);
+            $currency = $validated['currency'];
+            $transactionFee = floatval($settings->transaction_fee ?? 0.025); // Default 2.5%
+            $minAmount = floatval($settings->min_transaction_limit ?? 10);
+            $maxAmount = floatval($settings->max_transaction_limit ?? 10000);
+
+            // Convert amount to USD for limit validation
+            $amountInUSD = $this->convertToUSD($amount, $currency);
+            \Log::info('Amount conversion:', [
+                'original_amount' => $amount,
+                'currency' => $currency,
+                'amount_in_usd' => $amountInUSD
+            ]);
+
+            \Log::info('Transaction limits:', [
+                'amount_in_usd' => $amountInUSD,
+                'min' => $minAmount,
+                'max' => $maxAmount,
+                'fee' => $transactionFee
+            ]);
+
+            // Validate amount against limits (in USD)
+            if ($amountInUSD < $minAmount) {
+                \Log::warning('Amount below minimum limit:', [
+                    'amount_in_usd' => $amountInUSD,
+                    'min' => $minAmount
+                ]);
+                return Inertia::render('Wallet/Show', [
+                    'success' => false,
+                    'message' => "Minimum transfer amount is {$minAmount} USD (approximately " . number_format($this->convertFromUSD($minAmount, $currency), 2) . " {$currency})",
+                    'error' => true
+                ]);
+            }
+
+            if ($amountInUSD > $maxAmount) {
+                \Log::warning('Amount above maximum limit:', [
+                    'amount_in_usd' => $amountInUSD,
+                    'max' => $maxAmount
+                ]);
+                return Inertia::render('Wallet/Show', [
+                    'success' => false,
+                    'message' => "Maximum transfer amount is {$maxAmount} USD (approximately " . number_format($this->convertFromUSD($maxAmount, $currency), 2) . " {$currency}). Please split your transfer into smaller amounts.",
+                    'error' => true
+                ]);
+            }
+
+            // Calculate fees and total amount
+            $feeAmount = $amount * $transactionFee;
+            $totalAmount = $amount + $feeAmount;
+
+            \Log::info('Calculated amounts:', [
+                'amount' => $amount,
+                'fee' => $feeAmount,
+                'total' => $totalAmount,
+                'currency' => $currency
+            ]);
+
+            // Convert total amount to XLM for admin wallet transfer
+            $totalAmountInXLM = $this->convertToXLM($totalAmount, $currency);
+            \Log::info('Amount in XLM:', [
+                'total_amount' => $totalAmount,
+                'currency' => $currency,
+                'amount_in_xlm' => $totalAmountInXLM
+            ]);
+
+            // Check if user has sufficient balance in XLM
+            $xlmBalance = $this->stellarWalletService->getWalletBalance($wallet->public_key);
+            \Log::info('Wallet balance check:', [
+                'balance_xlm' => $xlmBalance,
+                'required_xlm' => $totalAmountInXLM
+            ]);
+
+            if ($xlmBalance < $totalAmountInXLM) {
+                \Log::warning('Insufficient balance:', [
+                    'balance_xlm' => $xlmBalance,
+                    'required_xlm' => $totalAmountInXLM
+                ]);
+                return Inertia::render('Wallet/Show', [
+                    'success' => false,
+                    'message' => 'Insufficient balance. Please add more funds to your wallet.',
+                    'error' => true
+                ]);
+            }
+
+            // Create transfer reference
+            $reference = 'RMTEASE_' . Str::random(10);
+
             if ($request->transfer_type === 'crypto') {
                 // Handle crypto transfer
-                $result = $this->stellarWalletService->transferFunds(
-                    $wallet->public_key,
+                \Log::info('Processing crypto transfer');
+                $result = $this->stellarWalletService->sendPayment(
+                    $wallet,
                     $validated['wallet_address'],
                     $validated['amount'],
                     $validated['currency']
                 );
+
+                \Log::info('Crypto transfer result:', $result);
 
                 if ($result['success']) {
                     // Record the transaction
@@ -316,43 +387,43 @@ class RemittanceController extends Controller
                     ]);
                     $transaction->save();
 
-                    return $request->wantsJson()
-                        ? response()->json([
-                            'success' => true,
-                            'message' => 'Crypto transfer completed successfully'
-                        ])
-                        : Inertia::render('Wallet/Show', [
-                            'success' => true,
-                            'message' => 'Crypto transfer completed successfully'
-                        ]);
+                    \Log::info('Crypto transaction recorded:', $transaction->toArray());
+
+                    return Inertia::render('Wallet/Show', [
+                        'success' => true,
+                        'message' => 'Crypto transfer completed successfully',
+                        'transaction' => $transaction
+                    ]);
                 } else {
-                    return $request->wantsJson()
-                        ? response()->json([
-                            'success' => false,
-                            'message' => $result['message'] ?? 'Transfer failed'
-                        ], 500)
-                        : Inertia::render('Wallet/Show', [
-                            'success' => false,
-                            'message' => $result['message'] ?? 'Transfer failed'
-                        ]);
+                    \Log::error('Crypto transfer failed:', $result);
+                    return Inertia::render('Wallet/Show', [
+                        'success' => false,
+                        'message' => $result['message'] ?? 'Transfer failed',
+                        'error' => true
+                    ]);
                 }
             } else {
                 // Handle cash transfer
                 try {
                     DB::beginTransaction();
+                    \Log::info('Processing cash transfer');
 
-                    // Transfer amount to admin wallet
-                    $adminWallet = \App\Models\User::where('role', 'admin')->first()->wallet;
+                    // Transfer amount to admin wallet in XLM
+                    $adminWallet = \App\Models\User::role('admin')->first()->wallet;
                     if (!$adminWallet) {
                         throw new \Exception('Admin wallet not found');
                     }
 
-                    $transferResult = $this->stellarWalletService->transferFunds(
-                        $wallet->public_key,
+                    \Log::info('Admin wallet found:', ['admin_wallet' => $adminWallet->public_key]);
+
+                    $transferResult = $this->stellarWalletService->sendPayment(
+                        $wallet,
                         $adminWallet->public_key,
-                        $totalAmount,
+                        $totalAmountInXLM,
                         'XLM'
                     );
+
+                    \Log::info('Admin transfer result:', $transferResult);
 
                     if (!$transferResult['success']) {
                         throw new \Exception($transferResult['message'] ?? 'Failed to transfer to admin wallet');
@@ -362,8 +433,8 @@ class RemittanceController extends Controller
                     $remittance = new \App\Models\Remittance([
                         'user_id' => $user->id,
                         'recipient_id' => $request->recipient_id ?? null,
-                        'amount' => $validated['amount'],
-                        'currency' => $validated['currency'],
+                        'amount' => $amount,
+                        'currency' => $currency,
                         'status' => 'pending',
                         'reference' => $reference,
                         'bank_code' => $validated['bank_code'],
@@ -371,50 +442,128 @@ class RemittanceController extends Controller
                         'narration' => $validated['narration'] ?? 'RemittEase Transfer',
                         'phone' => $validated['phone'],
                         'fee_amount' => $feeAmount,
-                        'total_amount' => $totalAmount
+                        'total_amount' => $totalAmount,
+                        'xlm_amount' => $totalAmountInXLM
                     ]);
                     $remittance->save();
 
+                    \Log::info('Remittance recorded:', $remittance->toArray());
+
                     // Send notification to admin
-                    $admin = \App\Models\User::where('role', 'admin')->first();
+                    $admin = \App\Models\User::role('admin')->first();
                     if ($admin) {
                         $admin->notify(new \App\Notifications\NewRemittanceNotification($remittance));
+                        \Log::info('Admin notification sent');
                     }
 
                     DB::commit();
+                    \Log::info('Cash transfer completed successfully');
 
-                    return $request->wantsJson()
-                        ? response()->json([
-                            'success' => true,
-                            'message' => 'Cash transfer initiated successfully'
-                        ])
-                        : Inertia::render('Wallet/Show', [
-                            'success' => true,
-                            'message' => 'Cash transfer initiated successfully'
-                        ]);
+                    return Inertia::render('Wallet/Show', [
+                        'success' => true,
+                        'message' => 'Cash transfer initiated successfully',
+                        'remittance' => $remittance
+                    ]);
                 } catch (\Exception $e) {
                     DB::rollBack();
-                    return $request->wantsJson()
-                        ? response()->json([
-                            'success' => false,
-                            'message' => 'Transfer failed: ' . $e->getMessage()
-                        ], 500)
-                        : Inertia::render('Wallet/Show', [
-                            'success' => false,
-                            'message' => 'An error occurred while processing the transfer'
-                        ]);
+                    \Log::error('Cash transfer failed:', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    return Inertia::render('Wallet/Show', [
+                        'success' => false,
+                        'message' => 'An error occurred while processing the transfer',
+                        'error' => true
+                    ]);
                 }
             }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed:', [
+                'errors' => $e->errors(),
+                'data' => $request->all()
+            ]);
+            return Inertia::render('Wallet/Show', [
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+                'error' => true
+            ]);
         } catch (\Exception $e) {
-            return $request->wantsJson()
-                ? response()->json([
-                    'success' => false,
-                    'message' => 'Transfer failed: ' . $e->getMessage()
-                ], 500)
-                : Inertia::render('Wallet/Show', [
-                    'success' => false,
-                    'message' => 'An error occurred while processing the transfer'
-                ]);
+            \Log::error('Transfer failed:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return Inertia::render('Wallet/Show', [
+                'success' => false,
+                'message' => 'An error occurred while processing the transfer',
+                'error' => true
+            ]);
         }
+    }
+
+    /**
+     * Get current exchange rates
+     */
+    private function getExchangeRates()
+    {
+        // Current market rates as of April 2025
+        // TODO: Replace with real-time rates from an API
+        return [
+            'NGN' => 1/1500.0,    // 1 USD = 1500 NGN
+            'GHS' => 1/12.50,     // 1 USD = 12.50 GHS
+            'KES' => 1/130.0,     // 1 USD = 130 KES
+            'UGX' => 1/3800.0,    // 1 USD = 3800 UGX
+            'TZS' => 1/2500.0,    // 1 USD = 2500 TZS
+            'ZAR' => 1/19.0,      // 1 USD = 19 ZAR
+            'XLM' => 1/4.47,      // 1 USD = 4.47 XLM (current rate)
+            'USD' => 1.0
+        ];
+    }
+
+    /**
+     * Convert amount to USD for limit validation
+     */
+    private function convertToUSD($amount, $currency)
+    {
+        $rates = $this->getExchangeRates();
+
+        if ($currency === 'USD') {
+            return $amount;
+        }
+
+        // Convert to USD using the rates
+        return $amount * $rates[$currency];
+    }
+
+    /**
+     * Convert USD amount to target currency
+     */
+    private function convertFromUSD($amount, $currency)
+    {
+        $rates = $this->getExchangeRates();
+
+        if ($currency === 'USD') {
+            return $amount;
+        }
+
+        // Convert from USD to target currency
+        return $amount / $rates[$currency];
+    }
+
+    /**
+     * Convert amount to XLM for admin wallet transfer
+     */
+    private function convertToXLM($amount, $currency)
+    {
+        if ($currency === 'XLM') {
+            return $amount;
+        }
+
+        // First convert to USD
+        $amountInUSD = $this->convertToUSD($amount, $currency);
+
+        // Then convert USD to XLM using current rate
+        $xlmRate = $this->getExchangeRates()['XLM'];
+        return $amountInUSD / $xlmRate;
     }
 }
