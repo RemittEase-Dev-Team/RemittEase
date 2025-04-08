@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 import { Search, Wallet, Building2, X } from 'lucide-react';
+import Modal from '@/Components/Modal';
+import { ErrorBoundary } from '@/Components/ErrorBoundary';
 
 interface Currency {
   code: string;
@@ -134,9 +136,9 @@ const SUPPORTED_COUNTRIES = {
     XY: { name: 'Saint Pierre and Miquelon', currency: 'EUR' },
     XZ: { name: 'Saint Lucia', currency: 'XCD' },
     ZW: { name: 'Zimbabwe', currency: 'ZWL' },
-  };
+};
 
-export default function SendModal({
+function SendModalContent({
   search,
   setSearch,
   selectedCurrency,
@@ -163,6 +165,8 @@ export default function SendModal({
   const [transferError, setTransferError] = useState<string | null>(null);
   const [isTransferring, setIsTransferring] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<string>('NG');
+  const [transferStatus, setTransferStatus] = useState<'idle' | 'processing' | 'completed' | 'failed'>('idle');
+  const [transactionId, setTransactionId] = useState<string | null>(null);
 
   const { data, setData, post, processing, errors } = useForm<SendFormData>({
     bank_code: '',
@@ -175,7 +179,7 @@ export default function SendModal({
     wallet_address: ''
   });
 
-  // Update form data when local state changes
+  // Fetch banks when country changes
   useEffect(() => {
     if (transferType === 'crypto') {
       setData({
@@ -224,25 +228,20 @@ export default function SendModal({
 
           params: { country: selectedCountry }
         });
-        if (banksResponse.data.success) {
-          setBanks(banksResponse.data.data || []);
-        } else {
-          setBankError(banksResponse.data.message || 'Failed to load banks');
-        }
 
-        // Fetch recipients using the new endpoint
-        const recipientsResponse = await axios.get(route('recipients.transfer'));
-        if (recipientsResponse.data.success) {
-          setRecipients(recipientsResponse.data.data || []);
+        if (response.data.success) {
+          setBanks(response.data.data || []);
+        } else {
+          setBankError(response.data.message || 'Failed to load banks');
         }
       } catch (error: any) {
-        console.error('Failed to fetch data:', error);
+        console.error('Failed to fetch banks:', error);
         if (error.response?.data?.message) {
           setBankError(error.response.data.message);
         } else if (error.message?.includes('route')) {
           setBankError('Service temporarily unavailable. Please try again later.');
         } else {
-          setBankError('Failed to load data. Please try again later.');
+          setBankError('Failed to load banks. Please try again later.');
         }
       } finally {
         setIsLoadingBanks(false);
@@ -270,56 +269,92 @@ export default function SendModal({
           bank_code: selectedBank,
           account_number: accountNumber
         });
+        // Clear any previous errors
+        setTransferError(null);
       } else {
         setTransferError(response.data.message || 'Failed to verify account');
+        setAccountName('');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Account verification failed:', error);
-      setTransferError('Failed to verify account. Please try again.');
+      setTransferError(error.response?.data?.message || 'Failed to verify account. Please try again.');
+      setAccountName('');
     } finally {
       setIsVerifying(false);
     }
   };
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTransferError(null);
     setIsTransferring(true);
+    setTransferStatus('processing');
 
     try {
-      // Ensure form data is up to date before submission
       if (transferType === 'crypto') {
-        if (!selectedCurrency || !amount || !walletAddress) {
+        // Handle crypto transfer
+        if (!amount || !walletAddress) {
           setTransferError('Please fill in all required fields');
-          setIsTransferring(false);
+          setTransferStatus('failed');
           return;
         }
 
-        post(route('remittance.transfer'));
+        const formData = {
+          amount,
+          currency: selectedCurrency?.code || 'NGN',
+          transfer_type: 'crypto',
+          wallet_address: walletAddress,
+          narration: 'Transfer from RemittEase'
+        };
+
+        const response = await axios.post('/api/wallet/send-transaction', formData);
+
+        if (response.data.success) {
+          setTransferStatus('completed');
+          setTransactionId(response.data.transaction_id);
+          onClose();
+        } else {
+          setTransferStatus('failed');
+          setTransferError(response.data.message);
+        }
       } else {
-        if (!selectedRecipient || !amount || !selectedBank || !accountNumber) {
-          setTransferError('Please fill in all required fields');
-          setIsTransferring(false);
+        // Handle bank transfer
+        if (!amount || !selectedBank || !accountNumber || !accountName) {
+          setTransferError('Please fill in all required fields and verify account');
+          setTransferStatus('failed');
           return;
         }
 
-        post(route('remittance.transfer'));
-      }
+        const formData = {
+          amount,
+          currency: SUPPORTED_COUNTRIES[selectedCountry as keyof typeof SUPPORTED_COUNTRIES]?.currency || 'NGN',
+          transfer_type: 'cash',
+          bank_code: selectedBank,
+          account_number: accountNumber,
+          narration: 'Transfer from RemittEase',
+          recipient_id: selectedRecipient?.id
+        };
 
-      CloseModal();
+        const response = await axios.post('/api/wallet/send-transaction', formData);
+
+        if (response.data.success) {
+          setTransferStatus('completed');
+          setTransactionId(response.data.transaction_id);
+          onClose();
+        } else {
+          setTransferStatus('failed');
+          setTransferError(response.data.message);
+        }
+      }
     } catch (error) {
-      console.error('Transfer failed:', error);
-      setTransferError('Failed to process transfer. Please try again.');
+      setTransferStatus('failed');
+      setTransferError('Failed to process transaction');
+      console.error('Error sending transaction:', error);
     } finally {
       setIsTransferring(false);
     }
   };
-
-  const filteredCurrencies = currencies?.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.code.toLowerCase().includes(search.toLowerCase())
-  ) || [];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -359,159 +394,144 @@ export default function SendModal({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {transferType === 'crypto' ? (
-            // Crypto Transfer Form
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Currency</label>
-                <select
-                  value={selectedCurrency?.code || ''}
-                  onChange={(e) => {
-                    const currency = currencies.find(c => c.code === e.target.value);
-                    setSelectedCurrency(currency || null);
-                  }}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                >
-                  <option value="">Select Currency</option>
-                  {currencies.map((currency) => (
-                    <option key={`currency-${currency.code}`} value={currency.code}>
-                      {currency.name} ({currency.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {/* Currency Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Currency
+              </label>
+              <select
+                value={selectedCurrency?.code || ''}
+                onChange={(e) => {
+                  const currency = currencies.find(c => c.code === e.target.value);
+                  setSelectedCurrency(currency || null);
+                }}
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Select currency</option>
+                {currencies.map((currency) => (
+                  <option key={currency.code} value={currency.code}>
+                    {currency.flag} {currency.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
+            {/* Recipient Details */}
+            {transferType === 'cash' ? (
+              <>
+                {/* Country Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Country
+                  </label>
+                  <select
+                    value={selectedCountry}
+                    onChange={(e) => setSelectedCountry(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    {Object.entries(SUPPORTED_COUNTRIES).map(([code, country]) => (
+                      <option key={code} value={code}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Bank Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bank
+                  </label>
+                  <select
+                    value={selectedBank}
+                    onChange={(e) => setSelectedBank(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    required
+                    disabled={isLoadingBanks}
+                  >
+                    <option value="">Select bank</option>
+                    {banks.map((bank) => (
+                      <option key={`bank-${bank.code}-${bank.country}`} value={bank.code}>
+                        {bank.name}
+                      </option>
+                    ))}
+                  </select>
+                  {isLoadingBanks && <p className="text-sm text-gray-500 mt-1">Loading banks...</p>}
+                  {bankError && <p className="text-sm text-red-500 mt-1">{bankError}</p>}
+                </div>
+
+                {/* Account Number with Verify Button */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Account Number
+                  </label>
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={accountNumber}
+                      onChange={(e) => setAccountNumber(e.target.value)}
+                      className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter account number"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyAccount}
+                      disabled={isVerifying || !selectedBank || !accountNumber}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {isVerifying ? 'Verifying...' : 'Verify'}
+                    </button>
+                  </div>
+                  {accountName && (
+                    <div className="p-3 bg-gray-50 rounded-lg mt-2">
+                      <p className="text-sm text-gray-600">
+                        Account Name: <span className="font-medium">{accountName}</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              /* Crypto Transfer */
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Wallet Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Wallet Address
+                </label>
                 <input
                   type="text"
                   value={walletAddress}
                   onChange={(e) => setWalletAddress(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter wallet address"
+                  required
                 />
               </div>
+            )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                  placeholder="Enter amount"
-                />
+            {/* Error Message */}
+            {transferError && (
+              <div className="p-3 bg-red-50 text-red-600 rounded-lg">
+                {transferError}
               </div>
-            </div>
-          ) : (
-            // Cash Transfer Form
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Country</label>
-                <select
-                  value={selectedCountry}
-                  onChange={(e) => setSelectedCountry(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                >
-                  {Object.entries(SUPPORTED_COUNTRIES).map(([code, { name, currency }]) => (
-                    <option key={`country-${code}`} value={code}>
-                      {name} ({currency})
-                    </option>
-                  ))}
-                </select>
-              </div>
+            )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Recipient</label>
-                <select
-                  value={selectedRecipient?.id.toString() || ''}
-                  onChange={(e) => {
-                    const recipient = recipients.find(r => r.id === parseInt(e.target.value));
-                    setSelectedRecipient(recipient || null);
-                    if (recipient) {
-                      setSelectedBank(recipient.bank_code);
-                      setAccountNumber(recipient.account_number);
-                      setAccountName(recipient.account_name);
-                    }
-                  }}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                >
-                  <option value="">Select Recipient</option>
-                  {recipients.map((recipient) => (
-                    <option key={`recipient-${recipient.id}`} value={recipient.id}>
-                      {recipient.name} - {recipient.account_number}
-                    </option>
-                  ))}
-                </select>
+            {/* Status Message */}
+            {transferStatus !== 'idle' && (
+              <div className={`p-3 rounded-lg ${
+                transferStatus === 'completed'
+                  ? 'bg-green-50 text-green-600'
+                  : transferStatus === 'failed'
+                  ? 'bg-red-50 text-red-600'
+                  : 'bg-blue-50 text-blue-600'
+              }`}>
+                {transferStatus === 'completed' && 'Transfer completed successfully!'}
+                {transferStatus === 'failed' && transferError}
+                {transferStatus === 'processing' && 'Processing your transfer...'}
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Bank</label>
-                <select
-                  value={selectedBank}
-                  onChange={(e) => setSelectedBank(e.target.value)}
-                  disabled={isLoadingBanks}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                >
-                  <option value="">Select Bank</option>
-                  {banks.map((bank) => (
-                    <option key={`bank-${bank.code}`} value={bank.code}>
-                      {bank.name}
-                    </option>
-                  ))}
-                </select>
-                {isLoadingBanks && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Loading banks...</p>}
-                {bankError && <p className="mt-1 text-sm text-red-500">{bankError}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Account Number</label>
-                <div className="mt-1 flex rounded-md shadow-sm">
-                  <input
-                    type="text"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value)}
-                    className="flex-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-primary-500 focus:ring-primary-500"
-                    placeholder="Enter account number"
-                  />
-                  <button
-                    type="button"
-                    onClick={verifyAccount}
-                    disabled={isVerifying || !selectedBank || !accountNumber}
-                    className="ml-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
-                  >
-                    {isVerifying ? 'Verifying...' : 'Verify'}
-                  </button>
-                </div>
-                {accountName && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Account Name: {accountName}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Amount ({SUPPORTED_COUNTRIES[selectedCountry as keyof typeof SUPPORTED_COUNTRIES]?.currency || 'NGN'})
-                </label>
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                  placeholder="Enter amount"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Narration (Optional)</label>
-                <input
-                  type="text"
-                  value={data.narration}
-                  onChange={(e) => setData('narration', e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                  placeholder="Enter narration"
-                />
-              </div>
-            </div>
-          )}
+            )}
 
           {transferError && (
             <div className="mt-4 text-sm text-red-500">{transferError}</div>
@@ -538,3 +558,5 @@ export default function SendModal({
     </div>
   );
 }
+
+export default SendModalContent;

@@ -78,6 +78,24 @@ interface Currency {
   selected: boolean;
 }
 
+interface ExchangeRates {
+  [key: string]: number;
+  XLM: number;
+  USD: number;
+  EUR: number;
+  GBP: number;
+  NGN: number;
+}
+
+interface ExchangeRateResponse {
+  stellar: {
+    usd: number;
+    eur: number;
+    gbp: number;
+    ngn: number;
+  };
+}
+
 interface Props {
   moonpayEnabled: boolean;
   linkioEnabled: boolean;
@@ -113,9 +131,6 @@ interface Props {
     amount: string;
   };
   paymentProviders: PaymentProvider[];
-  exchangeRates: {
-    [key: string]: number;
-  };
 }
 
 export default function Dashboard({
@@ -127,12 +142,7 @@ export default function Dashboard({
   transactions,
   currencies,
   balances,
-  exchangeRates = {
-    XLM: 1,
-    USD: 1,
-    EUR: 1,
-    GBP: 1,
-  }
+  paymentProviders
 }: Props) {
   // Inertia form (use if you're posting to your backend)
   const { data, setData, post } = useForm<DepositFormData>({
@@ -168,29 +178,14 @@ export default function Dashboard({
   const [xlmPrice, setXlmPrice] = useState(0);
   const [chartCurrency, setChartCurrency] = useState('XLM');
 
-  const paymentProviders = [
-    {
-      id: 'moonpay',
-      fees: {
-        percentage: 0.00000020,
-        fixed: 0.000000001
-      },
-    },
-    {
-      id: 'linkio',
-      fees: {
-        percentage: 0.00000005,
-        fixed: 0.00000034
-      },
-    },
-    {
-      id: 'yellowcard',
-      fees: {
-        percentage: 0.00000010,
-        fixed: 1
-      },
-    },
-  ]
+  // Add new state for exchange rates
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRates>({
+    XLM: 1,
+    USD: 1,
+    EUR: 1,
+    GBP: 1,
+    NGN: 1
+  });
 
   // Dummy balances, totalBalance, chartData, etc.
   const [balance, setBalance] = useState({
@@ -276,6 +271,36 @@ export default function Dashboard({
       setChartData(sortedData);
     }
   }, [wallet, transactions, xlmPrice]);
+
+  // Fetch exchange rates from CoinGecko
+  useEffect(() => {
+    const fetchExchangeRates = async () => {
+      try {
+        const response = await fetch(
+          'https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd,eur,gbp,ngn'
+        );
+        const data: ExchangeRateResponse = await response.json();
+
+        // Update exchange rates
+        setExchangeRates({
+          XLM: 1,
+          USD: data.stellar.usd,
+          EUR: data.stellar.eur,
+          GBP: data.stellar.gbp,
+          NGN: data.stellar.ngn
+        });
+      } catch (error) {
+        console.error('Error fetching exchange rates:', error);
+      }
+    };
+
+    // Fetch immediately
+    fetchExchangeRates();
+
+    // Update every 5 minutes
+    const interval = setInterval(fetchExchangeRates, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Filter chart data based on active time filter
   const getFilteredChartData = (filter: string) => {
@@ -666,6 +691,7 @@ export default function Dashboard({
               moonpayEnabled={moonpayEnabled}
               balances={balances || defaultBalances}
               isLoading={false}
+              exchangeRates={exchangeRates}
             />
             <TotalBalanceChart
               chartData={getFilteredChartData(activeTimeFilter)}
