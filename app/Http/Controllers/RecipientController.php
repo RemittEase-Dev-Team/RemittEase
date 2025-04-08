@@ -201,6 +201,7 @@ class RecipientController extends Controller
                         'account_number' => $recipient->account_number,
                         'account_name' => $recipient->name,
                         'country' => $recipient->country,
+                        'phone' => $recipient->phone,
                         'currency' => $recipient->country === 'NG' ? 'NGN' : 'USD', // Default to NGN for Nigeria, USD for others
                     ];
                 });

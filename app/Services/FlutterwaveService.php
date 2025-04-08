@@ -29,7 +29,7 @@ class FlutterwaveService
     /**
      * Initiate a transfer
      */
-    public function initiateTransfer(Transaction $transaction, array $config = [])
+    public function initiateTransfer($data, array $config = [])
     {
         try {
             // Use provided config or fallback to environment variables
@@ -49,19 +49,36 @@ class FlutterwaveService
                 'Content-Type' => 'application/json'
             ];
 
-            $payload = [
-                'account_bank' => $transaction->bank_code,
-                'account_number' => $transaction->recipient_address,
-                'amount' => $transaction->amount,
-                'narration' => $transaction->memo,
-                'currency' => $transaction->currency,
-                'reference' => $transaction->reference,
-                'callback_url' => route('webhooks.flutterwave'),
-                'metadata' => [
-                    'transaction_id' => $transaction->id,
-                    'user_id' => $transaction->user_id
-                ]
-            ];
+            // Handle both Transaction model and array data
+            if ($data instanceof Transaction) {
+                $payload = [
+                    'account_bank' => $data->bank_code,
+                    'account_number' => $data->recipient_address,
+                    'amount' => $data->amount,
+                    'narration' => $data->memo,
+                    'currency' => $data->currency,
+                    'reference' => $data->reference,
+                    'callback_url' => route('webhooks.flutterwave'),
+                    'metadata' => [
+                        'transaction_id' => $data->id,
+                        'user_id' => $data->user_id
+                    ]
+                ];
+            } else {
+                // Handle array data
+                $payload = [
+                    'account_bank' => $data['bank_code'],
+                    'account_number' => $data['account_number'],
+                    'amount' => $data['amount'],
+                    'narration' => $data['narration'] ?? 'RemittEase Transfer',
+                    'currency' => $data['currency'],
+                    'reference' => $data['reference'],
+                    'callback_url' => route('webhooks.flutterwave'),
+                    'metadata' => [
+                        'user_id' => $data['user_id'] ?? null
+                    ]
+                ];
+            }
 
             $response = Http::withHeaders($headers)
                 ->post($baseUrl . '/transfers', $payload);
@@ -70,15 +87,16 @@ class FlutterwaveService
                 throw new \Exception('Flutterwave API error: ' . $response->body());
             }
 
-            $data = $response->json();
+            $responseData = $response->json();
 
             return [
                 'success' => true,
-                'reference' => $data['data']['reference'],
+                'reference' => $responseData['data']['reference'],
                 'message' => 'Transfer initiated successfully'
             ];
 
         } catch (\Exception $e) {
+            Log::error('Flutterwave transfer error: ' . $e->getMessage());
             return [
                 'success' => false,
                 'message' => $e->getMessage()

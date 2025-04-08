@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use App\Services\FlutterwaveService;
 use App\Services\StellarWalletService;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class RemittanceController extends Controller
 {
@@ -226,7 +227,8 @@ class RemittanceController extends Controller
                 'bank_code' => 'required|string',
                 'account_number' => 'required|string',
                 'currency' => 'required|string',
-                'narration' => 'nullable|string|max:100'
+                'narration' => 'nullable|string|max:100',
+                'phone' => 'required|string'
             ]);
 
             // If recipient_id is provided, validate it
@@ -239,9 +241,44 @@ class RemittanceController extends Controller
         $user = auth()->user();
         $wallet = $user->wallet;
 
+        // Get settings for fees and limits
+        $settings = \App\Models\Settings::first();
+        $transactionFee = $settings->transaction_fee ?? 0.025; // Default 2.5%
+        $minAmount = $settings->min_transaction_limit ?? 10;
+        $maxAmount = $settings->max_transaction_limit ?? 10000;
+
+        // Validate amount against limits
+        if ($validated['amount'] < $minAmount) {
+            return $request->wantsJson()
+                ? response()->json([
+                    'success' => false,
+                    'message' => "Minimum transfer amount is {$minAmount}"
+                ], 400)
+                : Inertia::render('Wallet/Show', [
+                    'success' => false,
+                    'message' => "Minimum transfer amount is {$minAmount}"
+                ]);
+        }
+
+        if ($validated['amount'] > $maxAmount) {
+            return $request->wantsJson()
+                ? response()->json([
+                    'success' => false,
+                    'message' => "Maximum transfer amount is {$maxAmount}"
+                ], 400)
+                : Inertia::render('Wallet/Show', [
+                    'success' => false,
+                    'message' => "Maximum transfer amount is {$maxAmount}"
+                ]);
+        }
+
+        // Calculate fees and total amount
+        $feeAmount = $validated['amount'] * $transactionFee;
+        $totalAmount = $validated['amount'] + $feeAmount;
+
         // Check if user has sufficient balance
         $xlmBalance = $this->stellarWalletService->getWalletBalance($wallet->public_key);
-        if ($xlmBalance < $validated['amount']) {
+        if ($xlmBalance < $totalAmount) {
             return $request->wantsJson()
                 ? response()->json([
                     'success' => false,
@@ -301,20 +338,26 @@ class RemittanceController extends Controller
                 }
             } else {
                 // Handle cash transfer
-                // Prepare transfer data for Flutterwave
-                $transferData = [
-                    'bank_code' => $validated['bank_code'],
-                    'account_number' => $validated['account_number'],
-                    'amount' => $validated['amount'],
-                    'currency' => $validated['currency'],
-                    'narration' => $validated['narration'] ?? 'RemittEase Transfer',
-                    'reference' => $reference
-                ];
+                try {
+                    DB::beginTransaction();
 
-                // Initiate transfer through Flutterwave
-                $result = $this->flutterwaveService->createTransfer($transferData);
+                    // Transfer amount to admin wallet
+                    $adminWallet = \App\Models\User::where('role', 'admin')->first()->wallet;
+                    if (!$adminWallet) {
+                        throw new \Exception('Admin wallet not found');
+                    }
 
-                if ($result['success']) {
+                    $transferResult = $this->stellarWalletService->transferFunds(
+                        $wallet->public_key,
+                        $adminWallet->public_key,
+                        $totalAmount,
+                        'XLM'
+                    );
+
+                    if (!$transferResult['success']) {
+                        throw new \Exception($transferResult['message'] ?? 'Failed to transfer to admin wallet');
+                    }
+
                     // Record the remittance
                     $remittance = new \App\Models\Remittance([
                         'user_id' => $user->id,
@@ -322,9 +365,23 @@ class RemittanceController extends Controller
                         'amount' => $validated['amount'],
                         'currency' => $validated['currency'],
                         'status' => 'pending',
-                        'reference' => $reference
+                        'reference' => $reference,
+                        'bank_code' => $validated['bank_code'],
+                        'account_number' => $validated['account_number'],
+                        'narration' => $validated['narration'] ?? 'RemittEase Transfer',
+                        'phone' => $validated['phone'],
+                        'fee_amount' => $feeAmount,
+                        'total_amount' => $totalAmount
                     ]);
                     $remittance->save();
+
+                    // Send notification to admin
+                    $admin = \App\Models\User::where('role', 'admin')->first();
+                    if ($admin) {
+                        $admin->notify(new \App\Notifications\NewRemittanceNotification($remittance));
+                    }
+
+                    DB::commit();
 
                     return $request->wantsJson()
                         ? response()->json([
@@ -335,15 +392,16 @@ class RemittanceController extends Controller
                             'success' => true,
                             'message' => 'Cash transfer initiated successfully'
                         ]);
-                } else {
+                } catch (\Exception $e) {
+                    DB::rollBack();
                     return $request->wantsJson()
                         ? response()->json([
                             'success' => false,
-                            'message' => $result['message'] ?? 'Transfer failed'
+                            'message' => 'Transfer failed: ' . $e->getMessage()
                         ], 500)
                         : Inertia::render('Wallet/Show', [
                             'success' => false,
-                            'message' => $result['message'] ?? 'Transfer failed'
+                            'message' => 'An error occurred while processing the transfer'
                         ]);
                 }
             }
