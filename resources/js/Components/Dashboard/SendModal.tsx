@@ -254,7 +254,6 @@ export default function SendModal({
 
     fetchData();
   }, [selectedCountry]);
-
   const verifyAccount = async () => {
     if (!selectedBank || !accountNumber) return;
 
