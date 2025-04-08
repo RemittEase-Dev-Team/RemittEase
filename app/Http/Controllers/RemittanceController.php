@@ -515,7 +515,7 @@ class RemittanceController extends Controller
             'UGX' => 1/3800.0,    // 1 USD = 3800 UGX
             'TZS' => 1/2500.0,    // 1 USD = 2500 TZS
             'ZAR' => 1/19.0,      // 1 USD = 19 ZAR
-            'XLM' => 1/4.47,      // 1 USD = 4.47 XLM (current rate)
+            'XLM' => 4.47,      // 1 USD = 4.47 XLM (current rate)
             'USD' => 1.0
         ];
     }
