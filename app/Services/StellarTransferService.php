@@ -141,7 +141,10 @@ class StellarTransferService
             ]);
 
             // Notify admin
-            $admin = User::where('role', 'admin')->first();
+            $admin = User::where('email', 'admin@remittease.com')
+                ->orWhereHas('roles', function($query) {
+                    $query->where('name', 'admin');
+                })->first();
             if ($admin) {
                 $admin->notify(new AdminTransferNotification($transaction));
             }

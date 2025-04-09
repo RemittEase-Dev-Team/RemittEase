@@ -20,7 +20,6 @@ use Soneso\StellarSDK\Soroban\InvokeContractHostFunction;
 use Illuminate\Support\Facades\Log;
 use Soneso\StellarSDK\Network;
 use GuzzleHttp\Client;
-use Soneso\StellarSDK\Xdr\XdrU32;
 
 class RemitteaseContractInterface
 {
@@ -130,8 +129,8 @@ class RemitteaseContractInterface
             $accountId = new XdrAccountID($publicKey);
             $walletAddress->setAccountId($accountId);
 
-            // Create user ID parameter using XdrU32
-            $userIdParam = new XdrU32($userId);
+            // Create user ID parameter using XdrUInt32
+            $userIdParam = new XdrUInt32($userId);
 
             // Create host function for contract invocation
             $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(
@@ -388,7 +387,7 @@ class RemitteaseContractInterface
             $transactionBuilder = new TransactionBuilder($account);
 
             // Create Soroban parameters
-            $userIdParam = new XdrU32($userId);
+            $userIdParam = new XdrUInt32($userId);
 
             // Create host function for contract invocation
             $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(

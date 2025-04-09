@@ -43,7 +43,7 @@ interface Props {
   onClose?: () => void;
 }
 
-type TransferType = 'crypto' | 'cash';
+type TransferType = 'crypto' | 'cash' | 'demo';
 
 interface SendFormData {
   [key: string]: string | TransferType;
@@ -166,6 +166,7 @@ export default function SendModal({
   const [isTransferring, setIsTransferring] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<string>('NG');
   const [phone, setPhone] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const { data, setData, post, processing, errors } = useForm<SendFormData>({
     bank_code: '',
@@ -181,7 +182,21 @@ export default function SendModal({
 
   // Update form data when local state changes
   useEffect(() => {
-    if (transferType === 'crypto') {
+    if (transferType === 'demo') {
+      // For demo transactions, we only need the amount
+      setData({
+        ...data,
+        amount,
+        transfer_type: 'demo',
+        // Clear other fields
+        bank_code: '',
+        account_number: '',
+        recipient_id: '',
+        phone: '',
+        wallet_address: '',
+        currency: 'XLM' // For demo transactions, always use XLM
+      });
+    } else if (transferType === 'crypto') {
       setData({
         ...data,
         amount,
@@ -192,6 +207,7 @@ export default function SendModal({
         bank_code: '',
         account_number: '',
         recipient_id: '',
+        phone: ''
       });
     } else {
       setData({
@@ -199,6 +215,7 @@ export default function SendModal({
         amount,
         bank_code: selectedBank,
         account_number: accountNumber,
+        phone: phone,
         currency: SUPPORTED_COUNTRIES[selectedCountry as keyof typeof SUPPORTED_COUNTRIES]?.currency || 'NGN',
         recipient_id: selectedRecipient?.id?.toString() || '',
         transfer_type: 'cash',
@@ -214,7 +231,8 @@ export default function SendModal({
     selectedBank,
     accountNumber,
     selectedCountry,
-    selectedRecipient
+    selectedRecipient,
+    phone
   ]);
 
   useEffect(() => {
@@ -288,11 +306,47 @@ export default function SendModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTransferError(null);
+    setSuccessMessage(null);
     setIsTransferring(true);
 
     try {
-      // Ensure form data is up to date before submission
-      if (transferType === 'crypto') {
+      if (transferType === 'demo') {
+        // Use our new demo transaction endpoint
+        if (!amount) {
+          setTransferError('Please enter an amount to send');
+          setIsTransferring(false);
+          return;
+        }
+
+        const response = await axios.post(route('remittance.demo-transaction'), {
+          amount: amount
+        });
+
+        if (response.data.success) {
+          setSuccessMessage('Demo transaction created successfully! Check your transactions table.');
+
+          // Store transaction details in localStorage for future reference
+          if (response.data.transaction) {
+            localStorage.setItem('last_transaction', JSON.stringify({
+              id: response.data.transaction.id,
+              reference: response.data.transaction.reference,
+              type: 'demo',
+              amount: amount,
+              currency: 'XLM',
+              timestamp: new Date().toISOString()
+            }));
+          }
+
+          // Delay closing modal to show success message
+          setTimeout(() => {
+            CloseModal();
+            // Reload the page to show the new transaction
+            window.location.reload();
+          }, 2000);
+        } else {
+          setTransferError(response.data.message || 'Demo transaction failed');
+        }
+      } else if (transferType === 'crypto') {
         if (!selectedCurrency || !amount || !walletAddress) {
           setTransferError('Please fill in all required fields');
           setIsTransferring(false);
@@ -302,6 +356,7 @@ export default function SendModal({
         const response = await axios.post(route('remittance.transfer'), data);
 
         if (response.data.success) {
+          setSuccessMessage('Transaction created successfully!');
           // Store transaction details in localStorage for future reference
           if (response.data.transaction_id && response.data.reference) {
             localStorage.setItem('last_transaction', JSON.stringify({
@@ -314,7 +369,12 @@ export default function SendModal({
             }));
           }
 
-          CloseModal();
+          // Delay closing modal to show success message
+          setTimeout(() => {
+            CloseModal();
+            // Reload the page to show the new transaction
+            window.location.reload();
+          }, 2000);
         } else {
           setTransferError(response.data.message || 'Transfer failed');
         }
@@ -328,6 +388,7 @@ export default function SendModal({
         const response = await axios.post(route('remittance.transfer'), data);
 
         if (response.data.success) {
+          setSuccessMessage('Transaction created successfully!');
           // Store remittance details in localStorage for future reference
           if (response.data.transaction_id && response.data.remittance_id && response.data.reference) {
             localStorage.setItem('last_transaction', JSON.stringify({
@@ -341,7 +402,12 @@ export default function SendModal({
             }));
           }
 
-          CloseModal();
+          // Delay closing modal to show success message
+          setTimeout(() => {
+            CloseModal();
+            // Reload the page to show the new transaction
+            window.location.reload();
+          }, 2000);
         } else {
           setTransferError(response.data.message || 'Transfer failed');
         }
@@ -364,7 +430,7 @@ export default function SendModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Send Mone</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Send Money - RemittEase</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
             <X className="h-6 w-6" />
           </button>
@@ -372,10 +438,10 @@ export default function SendModal({
 
         {/* Transfer Type Selection */}
         <div className="mb-6">
-          <div className="flex space-x-4">
+          <div className="flex space-x-2">
             <button
               onClick={() => setTransferType('crypto')}
-              className={`flex-1 py-2 px-4 rounded ${
+              className={`flex-1 py-2 px-3 rounded text-sm ${
                 transferType === 'crypto'
                   ? 'bg-green-500 text-white'
                   : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -386,7 +452,7 @@ export default function SendModal({
             </button>
             <button
               onClick={() => setTransferType('cash')}
-              className={`flex-1 py-2 px-4 rounded ${
+              className={`flex-1 py-2 px-3 rounded text-sm ${
                 transferType === 'cash'
                   ? 'bg-green-500 text-white'
                   : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -395,11 +461,52 @@ export default function SendModal({
             >
               Cash
             </button>
+            <button
+              onClick={() => setTransferType('demo')}
+              className={`flex-1 py-2 px-3 rounded text-sm ${
+                transferType === 'demo'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+              }`}
+              type="button"
+            >
+              Demo TX
+            </button>
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
-          {transferType === 'crypto' ? (
+          {transferType === 'demo' ? (
+            // Demo Transaction Form
+            <div className="space-y-4">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900 rounded-lg mb-4">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  This will create a demo transaction to the admin wallet and save it to the database for demonstration purposes.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount (XLM)</label>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  placeholder="Enter amount in XLM"
+                  step="0.1"
+                  min="0.1"
+                />
+                <p className="mt-1 text-xs text-gray-500">Minimum: 0.1 XLM</p>
+              </div>
+
+              <div className="p-2 border border-yellow-200 bg-yellow-50 dark:bg-yellow-900 dark:border-yellow-800 rounded">
+                <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                  Note: This is for demonstration purposes only. The transaction will show in your transaction history as a
+                  completed transaction to the admin wallet.
+                </p>
+              </div>
+            </div>
+          ) : transferType === 'crypto' ? (
             // Crypto Transfer Form
             <div className="space-y-4">
               <div>
@@ -472,7 +579,14 @@ export default function SendModal({
                       setSelectedBank(recipient.bank_code);
                       setAccountNumber(recipient.account_number);
                       setAccountName(recipient.account_name);
-                      setPhone(recipient.phone);
+                      setPhone(recipient.phone || '');
+                      setData({
+                        ...data,
+                        bank_code: recipient.bank_code,
+                        account_number: recipient.account_number,
+                        phone: recipient.phone || '',
+                        recipient_id: recipient.id.toString()
+                      });
                     }
                   }}
                   className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
@@ -515,14 +629,14 @@ export default function SendModal({
                     className="flex-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-primary-500 focus:ring-primary-500"
                     placeholder="Enter account number"
                   />
-                  {/* <button
+                  <button
                     type="button"
                     onClick={verifyAccount}
-                    disabled={isVerifying || !selectedBank || !accountNumber}
+                    disabled={isVerifying || !selectedBank || !accountNumber || !phone}
                     className="ml-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
                   >
                     {isVerifying ? 'Verifying...' : 'Verify'}
-                  </button> */}
+                  </button>
                 </div>
                 {accountName && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Account Name: {accountName}</p>}
               </div>
@@ -545,9 +659,16 @@ export default function SendModal({
                 <input
                   type="text"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    setData({
+                      ...data,
+                      phone: e.target.value
+                    });
+                  }}
                   className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   placeholder="Enter phone number"
+                  required
                 />
               </div>
 
@@ -568,6 +689,12 @@ export default function SendModal({
             <div className="mt-4 text-sm text-red-500">{transferError}</div>
           )}
 
+          {successMessage && (
+            <div className="mt-4 text-sm text-green-500 p-2 bg-green-50 border border-green-100 rounded-md">
+              {successMessage}
+            </div>
+          )}
+
           <div className="mt-6 flex justify-end space-x-3">
             <button
               type="button"
@@ -579,9 +706,18 @@ export default function SendModal({
             <button
               type="submit"
               disabled={isTransferring || processing}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+              className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                transferType === 'demo'
+                  ? 'bg-blue-500 hover:bg-blue-600'
+                  : 'bg-green-500 hover:bg-primary-700'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50`}
             >
-              {isTransferring ? 'Processing...' : 'Send'}
+              {isTransferring
+                ? 'Processing...'
+                : transferType === 'demo'
+                  ? 'Create Demo Transaction'
+                  : 'Send'
+              }
             </button>
           </div>
         </form>

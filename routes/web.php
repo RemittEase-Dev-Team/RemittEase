@@ -80,6 +80,8 @@ Route::middleware([
     Route::get('/remittance/banks', [RemittanceController::class, 'getBanks'])->name('remittance.banks');
     Route::post('/remittance/verify-account', [RemittanceController::class, 'verifyAccount'])->name('remittance.verify-account');
     Route::post('/remittance/transfer', [RemittanceController::class, 'initiateTransfer'])->name('remittance.transfer');
+    Route::post('/remittance/test-transfer', [RemittanceController::class, 'testXLMTransfer'])->name('remittance.test-transfer');
+    Route::post('/remittance/demo-transaction', [RemittanceController::class, 'createDemoTransaction'])->name('remittance.demo-transaction');
     Route::get('/remittance/transaction/{transactionId}/status', [RemittanceController::class, 'checkTransactionStatus'])->name('remittance.transaction.status');
 
     Route::get('/transactions', [App\Http\Controllers\TransactionController::class, 'index'])->name('transactions');
@@ -122,6 +124,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/transactions', [ManageTransactionController::class, 'index'])->name('admin.transactions');
     Route::get('/transactions/{id}/approve', [ManageTransactionController::class, 'approve'])->name('admin.transactions.approve');
     Route::get('/transactions/{id}/reject', [ManageTransactionController::class, 'reject'])->name('admin.transactions.reject');
+    Route::post('/transactions/bulk-approve', [ManageTransactionController::class, 'bulkApprove'])->name('admin.transactions.bulk-approve');
+    Route::post('/transactions/bulk-reject', [ManageTransactionController::class, 'bulkReject'])->name('admin.transactions.bulk-reject');
+    Route::post('/transactions/schedule', [ManageTransactionController::class, 'scheduleTransactions'])->name('admin.transactions.schedule');
 
     Route::get('/blogs', [BlogController::class, 'index'])->name('admin.blogs');
     Route::get('/blogs/create', [BlogController::class, 'create'])->name('admin.blogs.create');
@@ -218,6 +223,21 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/kyc/complete', [KYCController::class, 'completeKYC'])->name('kyc.complete');
     Route::post('/kyc/webhook', [KYCController::class, 'handleWebhook'])->name('kyc.webhook');
 });
+
+Route::get('/stellar-test', [RemittanceController::class, 'stellarTest'])->name('stellar.test');
+
+// Demo route to show mockup transactions
+Route::get('/demo/transactions', function() {
+    $transactions = \App\Models\Transaction::where('reference', 'like', 'MOCKUP_%')
+        ->orWhere('type', 'test')
+        ->latest()
+        ->take(5)
+        ->get();
+
+    return view('demo-transactions', [
+        'transactions' => $transactions
+    ]);
+})->name('demo.transactions');
 
 require __DIR__.'/auth.php';
 

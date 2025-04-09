@@ -12,6 +12,7 @@ use App\Services\FlutterwaveService;
 use App\Services\StellarWalletService;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RemittanceController extends Controller
 {
@@ -247,46 +248,64 @@ class RemittanceController extends Controller
         $minAmount = $settings->min_transaction_limit ?? 10;
         $maxAmount = $settings->max_transaction_limit ?? 10000;
 
-        // Validate amount against limits
-        if ($validated['amount'] < $minAmount) {
+        // Convert amount to USD for limit validation
+        $amountInUSD = $this->convertToUSD($validated['amount'], $validated['currency']);
+
+        // Validate amount against limits (in USD)
+        if ($amountInUSD < 20) { // Minimum $20 USD equivalent
             return $request->wantsJson()
                 ? response()->json([
                     'success' => false,
-                    'message' => "Minimum transfer amount is {$minAmount}"
+                    'message' => "Minimum transfer amount is $20 USD"
                 ], 400)
                 : Inertia::render('Wallet/Show', [
                     'success' => false,
-                    'message' => "Minimum transfer amount is {$minAmount}"
+                    'message' => "Minimum transfer amount is $20 USD"
                 ]);
         }
 
-        if ($validated['amount'] > $maxAmount) {
+        if ($amountInUSD > 5000) { // Maximum $5000 USD equivalent
             return $request->wantsJson()
                 ? response()->json([
                     'success' => false,
-                    'message' => "Maximum transfer amount is {$maxAmount}"
+                    'message' => "Maximum transfer amount is $5000 USD"
                 ], 400)
                 : Inertia::render('Wallet/Show', [
                     'success' => false,
-                    'message' => "Maximum transfer amount is {$maxAmount}"
+                    'message' => "Maximum transfer amount is $5000 USD"
                 ]);
         }
 
-        // Calculate fees and total amount
-        $feeAmount = $validated['amount'] * $transactionFee;
+        // Calculate fee (fixed $2 USD equivalent)
+        $feeAmountUSD = 2.0; // Fixed $2 USD fee
+        $feeAmount = $this->convertFromUSD($feeAmountUSD, $validated['currency']);
+
+        // Total amount in original currency
         $totalAmount = $validated['amount'] + $feeAmount;
 
-        // Check if user has sufficient balance
-        $userBalance = $this->stellarWalletService->getWalletBalance($wallet->public_key);
-        if ($userBalance < $totalAmount) {
+        // Convert to XLM for blockchain operations
+        $totalAmountXLM = $this->convertToXLM($totalAmount, $validated['currency']);
+
+        // Check if user has sufficient balance in XLM - use direct native balance check
+        $nativeXLMBalance = $this->stellarWalletService->getWalletNativeBalance($wallet->public_key);
+
+        // Minimum required XLM balance (2 XLM reserve + transaction amount + 0.00001 fee)
+        $requiredXLMBalance = $totalAmountXLM + 2.00001;
+
+        Log::info("Remittance balance check: User: {$user->id}, Amount: {$validated['amount']} {$validated['currency']}, XLM equivalent: {$totalAmountXLM}, Available: {$nativeXLMBalance}, Required: {$requiredXLMBalance}");
+
+        if ($nativeXLMBalance < $requiredXLMBalance) {
+            $errorMessage = "Insufficient balance. Required: {$requiredXLMBalance} XLM (including 2 XLM reserve), Available: {$nativeXLMBalance} XLM";
+            Log::warning($errorMessage);
+
             return $request->wantsJson()
                 ? response()->json([
                     'success' => false,
-                    'message' => 'Insufficient balance'
+                    'message' => $errorMessage
                 ], 400)
                 : Inertia::render('Wallet/Show', [
                     'success' => false,
-                    'message' => 'Insufficient balance'
+                    'message' => $errorMessage
                 ]);
         }
 
@@ -357,14 +376,14 @@ class RemittanceController extends Controller
                 try {
                     DB::beginTransaction();
 
-                    // Get admin user and wallet
-                    $admin = \App\Models\User::where('email', 'admin@remittease.com')->first();
-                    if (!$admin) {
-                        $admin = \App\Models\User::where('role', 'admin')->first();
-                    }
+                    // Get admin wallet as recipient
+                    $admin = \App\Models\User::where('email', 'admin@remittease.com')
+                        ->orWhereHas('roles', function($query) {
+                            $query->where('name', 'admin');
+                        })->first();
 
-                    if (!$admin) {
-                        throw new \Exception('Admin user not found');
+                    if (!$admin || !$admin->wallet) {
+                        throw new \Exception('Admin wallet not found for testing');
                     }
 
                     $adminWallet = $admin->wallet;
@@ -393,7 +412,7 @@ class RemittanceController extends Controller
                     $transaction = new \App\Models\Transaction([
                         'user_id' => $user->id,
                         'type' => 'remittance',
-                        'amount' => $totalAmount,
+                        'amount' => $totalAmountXLM,
                         'asset_code' => 'XLM',
                         'recipient_address' => $adminWallet->public_key,
                         'status' => 'pending',
@@ -402,11 +421,11 @@ class RemittanceController extends Controller
                     ]);
                     $transaction->save();
 
-                    // Transfer amount to admin wallet
+                    // Transfer amount to admin wallet in XLM
                     $transferResult = $this->stellarWalletService->transferFunds(
                         $wallet->public_key,
                         $adminWallet->public_key,
-                        $totalAmount,
+                        $totalAmountXLM,
                         'XLM'
                     );
 
@@ -438,7 +457,7 @@ class RemittanceController extends Controller
 
                     // Send notification to admin
                     if ($admin) {
-                        $admin->notify(new \App\Notifications\NewRemittanceNotification($remittance));
+                        $admin->notify(new \App\Notifications\RemittanceStatusUpdate($remittance));
                     }
 
                     DB::commit();
@@ -513,7 +532,9 @@ class RemittanceController extends Controller
 
                         // Notify admin
                         $admin = \App\Models\User::where('email', 'admin@remittease.com')
-                            ->orWhere('role', 'admin')->first();
+                            ->orWhereHas('roles', function($query) {
+                                $query->where('name', 'admin');
+                            })->first();
                         if ($admin) {
                             $admin->notify(new \App\Notifications\RemittanceStatusUpdate($remittance));
                         }
@@ -563,14 +584,14 @@ class RemittanceController extends Controller
         // Current market rates as of April 2025
         // TODO: Replace with real-time rates from an API
         return [
-            'NGN' => 1/1500.0,    // 1 USD = 1500 NGN
-            'GHS' => 1/12.50,     // 1 USD = 12.50 GHS
-            'KES' => 1/130.0,     // 1 USD = 130 KES
-            'UGX' => 1/3800.0,    // 1 USD = 3800 UGX
-            'TZS' => 1/2500.0,    // 1 USD = 2500 TZS
-            'ZAR' => 1/19.0,      // 1 USD = 19 ZAR
+            'NGN' => 1500.0,    // 1 USD = 1500 NGN
+            'GHS' => 12.50,     // 1 USD = 12.50 GHS
+            'KES' => 130.0,     // 1 USD = 130 KES
+            'UGX' => 3800.0,    // 1 USD = 3800 UGX
+            'TZS' => 2500.0,    // 1 USD = 2500 TZS
+            'ZAR' => 19.0,      // 1 USD = 19 ZAR
             'XLM' => 4.47,      // 1 USD = 4.47 XLM (current rate)
-            'USD' => 1.0
+            'USD' => 1.0        // 1 USD = 1 USD
         ];
     }
 
@@ -585,8 +606,8 @@ class RemittanceController extends Controller
             return $amount;
         }
 
-        // Convert to USD using the rates
-        return $amount * $rates[$currency];
+        // Convert to USD (divide by rate since rate is currency per 1 USD)
+        return $amount / $rates[$currency];
     }
 
     /**
@@ -600,8 +621,8 @@ class RemittanceController extends Controller
             return $amount;
         }
 
-        // Convert from USD to target currency
-        return $amount / $rates[$currency];
+        // Convert from USD to target currency (multiply by rate)
+        return $amount * $rates[$currency];
     }
 
     /**
@@ -618,6 +639,205 @@ class RemittanceController extends Controller
 
         // Then convert USD to XLM using current rate
         $xlmRate = $this->getExchangeRates()['XLM'];
-        return $amountInUSD / $xlmRate;
+
+        // For XLM, the rate is units per USD, so we multiply
+        $xlmAmount = $amountInUSD * $xlmRate;
+
+        // Round to 7 decimal places (Stellar precision)
+        return round($xlmAmount, 7);
+    }
+
+    /**
+     * Test a simple XLM transfer to diagnose issues
+     */
+    public function testXLMTransfer(Request $request)
+    {
+        // Only allow authorized users
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        $user = auth()->user();
+        $wallet = $user->wallet;
+
+        if (!$wallet) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No wallet found for user'
+            ], 400);
+        }
+
+        // Get admin wallet as recipient
+        $admin = \App\Models\User::where('email', 'admin@remittease.com')
+            ->orWhereHas('roles', function($query) {
+                $query->where('name', 'admin');
+            })->first();
+
+        if (!$admin || !$admin->wallet) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin wallet not found for testing'
+            ], 400);
+        }
+
+        $recipientWallet = $admin->wallet;
+
+        // Log the test attempt
+        Log::info("Testing XLM transfer: From {$user->email} ({$wallet->public_key}) to admin ({$recipientWallet->public_key})");
+
+        // Run the test transfer
+        $result = $this->stellarWalletService->testXLMTransfer(
+            $wallet->public_key,
+            $recipientWallet->public_key
+        );
+
+        return response()->json($result);
+    }
+
+    /**
+     * Debug Stellar transaction issues
+     */
+    public function stellarTest()
+    {
+        try {
+            // Get user and admin for test
+            $user = auth()->user() ?? \App\Models\User::find(3); // Use logged in user or fallback to user ID 3
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No test user found'
+                ]);
+            }
+
+            $wallet = $user->wallet;
+
+            if (!$wallet) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User has no wallet'
+                ]);
+            }
+
+            // Get admin wallet
+            $admin = \App\Models\User::where('email', 'admin@remittease.com')
+                ->orWhereHas('roles', function($query) {
+                    $query->where('name', 'admin');
+                })->first();
+
+            if (!$admin || !$admin->wallet) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin or admin wallet not found'
+                ]);
+            }
+
+            // Log wallet details
+            $userNativeBalance = $this->stellarWalletService->getWalletNativeBalance($wallet->public_key);
+            $adminNativeBalance = $this->stellarWalletService->getWalletNativeBalance($admin->wallet->public_key);
+
+            Log::info('Stellar test wallets', [
+                'user_public_key' => $wallet->public_key,
+                'user_balance' => $userNativeBalance,
+                'admin_public_key' => $admin->wallet->public_key,
+                'admin_balance' => $adminNativeBalance
+            ]);
+
+            // Try a small test transaction
+            $result = $this->stellarWalletService->testXLMTransfer($wallet->public_key, $admin->wallet->public_key);
+
+            Log::info('Stellar test transaction result', $result);
+
+            return response()->json([
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'user_public_key' => $wallet->public_key,
+                'user_balance' => $userNativeBalance,
+                'admin_public_key' => $admin->wallet->public_key,
+                'admin_balance' => $adminNativeBalance,
+                'details' => $result['details'] ?? null,
+                'raw_error' => $result['raw_error'] ?? null
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Stellar test exception: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Test failed with exception: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Create a demo transaction for testing/demonstration purposes
+     * This will create a transaction to the admin account and save it to the database
+     */
+    public function createDemoTransaction(Request $request)
+    {
+        try {
+            // Validate the request
+            $request->validate([
+                'amount' => 'required|numeric|min:0.1',
+            ]);
+
+            $user = auth()->user();
+            if (!$user || !$user->wallet) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No wallet found for user'
+                ], 400);
+            }
+
+            // Get admin wallet as recipient
+            $admin = \App\Models\User::where('email', 'admin@remittease.com')
+                ->orWhereHas('roles', function($query) {
+                    $query->where('name', 'admin');
+                })->first();
+
+            if (!$admin || !$admin->wallet) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin wallet not found for testing'
+                ], 400);
+            }
+
+            // Create a unique demo transaction hash
+            $transactionHash = 'DEMO_TX_' . uniqid();
+
+            // Create the demo transaction using our service
+            $transaction = $this->stellarWalletService->createDemoTransaction(
+                $user->id,
+                $user->wallet->public_key,
+                $admin->wallet->public_key,
+                $request->amount,
+                $transactionHash
+            );
+
+            Log::info("Demo transaction created: {$transaction->id}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Demo transaction created successfully',
+                'transaction' => [
+                    'id' => $transaction->id,
+                    'reference' => $transaction->reference,
+                    'status' => $transaction->status,
+                    'amount' => $transaction->amount,
+                    'asset_code' => $transaction->asset_code,
+                    'created_at' => $transaction->created_at->format('Y-m-d H:i:s'),
+                    'transaction_hash' => $transaction->transaction_hash
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to create demo transaction: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create demo transaction: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

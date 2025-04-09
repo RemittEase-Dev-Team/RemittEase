@@ -11,6 +11,7 @@ use App\Models\Remittance;
 use App\Services\StellarWalletService;
 use Mockery;
 use Illuminate\Support\Facades\Queue;
+use Spatie\Permission\Models\Role;
 
 class CheckTransactionStatusJobTest extends TestCase
 {
@@ -32,6 +33,19 @@ class CheckTransactionStatusJobTest extends TestCase
             'min_transaction_limit' => 10,
             'max_transaction_limit' => 10000,
         ]);
+
+        // Create the admin role for testing
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+
+        // Create an admin user
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@remittease.com'],
+            [
+                'name' => 'Admin User',
+                'password' => bcrypt('password'),
+            ]
+        );
+        $admin->assignRole('admin');
 
         // Mock the StellarWalletService
         $this->stellarWalletServiceMock = Mockery::mock(StellarWalletService::class);

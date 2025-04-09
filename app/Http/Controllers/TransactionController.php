@@ -17,7 +17,7 @@ class TransactionController extends Controller
         $cryptoTransactions = Transaction::where('user_id', $user->id)
             ->latest()
             ->get()
-            ->map(function ($transaction) {
+            ->map(function ($transaction) use ($user) {
                 return [
                     'id' => $transaction->id,
                     'type' => $transaction->type,
@@ -25,7 +25,9 @@ class TransactionController extends Controller
                     'currency' => $transaction->currency,
                     'date' => $transaction->created_at->format('Y-m-d H:i:s'),
                     'status' => $transaction->status,
-                    'isOutgoing' => in_array($transaction->type, ['withdrawal', 'transfer']),
+                    'isOutgoing' => ($transaction->type === 'test')
+                        ? true  // Always treat test transactions as outgoing
+                        : ($user->wallet ? $transaction->sender_address === $user->wallet->public_key : false),
                     'recipientAddress' => $transaction->recipient_address,
                     'transactionHash' => $transaction->transaction_hash,
                     'transactionType' => 'crypto',

@@ -89,9 +89,8 @@ class CheckTransactionStatus implements ShouldQueue
                         $remittance->status = 'processing'; // Admin still needs to process it
                         $remittance->save();
 
-                        // Notify admin
-                        $admin = User::where('email', 'admin@remittease.com')
-                            ->orWhere('role', 'admin')->first();
+                        // Notify admin - using Spatie's role system
+                        $admin = User::role('admin')->first();
                         if ($admin) {
                             $admin->notify(new RemittanceStatusUpdate($remittance));
                         }

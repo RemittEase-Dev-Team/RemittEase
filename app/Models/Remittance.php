@@ -15,10 +15,14 @@ class Remittance extends Model
         'recipient_id',
         'amount',
         'currency',
+        'fee_amount',
+        'total_amount',
         'status',
+        'failure_reason',
         'reference',
         'bank_code',
         'account_number',
+        'phone',
         'narration',
         'provider',
         'provider_response'
@@ -26,6 +30,8 @@ class Remittance extends Model
 
     protected $casts = [
         'amount' => 'decimal:8',
+        'fee_amount' => 'decimal:8',
+        'total_amount' => 'decimal:8',
         'provider_response' => 'array'
     ];
 

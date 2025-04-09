@@ -102,7 +102,7 @@ class DashboardController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->take(10)
                 ->get()
-                ->map(function ($transaction) {
+                ->map(function ($transaction) use ($user) {
                     return [
                         'id' => $transaction->id,
                         'type' => $transaction->type,
@@ -110,7 +110,10 @@ class DashboardController extends Controller
                         'currency' => $transaction->asset_code,
                         'date' => $transaction->created_at->format('d M, Y'),
                         'status' => $transaction->status,
-                        'isOutgoing' => in_array($transaction->type, ['withdrawal', 'transfer']),
+                        'isOutgoing' => ($transaction->type === 'test')
+                            ? true // Always treat test transactions as outgoing
+                            : in_array($transaction->type, ['withdrawal', 'transfer']) ||
+                              ($user->wallet && $transaction->sender_address === $user->wallet->public_key),
                         'recipientAddress' => $transaction->recipient_address,
                         'transactionHash' => $transaction->transaction_hash,
                     ];

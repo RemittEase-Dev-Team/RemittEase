@@ -125,4 +125,60 @@ class Transaction extends Model
 
         return $baseUrl . $this->transaction_hash;
     }
+
+    /**
+     * Determine if this transaction is outgoing from the user's perspective
+     * @return bool
+     */
+    public function isOutgoing()
+    {
+        $user = auth()->user();
+        if (!$user || !$user->wallet) {
+            return false;
+        }
+
+        // If this is a test transaction created by the user, consider it outgoing
+        if ($this->type === 'test' && $this->user_id === $user->id) {
+            return true;
+        }
+
+        // If the sender address matches the user's wallet public key, it's outgoing
+        return $this->sender_address === $user->wallet->public_key;
+    }
+
+    /**
+     * Determine if this transaction is incoming to the user's perspective
+     * @return bool
+     */
+    public function isIncoming()
+    {
+        $user = auth()->user();
+        if (!$user || !$user->wallet) {
+            return false;
+        }
+
+        // If this is a test transaction created by the user, it's not incoming
+        if ($this->type === 'test' && $this->user_id === $user->id) {
+            return false;
+        }
+
+        // If the recipient address matches the user's wallet public key, it's incoming
+        return $this->recipient_address === $user->wallet->public_key;
+    }
+
+    /**
+     * Get the transaction direction (incoming/outgoing) from user's perspective
+     * @return string
+     */
+    public function getDirectionAttribute()
+    {
+        if ($this->isOutgoing()) {
+            return 'outgoing';
+        } elseif ($this->isIncoming()) {
+            return 'incoming';
+        }
+
+        // Default to outgoing if user_id matches (for backward compatibility)
+        return $this->user_id === auth()->id() ? 'outgoing' : 'incoming';
+    }
 }
