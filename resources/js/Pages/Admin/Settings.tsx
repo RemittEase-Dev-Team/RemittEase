@@ -31,20 +31,77 @@ interface SettingsProps {
     };
 }
 
+// Available currencies including XLM
+const AVAILABLE_CURRENCIES = [
+    'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'INR', 'NZD',
+    'SEK', 'KRW', 'SGD', 'NOK', 'MXN', 'XLM', 'BTC', 'ETH', 'USDT', 'USDC'
+];
+
+// Available Stellar network versions
+const STELLAR_NETWORKS = [
+    'Public Network',
+    'Test Network',
+    'Future Network'
+];
+
 const Settings = ({ settings }: SettingsProps) => {
-    const { data, setData, post, processing } = useForm<any>(settings);
-    const [loadingFields, setLoadingFields] = useState<string[] | any>([]);
+    const { data, setData, post, processing, errors } = useForm<any>(settings);
+    const [loadingFields, setLoadingFields] = useState<string[]>([]);
+    const [updateStatus, setUpdateStatus] = useState<{[key: string]: string}>({});
 
     const updateSetting = (name: keyof typeof data, value: any) => {
+        // Update the form data
         setData(name, value);
-        setLoadingFields((prev: any) => [...prev, name]);
 
-        post("/admin/settings/update", {
+        // Add to loading fields
+        setLoadingFields((prev) => [...prev, name as string]);
+
+        // Clear any previous status for this field
+        setUpdateStatus((prev) => ({ ...prev, [name as string]: '' }));
+
+        // Determine which section this setting belongs to
+        let section = 'general';
+        if (['contact_email', 'support_phone', 'support_email', 'terms_of_service_url', 'privacy_policy_url', 'site_url'].includes(name as string)) {
+            section = 'contact';
+        } else if (['api_key', 'api_secret', 'exchange_rate_api', 'kyc_verification_provider'].includes(name as string)) {
+            section = 'api';
+        } else if (['moonpay_enabled', 'linkio_enabled', 'yellowcard_enabled'].includes(name as string)) {
+            section = 'payment_gateways';
+        }
+
+        // Send the update request
+        post(route('admin.settings.update', { id: 1 }), {
             preserveScroll: true,
-            onFinish: () => {
-                setLoadingFields((prev: any) => prev.filter((f: any) => f !== name));
+            onSuccess: () => {
+                // Remove from loading fields
+                setLoadingFields((prev) => prev.filter(field => field !== name));
+                // Set success status
+                setUpdateStatus((prev) => ({ ...prev, [name as string]: 'success' }));
             },
+            onError: (errors) => {
+                // Remove from loading fields
+                setLoadingFields((prev) => prev.filter(field => field !== name));
+                // Set error status
+                setUpdateStatus((prev) => ({ ...prev, [name as string]: 'error' }));
+            },
+            onFinish: () => {
+                // Clear status after 3 seconds
+                setTimeout(() => {
+                    setUpdateStatus((prev) => {
+                        const newStatus = { ...prev };
+                        delete newStatus[name as string];
+                        return newStatus;
+                    });
+                }, 3000);
+            }
         });
+
+        // Update the form data with the section and value
+        setData((prev: typeof data) => ({
+            ...prev,
+            section,
+            [name]: value
+        }));
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -58,6 +115,22 @@ const Settings = ({ settings }: SettingsProps) => {
     };
 
     const isLoading = (field: string) => loadingFields.includes(field);
+
+    const getStatusIcon = (field: string) => {
+        if (isLoading(field)) {
+            return <span className="text-blue-500">Updating...</span>;
+        }
+
+        if (updateStatus[field] === 'success') {
+            return <span className="text-green-500">Saved</span>;
+        }
+
+        if (updateStatus[field] === 'error') {
+            return <span className="text-red-500">Failed to save</span>;
+        }
+
+        return null;
+    };
 
     return (
         <AdminLayout>
@@ -93,11 +166,9 @@ const Settings = ({ settings }: SettingsProps) => {
                                         'app_name',
                                         'app_version',
                                         'currency',
-                                        'default_currency',
                                         'transaction_fee',
                                         'max_transaction_limit',
                                         'min_transaction_limit',
-                                        'stellar_network',
                                         'maintenance_mode'
                                     ].map((key) => (
                                         <div key={key}>
@@ -107,15 +178,15 @@ const Settings = ({ settings }: SettingsProps) => {
 
                                             {key === 'maintenance_mode' ? (
                                                 <Switch
-                                                    checked={data[key]}
+                                                    checked={data[key] === true}
                                                     onChange={() => handleToggle(key)}
                                                     className={`${
-                                                        data[key] ? 'bg-green-500' : 'bg-gray-400'
+                                                        data[key] === true ? 'bg-green-500' : 'bg-gray-400'
                                                     } relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none`}
                                                 >
                                                     <span
                                                         className={`${
-                                                            data[key] ? 'translate-x-6' : 'translate-x-1'
+                                                            data[key] === true ? 'translate-x-6' : 'translate-x-1'
                                                         } inline-block w-4 h-4 transform bg-white rounded-full transition-transform`}
                                                     />
                                                 </Switch>
@@ -130,11 +201,59 @@ const Settings = ({ settings }: SettingsProps) => {
                                                 />
                                             )}
 
-                                            {isLoading(key) && (
-                                                <p className="text-xs text-blue-500 mt-1">Updating...</p>
-                                            )}
+                                            <div className="mt-1 text-xs">
+                                                {getStatusIcon(key)}
+                                            </div>
                                         </div>
                                     ))}
+
+                                    {/* Default Currency Dropdown */}
+                                    <div>
+                                        <label className="block text-gray-700 dark:text-gray-300 uppercase mb-1">
+                                            Default Currency
+                                        </label>
+                                        <select
+                                            name="default_currency"
+                                            value={data.default_currency || ''}
+                                            onChange={handleInputChange}
+                                            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
+                                            disabled={isLoading('default_currency')}
+                                        >
+                                            <option value="">Select Currency</option>
+                                            {AVAILABLE_CURRENCIES.map((currency) => (
+                                                <option key={currency} value={currency}>
+                                                    {currency}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="mt-1 text-xs">
+                                            {getStatusIcon('default_currency')}
+                                        </div>
+                                    </div>
+
+                                    {/* Stellar Network Dropdown */}
+                                    <div>
+                                        <label className="block text-gray-700 dark:text-gray-300 uppercase mb-1">
+                                            Stellar Network
+                                        </label>
+                                        <select
+                                            name="stellar_network"
+                                            value={data.stellar_network || ''}
+                                            onChange={handleInputChange}
+                                            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
+                                            disabled={isLoading('stellar_network')}
+                                        >
+                                            <option value="">Select Network</option>
+                                            {STELLAR_NETWORKS.map((network) => (
+                                                <option key={network} value={network}>
+                                                    {network}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="mt-1 text-xs">
+                                            {getStatusIcon('stellar_network')}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </TabPanel>
@@ -149,22 +268,22 @@ const Settings = ({ settings }: SettingsProps) => {
                                                 {key.replace(/_/g, " ")}
                                             </label>
                                             <Switch
-                                                checked={data[key]}
+                                                checked={data[key] === true}
                                                 onChange={() => handleToggle(key)}
                                                 className={`${
-                                                    data[key] ? 'bg-green-500' : 'bg-gray-400'
+                                                    data[key] === true ? 'bg-green-500' : 'bg-gray-400'
                                                 } relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none`}
                                             >
                                                 <span
                                                     className={`${
-                                                        data[key] ? 'translate-x-6' : 'translate-x-1'
+                                                        data[key] === true ? 'translate-x-6' : 'translate-x-1'
                                                     } inline-block w-4 h-4 transform bg-white rounded-full transition-transform`}
                                                 />
                                             </Switch>
 
-                                            {isLoading(key) && (
-                                                <p className="text-xs text-blue-500 mt-1">Updating...</p>
-                                            )}
+                                            <div className="mt-1 text-xs">
+                                                {getStatusIcon(key)}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -188,9 +307,9 @@ const Settings = ({ settings }: SettingsProps) => {
                                                 className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
                                                 disabled={isLoading(key)}
                                             />
-                                            {isLoading(key) && (
-                                                <p className="text-xs text-blue-500 mt-1">Updating...</p>
-                                            )}
+                                            <div className="mt-1 text-xs">
+                                                {getStatusIcon(key)}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -214,9 +333,9 @@ const Settings = ({ settings }: SettingsProps) => {
                                                 className="w-full p-2 border rounded dark:bg-gray-700 dark:text-gray-300"
                                                 disabled={isLoading(key)}
                                             />
-                                            {isLoading(key) && (
-                                                <p className="text-xs text-blue-500 mt-1">Updating...</p>
-                                            )}
+                                            <div className="mt-1 text-xs">
+                                                {getStatusIcon(key)}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

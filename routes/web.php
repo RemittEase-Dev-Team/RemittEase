@@ -146,7 +146,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::post('/blogs/{id}/reject', [BlogController::class, 'reject'])->name('admin.blogs.reject');
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('admin.settings');
-    Route::post('/settings/{id}/update', [SettingsController::class, 'update']);
+    Route::post('/settings/{id}/update', [SettingsController::class, 'update'])->name('admin.settings.update');
     Route::get('/users', [UserController::class, 'index'])->name('admin.users');
     Route::get('/users/{id}', [UserController::class, 'show'])->name('admin.users.show');
     Route::get('/users/{id}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
