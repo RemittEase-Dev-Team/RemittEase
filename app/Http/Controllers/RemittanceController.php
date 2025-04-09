@@ -277,8 +277,8 @@ class RemittanceController extends Controller
         $totalAmount = $validated['amount'] + $feeAmount;
 
         // Check if user has sufficient balance
-        $xlmBalance = $this->stellarWalletService->getWalletBalance($wallet->public_key);
-        if ($xlmBalance < $totalAmount) {
+        $userBalance = $this->stellarWalletService->getWalletBalance($wallet->public_key);
+        if ($userBalance < $totalAmount) {
             return $request->wantsJson()
                 ? response()->json([
                     'success' => false,
@@ -295,6 +295,18 @@ class RemittanceController extends Controller
 
         try {
             if ($request->transfer_type === 'crypto') {
+                // First create transaction record with pending status
+                $transaction = new \App\Models\Transaction([
+                    'user_id' => $user->id,
+                    'type' => 'crypto_transfer',
+                    'amount' => $validated['amount'],
+                    'asset_code' => $validated['currency'],
+                    'recipient_address' => $validated['wallet_address'],
+                    'status' => 'pending',
+                    'reference' => $reference
+                ]);
+                $transaction->save();
+
                 // Handle crypto transfer
                 $result = $this->stellarWalletService->transferFunds(
                     $wallet->public_key,
@@ -304,28 +316,32 @@ class RemittanceController extends Controller
                 );
 
                 if ($result['success']) {
-                    // Record the transaction
-                    $transaction = new \App\Models\Transaction([
-                        'user_id' => $user->id,
-                        'type' => 'crypto_transfer',
-                        'amount' => $validated['amount'],
-                        'asset_code' => $validated['currency'],
-                        'recipient_address' => $validated['wallet_address'],
-                        'status' => 'completed',
-                        'transaction_hash' => $result['transaction_hash'] ?? null
-                    ]);
+                    // Update the transaction record
+                    $transaction->status = 'completed';
+                    $transaction->transaction_hash = $result['transaction_hash'] ?? null;
                     $transaction->save();
+
+                    // Schedule a job to verify transaction status after some time
+                    \App\Jobs\CheckTransactionStatus::dispatch($transaction->id)
+                        ->delay(now()->addMinutes(5));
 
                     return $request->wantsJson()
                         ? response()->json([
                             'success' => true,
-                            'message' => 'Crypto transfer completed successfully'
+                            'message' => 'Crypto transfer initiated successfully',
+                            'transaction_id' => $transaction->id,
+                            'reference' => $reference
                         ])
                         : Inertia::render('Wallet/Show', [
                             'success' => true,
-                            'message' => 'Crypto transfer completed successfully'
+                            'message' => 'Crypto transfer initiated successfully'
                         ]);
                 } else {
+                    // Update transaction to failed
+                    $transaction->status = 'failed';
+                    $transaction->failure_reason = $result['message'] ?? 'Unknown error';
+                    $transaction->save();
+
                     return $request->wantsJson()
                         ? response()->json([
                             'success' => false,
@@ -341,24 +357,22 @@ class RemittanceController extends Controller
                 try {
                     DB::beginTransaction();
 
-                    // Transfer amount to admin wallet
-                    $adminWallet = \App\Models\User::where('role', 'admin')->first()->wallet;
+                    // Get admin user and wallet
+                    $admin = \App\Models\User::where('email', 'admin@remittease.com')->first();
+                    if (!$admin) {
+                        $admin = \App\Models\User::where('role', 'admin')->first();
+                    }
+
+                    if (!$admin) {
+                        throw new \Exception('Admin user not found');
+                    }
+
+                    $adminWallet = $admin->wallet;
                     if (!$adminWallet) {
                         throw new \Exception('Admin wallet not found');
                     }
 
-                    $transferResult = $this->stellarWalletService->transferFunds(
-                        $wallet->public_key,
-                        $adminWallet->public_key,
-                        $totalAmount,
-                        'XLM'
-                    );
-
-                    if (!$transferResult['success']) {
-                        throw new \Exception($transferResult['message'] ?? 'Failed to transfer to admin wallet');
-                    }
-
-                    // Record the remittance
+                    // First create the remittance record with pending status
                     $remittance = new \App\Models\Remittance([
                         'user_id' => $user->id,
                         'recipient_id' => $request->recipient_id ?? null,
@@ -375,8 +389,54 @@ class RemittanceController extends Controller
                     ]);
                     $remittance->save();
 
+                    // Create a transaction record
+                    $transaction = new \App\Models\Transaction([
+                        'user_id' => $user->id,
+                        'type' => 'remittance',
+                        'amount' => $totalAmount,
+                        'asset_code' => 'XLM',
+                        'recipient_address' => $adminWallet->public_key,
+                        'status' => 'pending',
+                        'reference' => $reference,
+                        'remittance_id' => $remittance->id
+                    ]);
+                    $transaction->save();
+
+                    // Transfer amount to admin wallet
+                    $transferResult = $this->stellarWalletService->transferFunds(
+                        $wallet->public_key,
+                        $adminWallet->public_key,
+                        $totalAmount,
+                        'XLM'
+                    );
+
+                    if (!$transferResult['success']) {
+                        // Update records to failed status
+                        $transaction->status = 'failed';
+                        $transaction->failure_reason = $transferResult['message'] ?? 'Blockchain transfer failed';
+                        $transaction->save();
+
+                        $remittance->status = 'failed';
+                        $remittance->failure_reason = $transferResult['message'] ?? 'Blockchain transfer failed';
+                        $remittance->save();
+
+                        throw new \Exception($transferResult['message'] ?? 'Failed to transfer to admin wallet');
+                    }
+
+                    // Update transaction with success info
+                    $transaction->status = 'completed';
+                    $transaction->transaction_hash = $transferResult['transaction_hash'] ?? null;
+                    $transaction->save();
+
+                    // Update remittance status to processing (admin needs to manually complete it)
+                    $remittance->status = 'processing';
+                    $remittance->save();
+
+                    // Schedule a job to verify transaction status after some time
+                    \App\Jobs\CheckTransactionStatus::dispatch($transaction->id)
+                        ->delay(now()->addMinutes(5));
+
                     // Send notification to admin
-                    $admin = \App\Models\User::where('role', 'admin')->first();
                     if ($admin) {
                         $admin->notify(new \App\Notifications\NewRemittanceNotification($remittance));
                     }
@@ -386,7 +446,10 @@ class RemittanceController extends Controller
                     return $request->wantsJson()
                         ? response()->json([
                             'success' => true,
-                            'message' => 'Cash transfer initiated successfully'
+                            'message' => 'Cash transfer initiated successfully',
+                            'transaction_id' => $transaction->id,
+                            'remittance_id' => $remittance->id,
+                            'reference' => $reference
                         ])
                         : Inertia::render('Wallet/Show', [
                             'success' => true,
@@ -401,7 +464,7 @@ class RemittanceController extends Controller
                         ], 500)
                         : Inertia::render('Wallet/Show', [
                             'success' => false,
-                            'message' => 'An error occurred while processing the transfer'
+                            'message' => 'An error occurred while processing the transfer: ' . $e->getMessage()
                         ]);
                 }
             }
@@ -413,8 +476,82 @@ class RemittanceController extends Controller
                 ], 500)
                 : Inertia::render('Wallet/Show', [
                     'success' => false,
-                    'message' => 'An error occurred while processing the transfer'
+                    'message' => 'An error occurred while processing the transfer: ' . $e->getMessage()
                 ]);
+        }
+    }
+
+    /**
+     * Check and update transaction status on the blockchain
+     */
+    public function checkTransactionStatus($transactionId)
+    {
+        try {
+            $transaction = \App\Models\Transaction::findOrFail($transactionId);
+
+            // Only check pending transactions
+            if ($transaction->status !== 'pending') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transaction is already in final state: ' . $transaction->status
+                ]);
+            }
+
+            // Check transaction status on blockchain
+            $result = $this->stellarWalletService->checkTransactionStatus($transaction->transaction_hash);
+
+            if ($result['success']) {
+                $transaction->status = 'completed';
+                $transaction->save();
+
+                // If this transaction is linked to a remittance, update its status
+                if ($transaction->remittance_id) {
+                    $remittance = \App\Models\Remittance::find($transaction->remittance_id);
+                    if ($remittance && $remittance->status === 'pending') {
+                        $remittance->status = 'processing'; // Admin still needs to process it
+                        $remittance->save();
+
+                        // Notify admin
+                        $admin = \App\Models\User::where('email', 'admin@remittease.com')
+                            ->orWhere('role', 'admin')->first();
+                        if ($admin) {
+                            $admin->notify(new \App\Notifications\RemittanceStatusUpdate($remittance));
+                        }
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transaction completed successfully',
+                    'status' => 'completed'
+                ]);
+            } else {
+                // If transaction failed or not found
+                $transaction->status = 'failed';
+                $transaction->failure_reason = $result['message'] ?? 'Transaction verification failed';
+                $transaction->save();
+
+                // If this transaction is linked to a remittance, update its status
+                if ($transaction->remittance_id) {
+                    $remittance = \App\Models\Remittance::find($transaction->remittance_id);
+                    if ($remittance && $remittance->status === 'pending') {
+                        $remittance->status = 'failed';
+                        $remittance->failure_reason = $result['message'] ?? 'Transaction verification failed';
+                        $remittance->save();
+                    }
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Transaction verification failed',
+                    'status' => 'failed'
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error checking transaction status: ' . $e->getMessage()
+            ], 500);
         }
     }
 

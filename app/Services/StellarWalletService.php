@@ -421,4 +421,212 @@ class StellarWalletService
             return [];
         }
     }
+
+    /**
+     * Transfer funds from one wallet to another
+     * Used for both crypto and cash remittances
+     */
+    public function transferFunds($senderPublicKey, $recipientPublicKey, $amount, $assetCode = 'XLM')
+    {
+        try {
+            // Get sender wallet
+            $senderWallet = Wallet::where('public_key', $senderPublicKey)->first();
+            if (!$senderWallet) {
+                return [
+                    'success' => false,
+                    'message' => 'Sender wallet not found'
+                ];
+            }
+
+            // Calculate transaction fee (0.00001 XLM)
+            $txFee = 0.00001;
+
+            // Get the balance of the sender
+            $balanceArray = $this->getWalletBalance($senderPublicKey);
+            $senderBalance = 0;
+
+            // Find the requested asset balance
+            foreach ($balanceArray as $balance) {
+                if ($assetCode === 'XLM' && $balance['asset_type'] === 'native') {
+                    $senderBalance = floatval($balance['balance']);
+                    break;
+                } elseif ($balance['asset_code'] === $assetCode) {
+                    $senderBalance = floatval($balance['balance']);
+                    break;
+                }
+            }
+
+            // Ensure minimum XLM reserve (2 XLM) plus transaction fee
+            $minimumBalance = 2.00001;
+            $totalRequired = ($assetCode === 'XLM') ? $amount + $minimumBalance : $minimumBalance;
+
+            if ($senderBalance < $totalRequired) {
+                return [
+                    'success' => false,
+                    'message' => "Insufficient balance. Required: {$totalRequired} XLM (including 2 XLM reserve), Available: {$senderBalance} XLM"
+                ];
+            }
+
+            // Check if we need to create an account for the recipient
+            $needToCreateAccount = false;
+            try {
+                $this->sdk->accounts()->account($recipientPublicKey);
+            } catch (\Exception $e) {
+                $needToCreateAccount = true;
+            }
+
+            // Decrypt the secret key
+            $secretKey = decrypt($senderWallet->secret_key);
+            $sourceKeypair = KeyPair::fromSeed($secretKey);
+
+            // Get the account
+            $account = $this->sdk->accounts()->account($senderPublicKey);
+
+            // Prepare transaction builder
+            $transactionBuilder = new \Soneso\StellarSDK\TransactionBuilder($account);
+
+            // If recipient account doesn't exist and we're sending XLM, create account
+            if ($needToCreateAccount && $assetCode === 'XLM') {
+                // Add create account operation
+                $transactionBuilder->addOperation(
+                    (new \Soneso\StellarSDK\CreateAccountOperationBuilder(
+                        $recipientPublicKey,
+                        strval(max(1, $amount)) // Ensure at least 1 XLM for account creation
+                    ))->build()
+                );
+            } else {
+                // Add payment operation for existing account
+                if ($assetCode === 'XLM') {
+                    // Native XLM payment
+                    $transactionBuilder->addOperation(
+                        (new \Soneso\StellarSDK\PaymentOperationBuilder(
+                            $recipientPublicKey,
+                            \Soneso\StellarSDK\Asset::native(),
+                            strval($amount)
+                        ))->build()
+                    );
+                } else {
+                    // Custom asset payment - would need issuer information
+                    // This is a placeholder - you'd need to implement token transfers
+                    // based on your specific token implementation
+                    return [
+                        'success' => false,
+                        'message' => 'Token transfers not implemented yet'
+                    ];
+                }
+            }
+
+            // Build the transaction
+            $transaction = $transactionBuilder
+                ->addMemo(\Soneso\StellarSDK\Memo::text('RemittEase Transfer'))
+                ->setTimeBounds(new \Soneso\StellarSDK\TimeBounds(null, time() + 60)) // 60 seconds timeout
+                ->build();
+
+            // Get the correct network
+            $network = $this->network === 'testnet'
+                ? \Soneso\StellarSDK\Network::testnet()
+                : \Soneso\StellarSDK\Network::public();
+
+            // Sign and submit the transaction
+            $transaction->sign($sourceKeypair, $network);
+            $response = $this->sdk->submitTransaction($transaction);
+
+            if ($response->isSuccessful()) {
+                $hash = $response->getHash();
+                Log::info("Transfer successful: {$amount} {$assetCode} from {$senderPublicKey} to {$recipientPublicKey}, hash: {$hash}");
+
+                // Record the transaction in the contract if possible
+                try {
+                    $this->contractInterface->recordTransaction(
+                        $senderPublicKey,
+                        $recipientPublicKey,
+                        $amount,
+                        'remittance'
+                    );
+                } catch (\Exception $e) {
+                    Log::warning('Failed to record transaction in contract: ' . $e->getMessage());
+                    // Don't fail if contract recording fails
+                }
+
+                return [
+                    'success' => true,
+                    'transaction_hash' => $hash,
+                    'message' => 'Transfer completed successfully'
+                ];
+            } else {
+                // If we get here, the transaction failed
+                $resultCodes = $response->getExtras()->getResultCodes();
+                $errorMessage = 'Transaction failed: ' . json_encode($resultCodes);
+                Log::error('Stellar transaction failed: ' . $errorMessage);
+
+                return [
+                    'success' => false,
+                    'message' => $errorMessage
+                ];
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Transfer failed: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Transfer failed: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Check transaction status on the blockchain
+     */
+    public function checkTransactionStatus($transactionHash)
+    {
+        try {
+            if (empty($transactionHash)) {
+                return [
+                    'success' => false,
+                    'message' => 'No transaction hash provided'
+                ];
+            }
+
+            // Query the transaction
+            $transaction = $this->sdk->transactions()->transaction($transactionHash);
+
+            if ($transaction) {
+                // Check if successful
+                $successful = $transaction->isSuccessful();
+
+                if ($successful) {
+                    return [
+                        'success' => true,
+                        'message' => 'Transaction completed successfully',
+                        'details' => [
+                            'hash' => $transactionHash,
+                            'ledger' => $transaction->getLedger(),
+                            'created_at' => $transaction->getCreatedAt()
+                        ]
+                    ];
+                } else {
+                    return [
+                        'success' => false,
+                        'message' => 'Transaction failed on blockchain',
+                        'details' => [
+                            'hash' => $transactionHash,
+                            'ledger' => $transaction->getLedger(),
+                            'created_at' => $transaction->getCreatedAt()
+                        ]
+                    ];
+                }
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Transaction not found on blockchain'
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to check transaction status: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Failed to check transaction status: ' . $e->getMessage()
+            ];
+        }
+    }
 }

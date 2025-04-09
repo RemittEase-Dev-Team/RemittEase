@@ -80,6 +80,7 @@ Route::middleware([
     Route::get('/remittance/banks', [RemittanceController::class, 'getBanks'])->name('remittance.banks');
     Route::post('/remittance/verify-account', [RemittanceController::class, 'verifyAccount'])->name('remittance.verify-account');
     Route::post('/remittance/transfer', [RemittanceController::class, 'initiateTransfer'])->name('remittance.transfer');
+    Route::get('/remittance/transaction/{transactionId}/status', [RemittanceController::class, 'checkTransactionStatus'])->name('remittance.transaction.status');
 
     Route::get('/transactions', [App\Http\Controllers\TransactionController::class, 'index'])->name('transactions');
 

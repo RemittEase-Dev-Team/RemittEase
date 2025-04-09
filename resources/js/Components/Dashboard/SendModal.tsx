@@ -299,21 +299,56 @@ export default function SendModal({
           return;
         }
 
-        post(route('remittance.transfer'));
+        const response = await axios.post(route('remittance.transfer'), data);
+
+        if (response.data.success) {
+          // Store transaction details in localStorage for future reference
+          if (response.data.transaction_id && response.data.reference) {
+            localStorage.setItem('last_transaction', JSON.stringify({
+              id: response.data.transaction_id,
+              reference: response.data.reference,
+              type: 'crypto',
+              amount: amount,
+              currency: selectedCurrency.code,
+              timestamp: new Date().toISOString()
+            }));
+          }
+
+          CloseModal();
+        } else {
+          setTransferError(response.data.message || 'Transfer failed');
+        }
       } else {
-        if (!selectedRecipient || !amount || !selectedBank || !accountNumber) {
+        if (!amount || !selectedBank || !accountNumber || !phone) {
           setTransferError('Please fill in all required fields');
           setIsTransferring(false);
           return;
         }
 
-        post(route('remittance.transfer'));
-      }
+        const response = await axios.post(route('remittance.transfer'), data);
 
-      CloseModal();
-    } catch (error) {
+        if (response.data.success) {
+          // Store remittance details in localStorage for future reference
+          if (response.data.transaction_id && response.data.remittance_id && response.data.reference) {
+            localStorage.setItem('last_transaction', JSON.stringify({
+              id: response.data.transaction_id,
+              remittance_id: response.data.remittance_id,
+              reference: response.data.reference,
+              type: 'cash',
+              amount: amount,
+              currency: SUPPORTED_COUNTRIES[selectedCountry as keyof typeof SUPPORTED_COUNTRIES]?.currency || 'NGN',
+              timestamp: new Date().toISOString()
+            }));
+          }
+
+          CloseModal();
+        } else {
+          setTransferError(response.data.message || 'Transfer failed');
+        }
+      }
+    } catch (error: any) {
       console.error('Transfer failed:', error);
-      setTransferError('Failed to process transfer. Please try again.');
+      setTransferError(error.response?.data?.message || 'Failed to process transfer. Please try again.');
     } finally {
       setIsTransferring(false);
     }

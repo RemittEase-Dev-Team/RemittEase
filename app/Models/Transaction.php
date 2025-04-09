@@ -20,13 +20,14 @@ class Transaction extends Model
         'recipient_address',
         'sender_wallet_id',
         'recipient_wallet_id',
+        'remittance_id',
         'transaction_hash',
         'type',
         'status',
         'reference',
         'memo',
         'metadata',
-        'error_message'
+        'failure_reason'
     ];
 
     protected $casts = [
@@ -74,6 +75,14 @@ class Transaction extends Model
     public function recipientWallet()
     {
         return $this->belongsTo(Wallet::class, 'recipient_wallet_id');
+    }
+
+    /**
+     * Get the associated remittance if any.
+     */
+    public function remittance()
+    {
+        return $this->belongsTo(Remittance::class);
     }
 
     /**
