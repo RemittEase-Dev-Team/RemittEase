@@ -32,11 +32,31 @@ interface Recipient {
   account_number: string;
   bank_code: string;
   amount: string;
+  [key: string]: string; // Add index signature to satisfy FormDataConvertible requirement
 }
 
 interface BulkRemittanceProps {
   currencies: Currency[];
   recent_processes: RecentProcess[];
+}
+
+// Define form data types with index signatures to satisfy FormDataType constraint
+interface FileUploadFormData {
+  file: File | null;
+  currency: string;
+  schedule_type: string;
+  is_recurring: boolean;
+  notes: string;
+  [key: string]: any; // Add index signature for FormDataType
+}
+
+interface ManualFormData {
+  recipients: Recipient[];
+  currency: string;
+  schedule_type: string;
+  is_recurring: boolean;
+  notes: string;
+  [key: string]: any; // Add index signature for FormDataType
 }
 
 export default function BulkRemittance({ currencies, recent_processes }: BulkRemittanceProps) {
@@ -51,16 +71,15 @@ export default function BulkRemittance({ currencies, recent_processes }: BulkRem
     amount: '',
   }]);
 
-  const { data, setData, post, processing, errors, reset } = useForm({
-    file: null as File | null,
+  const { data, setData, post, processing, errors, reset } = useForm<FileUploadFormData>({
+    file: null,
     currency: currencies.length > 0 ? currencies[0].code : 'XLM',
     schedule_type: 'daily',
     is_recurring: false,
     notes: '',
-    recipients: [] as Recipient[],
   });
 
-  const { data: manualData, setData: setManualData, post: postManual, processing: processingManual, errors: manualErrors } = useForm({
+  const { data: manualData, setData: setManualData, post: postManual, processing: processingManual, errors: manualErrors } = useForm<ManualFormData>({
     recipients: [] as Recipient[],
     currency: currencies.length > 0 ? currencies[0].code : 'XLM',
     schedule_type: 'daily',
@@ -70,7 +89,7 @@ export default function BulkRemittance({ currencies, recent_processes }: BulkRem
 
   useEffect(() => {
     // When recipients state changes, update form data
-    setManualData('recipients', recipients);
+    setManualData('recipients', [...recipients]);
   }, [recipients]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -206,7 +225,7 @@ export default function BulkRemittance({ currencies, recent_processes }: BulkRem
                     </div>
                     {data.file && (
                       <p className="mt-2 text-sm text-gray-600">
-                        Selected file: {data.file.name}
+                        Selected file: {data.file instanceof File ? data.file.name : ''}
                       </p>
                     )}
                     <InputError message={errors.file} className="mt-2" />
@@ -219,7 +238,7 @@ export default function BulkRemittance({ currencies, recent_processes }: BulkRem
                         id="currency"
                         className="mt-1 block w-full"
                         value={data.currency}
-                        onChange={(e) => setData('currency', e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setData('currency', e.target.value)}
                       >
                         {currencies.map((currency) => (
                           <option key={currency.id} value={currency.code}>
@@ -256,7 +275,7 @@ export default function BulkRemittance({ currencies, recent_processes }: BulkRem
                             id="schedule_type"
                             className="mt-1 block w-full"
                             value={data.schedule_type}
-                            onChange={(e) => setData('schedule_type', e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setData('schedule_type', e.target.value)}
                           >
                             <option value="hourly">Hourly</option>
                             <option value="daily">Daily</option>
@@ -289,7 +308,7 @@ export default function BulkRemittance({ currencies, recent_processes }: BulkRem
                         <TextInput
                           id="notes"
                           className="mt-1 block w-full"
-                          value={data.notes}
+                          value={data.notes || ''}
                           onChange={(e) => setData('notes', e.target.value)}
                         />
                       </div>
@@ -344,7 +363,9 @@ export default function BulkRemittance({ currencies, recent_processes }: BulkRem
                               onChange={(e) => updateRecipient(index, 'name', e.target.value)}
                               required
                             />
-                            <InputError message={manualErrors[`recipients.${index}.name`]} className="mt-2" />
+                            {manualErrors[`recipients.${index}.name`] && (
+                              <InputError message={manualErrors[`recipients.${index}.name`] as string} className="mt-2" />
+                            )}
                           </div>
 
                           <div>
@@ -369,7 +390,9 @@ export default function BulkRemittance({ currencies, recent_processes }: BulkRem
                               onChange={(e) => updateRecipient(index, 'account_number', e.target.value)}
                               required
                             />
-                            <InputError message={manualErrors[`recipients.${index}.account_number`]} className="mt-2" />
+                            {manualErrors[`recipients.${index}.account_number`] && (
+                              <InputError message={manualErrors[`recipients.${index}.account_number`] as string} className="mt-2" />
+                            )}
                           </div>
 
                           <div>
@@ -381,7 +404,9 @@ export default function BulkRemittance({ currencies, recent_processes }: BulkRem
                               onChange={(e) => updateRecipient(index, 'bank_code', e.target.value)}
                               required
                             />
-                            <InputError message={manualErrors[`recipients.${index}.bank_code`]} className="mt-2" />
+                            {manualErrors[`recipients.${index}.bank_code`] && (
+                              <InputError message={manualErrors[`recipients.${index}.bank_code`] as string} className="mt-2" />
+                            )}
                           </div>
 
                           <div>
@@ -396,7 +421,9 @@ export default function BulkRemittance({ currencies, recent_processes }: BulkRem
                               onChange={(e) => updateRecipient(index, 'amount', e.target.value)}
                               required
                             />
-                            <InputError message={manualErrors[`recipients.${index}.amount`]} className="mt-2" />
+                            {manualErrors[`recipients.${index}.amount`] && (
+                              <InputError message={manualErrors[`recipients.${index}.amount`] as string} className="mt-2" />
+                            )}
                           </div>
                         </div>
                       </div>
@@ -410,7 +437,7 @@ export default function BulkRemittance({ currencies, recent_processes }: BulkRem
                         id="manual-currency"
                         className="mt-1 block w-full"
                         value={manualData.currency}
-                        onChange={(e) => setManualData('currency', e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setManualData('currency', e.target.value)}
                       >
                         {currencies.map((currency) => (
                           <option key={currency.id} value={currency.code}>
@@ -447,7 +474,7 @@ export default function BulkRemittance({ currencies, recent_processes }: BulkRem
                             id="manual-schedule_type"
                             className="mt-1 block w-full"
                             value={manualData.schedule_type}
-                            onChange={(e) => setManualData('schedule_type', e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setManualData('schedule_type', e.target.value)}
                           >
                             <option value="hourly">Hourly</option>
                             <option value="daily">Daily</option>
@@ -480,7 +507,7 @@ export default function BulkRemittance({ currencies, recent_processes }: BulkRem
                         <TextInput
                           id="manual-notes"
                           className="mt-1 block w-full"
-                          value={manualData.notes}
+                          value={manualData.notes || ''}
                           onChange={(e) => setManualData('notes', e.target.value)}
                         />
                       </div>
