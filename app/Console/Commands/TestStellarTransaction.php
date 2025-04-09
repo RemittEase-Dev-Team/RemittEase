@@ -297,11 +297,15 @@ class TestStellarTransaction extends Command
                 $xdr = $transaction->toEnvelopeXdrBase64();
                 $this->info("Signed transaction XDR: " . $xdr);
 
-                // Just for testing, we can decrypt and verify the transaction
-                $this->info("Decoding transaction for verification...");
-                $txFromXdr = \Soneso\StellarSDK\AbstractTransaction::fromEnvelopeBase64XdrString($xdr);
-                $this->info("Transaction sequence number: " . $txFromXdr->getSequenceNumber());
-                $this->info("Transaction source account: " . $txFromXdr->getSourceAccount()->getAccountId());
+                try {
+                    // Just for testing, we can decrypt and verify the transaction
+                    $this->info("Decoding transaction for verification...");
+                    $txFromXdr = \Soneso\StellarSDK\AbstractTransaction::fromEnvelopeBase64XdrString($xdr);
+                    $this->info("Transaction sequence number: " . $txFromXdr->getSequenceNumber());
+                    $this->info("Transaction source account: " . $txFromXdr->getSourceAccount()->getAccountId());
+                } catch (\Exception $e) {
+                    $this->error("Failed to decode transaction: " . $e->getMessage());
+                }
 
                 $this->info("Transaction created and signed successfully. Not submitting to avoid failure.");
             } catch (\Exception $e) {

@@ -163,20 +163,20 @@ export default function Index({ transactions, stats }: Props) {
                     {/* Statistics */}
                     <div className="grid grid-cols-4 gap-4 mb-6">
                         <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
-                            <div className="text-lg font-semibold mb-1">Total</div>
-                            <div className="text-3xl font-bold">{stats.total}</div>
+                            <div className="text-lg font-semibold mb-1 text-gray-800 dark:text-blue-500">Total</div>
+                            <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">{stats.total}</div>
                         </div>
                         <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                             <div className="text-lg font-semibold mb-1 text-green-600 dark:text-green-400">Completed</div>
-                            <div className="text-3xl font-bold">{stats.completed}</div>
+                            <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">{stats.completed}</div>
                         </div>
                         <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                             <div className="text-lg font-semibold mb-1 text-yellow-600 dark:text-yellow-400">Pending</div>
-                            <div className="text-3xl font-bold">{stats.pending}</div>
+                            <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">{stats.pending}</div>
                         </div>
                         <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                             <div className="text-lg font-semibold mb-1 text-red-600 dark:text-red-400">Failed</div>
-                            <div className="text-3xl font-bold">{stats.failed}</div>
+                            <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">{stats.failed}</div>
                         </div>
                     </div>
 

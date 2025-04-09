@@ -127,6 +127,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::post('/transactions/bulk-approve', [ManageTransactionController::class, 'bulkApprove'])->name('admin.transactions.bulk-approve');
     Route::post('/transactions/bulk-reject', [ManageTransactionController::class, 'bulkReject'])->name('admin.transactions.bulk-reject');
     Route::post('/transactions/schedule', [ManageTransactionController::class, 'scheduleTransactions'])->name('admin.transactions.schedule');
+    Route::get('/transactions/{id}', [ManageTransactionController::class, 'show'])->name('admin.transactions.show');
+
+    // Bulk remittance routes
+    Route::get('/bulk-remittance', [ManageTransactionController::class, 'bulkRemittanceForm'])->name('admin.bulk-remittance');
+    Route::post('/bulk-remittance/process', [ManageTransactionController::class, 'processBulkRemittance'])->name('admin.bulk-remittance.process');
+    Route::post('/bulk-remittance/upload', [ManageTransactionController::class, 'uploadBulkRemittanceFile'])->name('admin.bulk-remittance.upload');
 
     Route::get('/blogs', [BlogController::class, 'index'])->name('admin.blogs');
     Route::get('/blogs/create', [BlogController::class, 'create'])->name('admin.blogs.create');
@@ -200,10 +206,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/teams/{team}/edit', [TeamController::class, 'edit'])->name('admin.teams.edit');
     Route::post('/teams/{team}/update', [TeamController::class, 'update'])->name('admin.teams.update');
     Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('admin.teams.destroy');
-    Route::resource('transactions', ManageTransactionController::class);
-
-
-
 });
 
 
