@@ -122,6 +122,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::post('/kyc/initiate', [KYCController::class, 'initiateKYC'])->name('admin.kyc.initiate');
 
     Route::get('/transactions', [ManageTransactionController::class, 'index'])->name('admin.transactions');
+    Route::get('/transactions/pending', [ManageTransactionController::class, 'pending'])->name('admin.transactions.pending');
+    Route::get('/transactions/completed', [ManageTransactionController::class, 'completed'])->name('admin.transactions.completed');
     Route::get('/transactions/{id}/approve', [ManageTransactionController::class, 'approve'])->name('admin.transactions.approve');
     Route::get('/transactions/{id}/reject', [ManageTransactionController::class, 'reject'])->name('admin.transactions.reject');
     Route::post('/transactions/bulk-approve', [ManageTransactionController::class, 'bulkApprove'])->name('admin.transactions.bulk-approve');

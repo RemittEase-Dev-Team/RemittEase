@@ -63,6 +63,92 @@ class ManageTransactionController extends Controller
         ]);
     }
 
+    /**
+     * Display pending transactions
+     */
+    public function pending()
+    {
+        $pendingCount = Transaction::where('status', 'pending')->count();
+        $completedCount = Transaction::where('status', 'completed')->count();
+        $failedCount = Transaction::where('status', 'failed')->count();
+
+        $transactions = Transaction::with('user')
+            ->where('status', 'pending')
+            ->latest()
+            ->get()
+            ->map(function ($transaction) {
+                return [
+                    'id' => $transaction->id,
+                    'user_id' => $transaction->user_id,
+                    'user_name' => $transaction->user ? $transaction->user->name : 'Unknown',
+                    'user_email' => $transaction->user ? $transaction->user->email : 'Unknown',
+                    'transaction_hash' => $transaction->transaction_hash,
+                    'amount' => floatval($transaction->amount),
+                    'currency' => $transaction->currency ?? $transaction->asset_code,
+                    'type' => $transaction->type,
+                    'status' => $transaction->status,
+                    'reference' => $transaction->reference,
+                    'created_at' => $transaction->created_at->format('Y-m-d H:i:s'),
+                    'sender_address' => $transaction->sender_address,
+                    'recipient_address' => $transaction->recipient_address,
+                    'network' => config('stellar.network', 'testnet'),
+                ];
+            });
+
+        return Inertia::render('Admin/Transactions/Pending', [
+            'transactions' => $transactions,
+            'stats' => [
+                'pending' => $pendingCount,
+                'completed' => $completedCount,
+                'failed' => $failedCount,
+                'total' => $pendingCount + $completedCount + $failedCount,
+            ],
+        ]);
+    }
+
+    /**
+     * Display completed transactions
+     */
+    public function completed()
+    {
+        $pendingCount = Transaction::where('status', 'pending')->count();
+        $completedCount = Transaction::where('status', 'completed')->count();
+        $failedCount = Transaction::where('status', 'failed')->count();
+
+        $transactions = Transaction::with('user')
+            ->where('status', 'completed')
+            ->latest()
+            ->get()
+            ->map(function ($transaction) {
+                return [
+                    'id' => $transaction->id,
+                    'user_id' => $transaction->user_id,
+                    'user_name' => $transaction->user ? $transaction->user->name : 'Unknown',
+                    'user_email' => $transaction->user ? $transaction->user->email : 'Unknown',
+                    'transaction_hash' => $transaction->transaction_hash,
+                    'amount' => floatval($transaction->amount),
+                    'currency' => $transaction->currency ?? $transaction->asset_code,
+                    'type' => $transaction->type,
+                    'status' => $transaction->status,
+                    'reference' => $transaction->reference,
+                    'created_at' => $transaction->created_at->format('Y-m-d H:i:s'),
+                    'sender_address' => $transaction->sender_address,
+                    'recipient_address' => $transaction->recipient_address,
+                    'network' => config('stellar.network', 'testnet'),
+                ];
+            });
+
+        return Inertia::render('Admin/Transactions/Completed', [
+            'transactions' => $transactions,
+            'stats' => [
+                'pending' => $pendingCount,
+                'completed' => $completedCount,
+                'failed' => $failedCount,
+                'total' => $pendingCount + $completedCount + $failedCount,
+            ],
+        ]);
+    }
+
     public function approve($id)
     {
         try {

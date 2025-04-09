@@ -4,7 +4,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\EnsureKycVerified;
-use Illuminate\Console\Application as Artisan;
 use App\Console\Commands\ProcessScheduledTransactions;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -13,15 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withCommands(function () {
-        // Register specific transaction-related commands directly here
-        Artisan::starting(function (Artisan $artisan) {
-            $artisan->resolveCommands([
-                \App\Console\Commands\ProcessScheduledTransactions::class,
-                // Add other specific commands as needed
-            ]);
-        });
-    })
+    ->withCommands([
+        \App\Console\Commands\ProcessScheduledTransactions::class,
+        // Add other specific commands as needed
+    ])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
