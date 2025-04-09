@@ -154,12 +154,12 @@ export default function Index({ transactions, stats }: Props) {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Manage Transactions</h2>}
+            header={<span className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Manage Transactions</span>}
         >
             <Head title="Transactions" />
 
             <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div className="max-w-10xl mx-auto sm:px-6 lg:px-8">
                     {/* Statistics */}
                     <div className="grid grid-cols-4 gap-4 mb-6">
                         <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">

@@ -145,7 +145,7 @@ export default function Pending({ transactions, stats }: Props) {
             <Head title="Pending Transactions" />
 
             <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div className="max-w-10xl mx-auto sm:px-6 lg:px-8">
                     {/* Statistics */}
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6 mb-6">
                         <div className="flex items-center justify-between">

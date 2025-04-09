@@ -17,7 +17,15 @@ interface Currency {
 }
 
 interface DashboardProps {
-  users: Array<{ id: number; name: string; email: string; createdAt: string }>;
+  users: Array<{
+    id: number;
+    name: string;
+    email: string;
+    createdAt: string;
+    status: string;
+    kycStatus: string;
+    lastLogin: string;
+  }>;
   transactions: Array<{
     id: number;
     amount: number;
@@ -25,8 +33,16 @@ interface DashboardProps {
     targetCurrency: string;
     status: string;
     createdAt: string;
+    type: string;
+    fees: number;
   }>;
-  kycRequests: Array<{ id: number; user_id: number; status: string; createdAt: string }>;
+  kycRequests: Array<{
+    id: number;
+    user_id: number;
+    status: string;
+    createdAt: string;
+    documentType: string;
+  }>;
   remittances: Array<{
     id: number;
     user_id: number;
@@ -36,6 +52,8 @@ interface DashboardProps {
     exchangeRate: number;
     status: string;
     createdAt: string;
+    fees: number;
+    destinationCountry: string;
   }>;
   blogs: Array<{ id: number; title: string }>;
   stats?: {
@@ -44,23 +62,60 @@ interface DashboardProps {
     activeUsers: number;
     conversionRate: number;
     averageTransactionSize: number;
+    monthlyRevenue: number;
+    yearlyRevenue: number;
+    stellarNetworkVolume: number;
+    fiatNetworkVolume: number;
+    totalRemittances: number;
+    averageRemittanceSize: number;
   };
   currencies?: Array<Currency>;
   weeklyTransactions: Array<{
     day: string;
     volume: number;
     count: number;
+    fees: number;
   }>;
   remittanceDestinations?: Array<{
     country: string;
     volume: number;
     percentage: number;
+    count: number;
   }>;
   stellarMetrics?: {
     nodeStatus: string;
     networkLatency: number;
     pendingTransactions: number;
     lastLedger: number;
+    networkVersion: string;
+    totalSupply: number;
+    circulatingSupply: number;
+    averageTransactionTime: number;
+    activeValidators: number;
+  };
+  revenueMetrics?: {
+    daily: number;
+    weekly: number;
+    monthly: number;
+    yearly: number;
+    byType: Array<{
+      type: string;
+      amount: number;
+      percentage: number;
+    }>;
+  };
+  userMetrics?: {
+    total: number;
+    active: number;
+    new: number;
+    kycPending: number;
+    kycApproved: number;
+    kycRejected: number;
+    byCountry: Array<{
+      country: string;
+      count: number;
+      percentage: number;
+    }>;
   };
 }
 
@@ -79,8 +134,29 @@ const AdminDashboard: React.FC<DashboardProps> = ({
     networkLatency: 0,
     pendingTransactions: 0,
     lastLedger: 0
+  },
+  revenueMetrics = {
+    daily: 0,
+    weekly: 0,
+    monthly: 0,
+    yearly: 0,
+    byType: []
+  },
+  userMetrics = {
+    total: 0,
+    active: 0,
+    new: 0,
+    kycPending: 0,
+    kycApproved: 0,
+    kycRejected: 0,
+    byCountry: []
   }
 }) => {
+  // Format number function to handle number formatting throughout the component
+  const formatNumber = (value: number): string => {
+    return new Intl.NumberFormat('en-US').format(value);
+  };
+
   const formattedVolume = stats ? new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -399,6 +475,126 @@ const AdminDashboard: React.FC<DashboardProps> = ({
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Stellar Network Metrics */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">Stellar Network Status</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Node Status</div>
+              <div className="text-xl font-semibold">{stellarMetrics?.nodeStatus || 'Unknown'}</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Network Latency</div>
+              <div className="text-xl font-semibold">{stellarMetrics?.networkLatency || 0}ms</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Pending Transactions</div>
+              <div className="text-xl font-semibold">{stellarMetrics?.pendingTransactions || 0}</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Last Ledger</div>
+              <div className="text-xl font-semibold">{stellarMetrics?.lastLedger || 0}</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Network Version</div>
+              <div className="text-xl font-semibold">{stellarMetrics?.networkVersion || 'Unknown'}</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Total Supply</div>
+              <div className="text-xl font-semibold">{formatNumber(stellarMetrics?.totalSupply || 0)} XLM</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Avg Transaction Time</div>
+              <div className="text-xl font-semibold">{stellarMetrics?.averageTransactionTime || 0}s</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Active Validators</div>
+              <div className="text-xl font-semibold">{stellarMetrics?.activeValidators || 0}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Revenue Metrics */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">Revenue Overview</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Daily Revenue</div>
+              <div className="text-xl font-semibold">${formatNumber(revenueMetrics?.daily || 0)}</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Weekly Revenue</div>
+              <div className="text-xl font-semibold">${formatNumber(revenueMetrics?.weekly || 0)}</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Monthly Revenue</div>
+              <div className="text-xl font-semibold">${formatNumber(revenueMetrics?.monthly || 0)}</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Yearly Revenue</div>
+              <div className="text-xl font-semibold">${formatNumber(revenueMetrics?.yearly || 0)}</div>
+            </div>
+          </div>
+          {revenueMetrics?.byType && (
+            <div className="mt-4">
+              <h3 className="text-md font-semibold mb-2">Revenue by Type</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {revenueMetrics.byType.map((type, index) => (
+                  <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-sm text-gray-600">{type.type}</div>
+                    <div className="text-xl font-semibold">${formatNumber(type.amount)}</div>
+                    <div className="text-sm text-gray-500">{type.percentage}%</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* User Metrics */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">User Statistics</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Total Users</div>
+              <div className="text-xl font-semibold">{formatNumber(userMetrics?.total || 0)}</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Active Users</div>
+              <div className="text-xl font-semibold">{formatNumber(userMetrics?.active || 0)}</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">New Users</div>
+              <div className="text-xl font-semibold">{formatNumber(userMetrics?.new || 0)}</div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">KYC Status</div>
+              <div className="text-xl font-semibold">
+                {formatNumber(userMetrics?.kycApproved || 0)} Approved
+              </div>
+              <div className="text-sm text-gray-500">
+                {formatNumber(userMetrics?.kycPending || 0)} Pending
+              </div>
+            </div>
+          </div>
+          {userMetrics?.byCountry && (
+            <div className="mt-4">
+              <h3 className="text-md font-semibold mb-2">Users by Country</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {userMetrics.byCountry.map((country, index) => (
+                  <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-sm text-gray-600">{country.country}</div>
+                    <div className="text-xl font-semibold">{formatNumber(country.count)}</div>
+                    <div className="text-sm text-gray-500">{country.percentage}%</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>
