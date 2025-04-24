@@ -7,7 +7,6 @@ use Soneso\StellarSDK\Xdr\XdrSCAddress;
 use Soneso\StellarSDK\Xdr\XdrSCAddressType;
 use Soneso\StellarSDK\Xdr\XdrAccountID;
 use Soneso\StellarSDK\Xdr\XdrSCVal;
-use Soneso\StellarSDK\Xdr\XdrUInt32;
 use Soneso\StellarSDK\Xdr\XdrInt128Parts;
 use Soneso\StellarSDK\Xdr\XdrSCSpecType;
 use Soneso\StellarSDK\StellarSDK;
@@ -129,8 +128,8 @@ class RemitteaseContractInterface
             $accountId = new XdrAccountID($publicKey);
             $walletAddress->setAccountId($accountId);
 
-            // Create user ID parameter using XdrUInt32
-            $userIdParam = new XdrUInt32($userId);
+            // Create user ID parameter using XdrSCVal instead of XdrUInt32
+            $userIdParam = XdrSCVal::forU32($userId);
 
             // Create host function for contract invocation
             $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(
@@ -387,7 +386,7 @@ class RemitteaseContractInterface
             $transactionBuilder = new TransactionBuilder($account);
 
             // Create Soroban parameters
-            $userIdParam = new XdrUInt32($userId);
+            $userIdParam = new XdrSCVal($userId);
 
             // Create host function for contract invocation
             $hostFunction = new \Soneso\StellarSDK\InvokeContractHostFunction(
