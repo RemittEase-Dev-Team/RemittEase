@@ -327,7 +327,7 @@ class RemitteaseContractInterface
         }
     }
 
-    /**
+    /*
      * Get total wallet count
      */
     public function getWalletCount()
